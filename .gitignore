@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+env/
+venv/
+.venv/
+pip-wheel-metadata/
+*.log
+
+# SQLite
+*.sqlite3
+*.db
+*.db-journal
+
+# Virtual environment names
+.env/
+env*/
+venv*/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node/React
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.pnp*
+.pnp.js
+.parcel-cache/
+.cache/
+dist/
+build/
+*.local
+
+# React env files
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# IDE / editors
+.vscode/
+.idea/
+*.swp
+*.swo
