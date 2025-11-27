@@ -1,48 +1,82 @@
-Getting started:
+# Getting Started
 
-= Pre-requisities =
-Install Node.js https://nodejs.org/en/download
+## Prerequisites
 
-In a terminal navigate to Frontend and run:
+Install **Node.js**
+https://nodejs.org/en/download
+
+### Frontend setup
+
+In a terminal, navigate to the `frontend` folder and run:
+```bash
 npm install
+````
 
-Navigate to project root in a terminal and run:
+### Backend setup
+
+Navigate to the project root and run:
+
+```bash
 pip install -r requirements.txt
+```
 
+-----
 
-= Starting the server =
-Navigate to frontend folder in a terminal: npm run dev
+## Starting the Server
 
-Navigate to backend folder in a terminal: uvicorn app.main:app --reload
+### Frontend
 
-In the Vite server terminal type o -> enter to open website.
+In the `frontend` folder:
 
+```bash
+npm run dev
+```
 
-Note: If you encounter an error on the website, check the terminal where you started the uvicorn server. If anything goes wrong it's likely a missing library.
+### Backend
 
-If you plan to have a file upload demo, you can create an empty .txt file. No actual data is extracted, so the content is irrelevant.
+In the backend folder:
 
+```bash
+uvicorn app.main:app --reload
+```
 
+To open the Vite development server in the browser, press `o` and then Enter in the terminal running `npm run dev`.
 
-= Stopping the server =
-In both command prompts press Ctrl + C to terminate each server.
+**Note:** If an error appears in the browser, check the terminal running the backend server. Missing **Python** libraries are the most common cause. If you want to demonstrate file upload, you may create an empty `.txt` file. The content does not matter because no data is processed.
 
+-----
 
+## Stopping the Server
 
-TODO:
-XL Create dashboard 
+Press `Ctrl + C` in both terminals to stop the frontend and backend servers.
 
-L lil ai guy on manual setup
-L Edit button in summary list in ai setup page
-L Ability to change scoring type in SetupAI and SetupManual (and dashboard)
-L Adjust scoring weights in setup based on scoring type selected
+-----
 
-M Sponsor image upload for public card showcase + Event image (also in SetupMethod.tsx + SetupSummary)
-✓ M Clean up event summary
-✓ M Info pop ups on SetupTemplates
+# To-Do
 
-✓ S Optional field for audience members allowed. To prevent more users than desired to participate (in case the code gets posted online)
-✓ S Scoring type display on 'Method' page
-✓ S Change Date & Time to a range (automatically cut off access)
-S Decide later button logic spearated from continue button
+## XL
 
+  - [ ] Create dashboard
+
+## L
+
+  - [ ] AI assistant on manual setup
+  - [ ] Edit button in summary list on AI setup page
+  - [ ] Ability to change scoring type in SetupAI and SetupManual (and dashboard)
+  - [ ] Adjust scoring weights in setup based on selected scoring type
+
+## M
+
+  - [ ] Sponsor image upload for public card showcase and event image (also in `SetupMethod.tsx` and `SetupSummary`)
+  - [x] Clean up event summary
+  - [x] Information pop-ups on SetupTemplates
+
+## S
+
+  - [x] Optional field for audience members allowed
+  - [x] Scoring type display on Method page
+  - [x] Change Date and Time to a range with automatic access cut-off
+  - [ ] Decide later button logic separated from continue button
+  - [ ] Remove backend/requirements.txt
+
+<!-- end list -->
