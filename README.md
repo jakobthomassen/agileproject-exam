@@ -57,6 +57,7 @@ Press `Ctrl + C` in both terminals to stop the frontend and backend servers.
 ## XL
 
   - [ ] Create dashboard
+  - [ ] Standardize frontend formatting with shared css styles
 
 ## L
 
