@@ -1,0 +1,8 @@
+// run this  in the project venv homefolder
+export GEMINI_API_KEY="AIzaSyDvPIL6nt_sfL-ovuSZBQLH_2CPF8MzxP8"
+
+kjør denne først 
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+activate venv
+source .venv/bin/activate
