@@ -19,7 +19,7 @@ class Gemini(AIPlatform):
         missing =event_state.missing_fields() # checks for missing fields in the event state
         state = event_state.is_complete # check if all required fields are present
 
-        if missing:
+      
             
         response = self.client.models.generate_content(
             model=self.model,
@@ -34,8 +34,19 @@ class Gemini(AIPlatform):
         
         while response.function_calls: # While the ai still to call functions 
             for tool_call in response.function_calls:
-                if tool_call.name in self.tool_registry:# if the tool exists in our arsenal
+                fnargs = eval(tool_call.arguments)
+                fn_name = tool_call.name
+                if fn_name in self.tool_registry:# if the tool exists in our arsenal
                     try:
+                        #select the tool from the registry
+                        selected_tool = self.tool_registry[fn_name]
+
+                        result = selected_tool(state=state, **fnargs)
+                    except Exception as e:
+                        result = f"Error executing tool {fn_name}: {str(e)}"
+                else:
+                    result = f"Tool {fn_name} not found in registry."
+
         return response.text
 
     def chat(self, prompt: str) -> str:
