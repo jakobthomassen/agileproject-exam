@@ -5,11 +5,11 @@ from fastapi import HTTPException, status
 
 # --- Constants ---
 # For authenticated users
-AUTH_RATE_LIMIT = 5
+AUTH_RATE_LIMIT = 10
 AUTH_TIME_WINDOW_SECONDS = 60
 
 # For unauthenticated "global" users
-GLOBAL_RATE_LIMIT = 3
+GLOBAL_RATE_LIMIT = 10
 GLOBAL_TIME_WINDOW_SECONDS = 60
 
 # --- In-memory storage for user requests ---
