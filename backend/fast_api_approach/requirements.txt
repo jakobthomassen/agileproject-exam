@@ -3,3 +3,4 @@ uvicorn==0.34.3
 pydantic==2.11.5
 google-genai
 python-jose[cryptography]==3.5.0
+sqlalchemy==2.0.23

@@ -36,3 +36,32 @@ class EventState(BaseModel):
     @property # check if all required fields are present
     def is_complete(self) -> bool: 
         return len(self.missing_fields()) == 0 # if no missing fields, then complete. If any missing, then incomplete
+
+# --- Database Event Models ---
+# These are for creating and reading events from the database
+
+class EventCreate(BaseModel):
+    """Model for creating a new event"""
+    customer_id: str = Field(..., description="ID of the customer creating the event")
+    title: str = Field(..., description="Title of the event")
+    description: str = Field(..., description="Description of the event")
+    date: str = Field(..., description="Date of the event")
+    location: str = Field(..., description="Location of the event")
+
+class EventResponse(BaseModel):
+    """Model for returning event data"""
+    id: int
+    customer_id: str
+    title: str
+    description: str
+    date: str
+    location: str
+    status: str
+    
+    class Config:
+        from_attributes = True  # Allows Pydantic to work with SQLAlchemy models
+
+class SimulateAIRequest(BaseModel):
+    """Model for simulating AI response"""
+    event_id: int = Field(..., description="ID of the event to simulate response for")
+    ai_response: str = Field(..., description="Simulated AI response text")

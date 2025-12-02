@@ -1,21 +1,25 @@
-from sqlalchemy import Column, Integer, String
-from database import Base
-from sqlalchemy.types import DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Enum
+from .database import Base
 import enum
 
-class EventStatus(enum.Enum):
+# Enum for event status
+# This defines the possible states an event can be in
+class EventStatus(str, enum.Enum):
     PENDING = "pending"
     CONFIRMED = "confirmed"
     CANCELLED = "cancelled"
     SUCCESS = "success"
 
+# Event model - represents an event in the database
+# This is like a blueprint for the "events" table
 class Event(Base):
-    __tablename__ = "events"
+    __tablename__ = "events"  # Name of the table in the database
 
-    id = Column(Integer, primary_key=True, index=True)
-    customer_id = Column(String, index=True)
-    title = Column(String, index=True)
-    description = Column(String, index=True)
-    date = Column(DateTime, index=True)
-    location = Column(String, index=True)
-    status = Column(enum.Enum(EventStatus), default=EventStatus.PENDING)
+    # Columns in the table
+    id = Column(Integer, primary_key=True, index=True)  # Unique ID for each event
+    customer_id = Column(String, index=True)  # Who created the event
+    title = Column(String, index=True)  # Event title
+    description = Column(String)  # Event description
+    date = Column(String)  # Event date (stored as string for simplicity)
+    location = Column(String)  # Event location
+    status = Column(String, default=EventStatus.PENDING.value)  # Current status
