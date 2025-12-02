@@ -74,11 +74,13 @@ export default function SetupTemplates() {
   const [hovered, setHovered] = useState<TemplateType | null>(null);
 
   function handleContinue() {
-    if (selected) {
-      sessionStorage.setItem("selectedTemplate", selected);
-    } else {
-      sessionStorage.removeItem("selectedTemplate");
-    }
+    if (!selected) return;
+    sessionStorage.setItem("selectedTemplate", selected);
+    navigate("/setup/method");
+  }
+
+  function handleDecideLater() {
+    sessionStorage.removeItem("selectedTemplate");
     navigate("/setup/method");
   }
 
@@ -169,7 +171,7 @@ export default function SetupTemplates() {
 
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <button
-            onClick={handleContinue}
+            onClick={handleDecideLater}
             style={{
               padding: "10px 22px",
               borderRadius: "999px",
