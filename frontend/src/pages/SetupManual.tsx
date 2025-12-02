@@ -2,6 +2,24 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEventSetup } from "../context/EventSetupContext";
 
+function formatDateTime(value: string): string {
+  if (!value) return "";
+
+  
+  const [datePart, timePart] = value.split("T");
+  if (!datePart || !timePart) {
+    return value;
+  }
+
+  const [year, month, day] = datePart.split("-");
+  if (!year || !month || !day) {
+    return value;
+  }
+
+ 
+  return `${day}.${month}.${year} ${timePart}`;
+}
+
 export default function SetupManual() {
   const navigate = useNavigate();
   const { setEventData } = useEventSetup();
@@ -35,6 +53,7 @@ export default function SetupManual() {
     const audienceLimitNumber =
       audienceLimit === "" ? null : Number(audienceLimit);
 
+    // Use the same keys as the original EventSetupContext
     setEventData({
       eventName: eventName || null,
       eventType: eventType || null,
@@ -80,7 +99,9 @@ export default function SetupManual() {
     background: "rgba(15,23,42,0.9)",
     borderRadius: 16,
     border: "1px solid rgba(148,163,184,0.6)",
-    padding: 20
+    padding: 20,
+    wordBreak: "break-word",
+    overflowWrap: "anywhere"
   };
 
   return (
@@ -224,14 +245,6 @@ export default function SetupManual() {
               />
             </Field>
 
-            <Field label="Rules (optional)">
-              <textarea
-                value={rules}
-                onChange={e => setRules(e.target.value)}
-                style={{ ...inputStyle, minHeight: 80, resize: "vertical" }}
-              />
-            </Field>
-
             <Field label="Audience limit (optional)">
               <input
                 type="number"
@@ -243,6 +256,14 @@ export default function SetupManual() {
                   )
                 }
                 style={inputStyle}
+              />
+            </Field>
+
+            <Field label="Rules (optional)">
+              <textarea
+                value={rules}
+                onChange={e => setRules(e.target.value)}
+                style={{ ...inputStyle, minHeight: 80, resize: "vertical" }}
               />
             </Field>
 
@@ -289,7 +310,9 @@ export default function SetupManual() {
             <div style={{ marginBottom: 8, fontSize: 14 }}>
               <strong>Date and time:</strong>{" "}
               {startDateTime || endDateTime
-                ? `${startDateTime || "?"} to ${endDateTime || "?"}`
+                ? `${formatDateTime(startDateTime) || "?"} to ${
+                    formatDateTime(endDateTime) || "?"
+                  }`
                 : "Not set"}
             </div>
             <div style={{ marginBottom: 8, fontSize: 14 }}>
@@ -302,7 +325,15 @@ export default function SetupManual() {
             <div style={{ marginBottom: 8, fontSize: 14 }}>
               <strong>Rules:</strong>{" "}
               {rules ? (
-                <span style={{ whiteSpace: "pre-wrap" }}>{rules}</span>
+                <span
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    overflowWrap: "anywhere"
+                  }}
+                >
+                  {rules}
+                </span>
               ) : (
                 "Not set"
               )}
