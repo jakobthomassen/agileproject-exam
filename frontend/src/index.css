@@ -84,3 +84,123 @@ html, body, #root {
     background: radial-gradient(circle at top, #0b1120, #020617);
 }
 */
+
+.faq-bot {
+  max-width: 720px;
+  margin: 3rem auto;
+  padding: 0 1rem;
+}
+
+.faq-bot__card {
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.faq-bot__header {
+  margin-bottom: 1rem;
+}
+
+.faq-bot__title {
+  font-size: 1.5rem;
+  margin: 0 0 0.25rem 0;
+}
+
+.faq-bot__subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+.faq-bot__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .faq-bot__content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.faq-bot__questions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.faq-bot__question-btn {
+  text-align: left;
+  font-size: 0.95rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+}
+
+.faq-bot__question-btn:hover {
+  background: #e5f0ff;
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.faq-bot__chat-window {
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem;
+  background: #f8fafc;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+}
+
+.faq-bot__message {
+  max-width: 100%;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.faq-bot__message p {
+  margin: 0;
+}
+
+.faq-bot__message--system {
+  color: #475569;
+}
+
+.faq-bot__message--user {
+  align-self: flex-end;
+  background: #3b82f6;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px 999px 4px 999px;
+}
+
+.faq-bot__message--bot {
+  align-self: flex-start;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px 4px 999px 999px;
+  border: 1px solid #e2e8f0;
+}
+
+.faq-bot__footer {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  text-align: right;
+}
+
+.faq-bot__hint strong {
+  font-weight: 600;
+}
+
