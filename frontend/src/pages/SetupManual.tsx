@@ -1,6 +1,13 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEventSetup } from "../context/EventSetupContext";
+
+import { PageContainer } from "../components/layout/PageContainer";
+
+/* Shared UI components */
+import { Card } from "../components/ui/Card";
+import { TwoColumn } from "../components/ui/Grid";
+import { leadText, muted } from "../components/ui/Text";
+import { Button } from "../components/ui/Button";
 
 export default function SetupManual() {
   const navigate = useNavigate();
@@ -30,15 +37,10 @@ export default function SetupManual() {
   function handleContinue() {
     if (!canContinue()) return;
 
-    const participantsNumber =
-      participants === "" ? null : Number(participants);
-    const audienceLimitNumber =
-      audienceLimit === "" ? null : Number(audienceLimit);
-
     setEventData({
       eventName: eventName || null,
       eventType: eventType || null,
-      participants: participantsNumber,
+      participants: participants === "" ? null : Number(participants),
       scoringMode: "mixed",
       scoringAudience: audienceWeight,
       scoringJudge: judgesWeight,
@@ -47,94 +49,50 @@ export default function SetupManual() {
       endDateTime: endDateTime || null,
       sponsor: sponsor || null,
       rules: rules || null,
-      audienceLimit: audienceLimitNumber,
+      audienceLimit:
+        audienceLimit === "" ? null : Number(audienceLimit),
       image: null
     });
 
     navigate("/setup/summary");
   }
 
-  const pageStyle: React.CSSProperties = {
-    minHeight: "100vh",
-    background: "radial-gradient(circle at top, #020617, #020617)",
-    color: "white",
-    fontFamily: "Inter, system-ui, sans-serif",
-    display: "flex",
-    justifyContent: "center"
-  };
-
-  const wrapperStyle: React.CSSProperties = {
-    width: "100%",
-    maxWidth: 960,
-    padding: "40px 16px"
-  };
-
-  const gridStyle: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "3fr 2fr",
-    gap: 24,
-    alignItems: "flex-start"
-  };
-
-  const cardStyle: React.CSSProperties = {
-    background: "rgba(15,23,42,0.9)",
-    borderRadius: 16,
-    border: "1px solid rgba(148,163,184,0.6)",
-    padding: 20
-  };
-
   return (
-    <div style={pageStyle}>
-      <div style={wrapperStyle}>
-        <button
+    <PageContainer kind="solid">
+      <div style={{ width: "100%" }}>
+        <Button
+          variant="ghost"
           onClick={() => navigate("/setup/method")}
-          style={{
-            marginBottom: 16,
-            padding: "6px 14px",
-            borderRadius: 999,
-            border: "1px solid rgba(148,163,184,0.7)",
-            background: "transparent",
-            color: "#e5e7eb",
-            cursor: "pointer",
-            fontSize: 13
-          }}
+          style={{ marginBottom: 16, padding: "6px 14px", fontSize: 13 }}
         >
           ← Back
-        </button>
+        </Button>
 
         <h1 style={{ marginBottom: 10 }}>Manual setup</h1>
-        <p
-          style={{
-            maxWidth: 520,
-            color: "#d1d5db",
-            marginBottom: 24
-          }}
-        >
-          Fill out your event details. Required fields must be completed before
-          continuing.
+        <p style={leadText}>
+          Fill out your event details. Required fields must be completed
+          before continuing.
         </p>
 
-        <div style={gridStyle}>
-          {/* Left side: form */}
-          <div style={cardStyle}>
+        <TwoColumn>
+          {/* LEFT: Form */}
+          <Card padding={20}>
             <Field label="Event name" required>
-              <input
+              <TextInput
                 value={eventName}
                 onChange={e => setEventName(e.target.value)}
-                style={inputStyle}
               />
             </Field>
 
             <Field label="Event type" required>
-              <input
+              <TextInput
                 value={eventType}
                 onChange={e => setEventType(e.target.value)}
-                style={inputStyle}
               />
             </Field>
 
             <Field label="Number of contestants" required>
-              <input
+              <TextInput
                 type="number"
                 min={1}
                 value={participants}
@@ -143,19 +101,12 @@ export default function SetupManual() {
                     e.target.value === "" ? "" : Number(e.target.value)
                   )
                 }
-                style={inputStyle}
               />
             </Field>
 
             <Field label="Scoring (audience vs judges)">
-              <div
-                style={{
-                  marginBottom: 4,
-                  fontSize: 13,
-                  color: "#9ca3af"
-                }}
-              >
-                Audience {audienceWeight}% - Judges {judgesWeight}%
+              <div style={{ marginBottom: 4, fontSize: 13, ...muted }}>
+                Audience {audienceWeight}% — Judges {judgesWeight}%
               </div>
               <input
                 type="range"
@@ -168,59 +119,41 @@ export default function SetupManual() {
             </Field>
 
             <Field label="Venue">
-              <input
+              <TextInput
                 value={venue}
                 onChange={e => setVenue(e.target.value)}
-                style={inputStyle}
               />
             </Field>
 
             <Field label="Event date and time range">
-              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <div style={{ display: "flex", gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "#9ca3af",
-                      marginBottom: 4
-                    }}
-                  >
-                    Start
-                  </div>
-                  <input
+                  <span style={{ fontSize: 12, ...muted }}>Start</span>
+                  <TextInput
                     type="datetime-local"
                     value={startDateTime}
                     onChange={e => setStartDateTime(e.target.value)}
-                    style={inputStyle}
                   />
                 </div>
-                <div style={{ color: "#9ca3af", paddingTop: 20 }}>→</div>
+
+                <div style={{ paddingTop: 20, ...muted }}>→</div>
+
                 <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "#9ca3af",
-                      marginBottom: 4
-                    }}
-                  >
-                    End
-                  </div>
-                  <input
+                  <span style={{ fontSize: 12, ...muted }}>End</span>
+                  <TextInput
                     type="datetime-local"
                     value={endDateTime}
-                    onChange={e => setEndDateTime(e.target.value)}
                     min={startDateTime || undefined}
-                    style={inputStyle}
+                    onChange={e => setEndDateTime(e.target.value)}
                   />
                 </div>
               </div>
             </Field>
 
             <Field label="Sponsor (optional)">
-              <input
+              <TextInput
                 value={sponsor}
                 onChange={e => setSponsor(e.target.value)}
-                style={inputStyle}
               />
             </Field>
 
@@ -228,12 +161,16 @@ export default function SetupManual() {
               <textarea
                 value={rules}
                 onChange={e => setRules(e.target.value)}
-                style={{ ...inputStyle, minHeight: 80, resize: "vertical" }}
+                style={{
+                  ...inputBase,
+                  resize: "vertical",
+                  minHeight: 80
+                }}
               />
             </Field>
 
             <Field label="Audience limit (optional)">
-              <input
+              <TextInput
                 type="number"
                 min={1}
                 value={audienceLimit}
@@ -242,106 +179,91 @@ export default function SetupManual() {
                     e.target.value === "" ? "" : Number(e.target.value)
                   )
                 }
-                style={inputStyle}
               />
             </Field>
 
-            <button
+            <Button
+              fullWidth
               onClick={handleContinue}
               disabled={!canContinue()}
-              style={{
-                marginTop: 16,
-                width: "100%",
-                padding: 12,
-                borderRadius: 8,
-                border: "none",
-                background: canContinue() ? "#10b981" : "#334155",
-                color: canContinue() ? "#020617" : "#64748b",
-                cursor: canContinue() ? "pointer" : "not-allowed",
-                fontWeight: 500
-              }}
+              style={{ marginTop: 16 }}
             >
               Continue
-            </button>
-          </div>
+            </Button>
+          </Card>
 
-          {/* Right side: live preview */}
-          <div style={cardStyle}>
+          {/* RIGHT: Live preview */}
+          <Card padding={20}>
             <h3 style={{ marginBottom: 12 }}>Live preview</h3>
 
-            <div style={{ marginBottom: 8, fontSize: 14 }}>
-              <strong>Name:</strong> {eventName || "Not set"}
-            </div>
-            <div style={{ marginBottom: 8, fontSize: 14 }}>
-              <strong>Type:</strong> {eventType || "Not set"}
-            </div>
-            <div style={{ marginBottom: 8, fontSize: 14 }}>
-              <strong>Contestants:</strong>{" "}
-              {participants !== "" ? participants : "Not set"}
-            </div>
-            <div style={{ marginBottom: 8, fontSize: 14 }}>
-              <strong>Scoring:</strong> Audience {audienceWeight}% - Judges{" "}
-              {judgesWeight}%
-            </div>
-            <div style={{ marginBottom: 8, fontSize: 14 }}>
-              <strong>Venue:</strong> {venue || "Not set"}
-            </div>
-            <div style={{ marginBottom: 8, fontSize: 14 }}>
-              <strong>Date and time:</strong>{" "}
-              {startDateTime || endDateTime
-                ? `${startDateTime || "?"} to ${endDateTime || "?"}`
-                : "Not set"}
-            </div>
-            <div style={{ marginBottom: 8, fontSize: 14 }}>
-              <strong>Sponsor:</strong> {sponsor || "Not set"}
-            </div>
-            <div style={{ marginBottom: 8, fontSize: 14 }}>
-              <strong>Audience limit:</strong>{" "}
-              {audienceLimit !== "" ? audienceLimit : "Not set"}
-            </div>
-            <div style={{ marginBottom: 8, fontSize: 14 }}>
-              <strong>Rules:</strong>{" "}
+            <Preview label="Name" value={eventName} />
+            <Preview label="Type" value={eventType} />
+            <Preview
+              label="Contestants"
+              value={participants !== "" ? participants : ""}
+            />
+            <Preview
+              label="Scoring"
+              value={`Audience ${audienceWeight}% — Judges ${judgesWeight}%`}
+            />
+            <Preview label="Venue" value={venue} />
+            <Preview
+              label="Date and time"
+              value={
+                startDateTime || endDateTime
+                  ? `${startDateTime || "?"} to ${endDateTime || "?"}`
+                  : ""
+              }
+            />
+            <Preview label="Sponsor" value={sponsor} />
+            <Preview
+              label="Audience limit"
+              value={audienceLimit !== "" ? audienceLimit : ""}
+            />
+            <Preview label="Rules">
               {rules ? (
-                <span style={{ whiteSpace: "pre-wrap" }}>{rules}</span>
+                <div style={{ whiteSpace: "pre-wrap" }}>{rules}</div>
               ) : (
-                "Not set"
+                ""
               )}
-            </div>
-          </div>
-        </div>
+            </Preview>
+          </Card>
+        </TwoColumn>
       </div>
-    </div>
+    </PageContainer>
   );
 }
 
-function Field(props: {
+/* -------------------------------------------------------------------------- */
+/* UI Helpers */
+/* -------------------------------------------------------------------------- */
+
+import { useEventSetup } from "../context/EventSetupContext";
+
+function Field({
+  label,
+  required,
+  children
+}: {
   label: string;
-  children: React.ReactNode;
   required?: boolean;
+  children: React.ReactNode;
 }) {
-  const { label, children, required } = props;
   return (
-    <div style={{ marginBottom: 14 }}>
+    <div style={{ marginBottom: 16 }}>
       <div
         style={{
-          fontSize: 13,
-          color: "#e5e7eb",
           marginBottom: 4,
           display: "flex",
           alignItems: "center",
-          gap: 6
+          gap: 6,
+          color: "#e5e7eb",
+          fontSize: 13
         }}
       >
         <span>{label}</span>
         {required && (
-          <span
-            style={{
-              fontSize: 11,
-              color: "#f97316"
-            }}
-          >
-            Required
-          </span>
+          <span style={{ color: "#f97316", fontSize: 11 }}>Required</span>
         )}
       </div>
       {children}
@@ -349,8 +271,34 @@ function Field(props: {
   );
 }
 
-const inputStyle: React.CSSProperties = {
+function Preview({
+  label,
+  value,
+  children
+}: {
+  label: string;
+  value?: string | number | null;
+  children?: React.ReactNode;
+}) {
+  const hasValue = value !== "" && value !== null && value !== undefined;
+  return (
+    <div style={{ marginBottom: 8, fontSize: 14 }}>
+      <strong>{label}:</strong>{" "}
+      {children ? (
+        children
+      ) : hasValue ? (
+        value
+      ) : (
+        <span style={muted}>Not set</span>
+      )}
+    </div>
+  );
+}
+
+/* Input style shared locally */
+const inputBase = {
   width: "100%",
+  boxSizing: "border-box",
   padding: "8px 10px",
   borderRadius: 8,
   border: "1px solid #4b5563",
@@ -359,3 +307,10 @@ const inputStyle: React.CSSProperties = {
   fontSize: 14,
   marginTop: 4
 };
+
+
+function TextInput(
+  props: React.InputHTMLAttributes<HTMLInputElement>
+) {
+  return <input {...props} style={inputBase} />;
+}
