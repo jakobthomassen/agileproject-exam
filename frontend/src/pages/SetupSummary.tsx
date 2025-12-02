@@ -10,7 +10,7 @@ import { cardBaseStyle } from "../components/ui/Card";
 
 export default function SetupSummary() {
   const navigate = useNavigate();
-  const { eventData } = useEventSetup();
+  const { eventData, addSavedEvent, resetEventData } = useEventSetup();
 
   const {
     eventName,
@@ -30,6 +30,26 @@ export default function SetupSummary() {
 
   const { dateLine, timeLine } = formatDateTimeRange(startDateTime, endDateTime);
   const scoringText = formatScoring(scoringMode, scoringAudience, scoringJudge);
+
+  function handleFinish() {
+  const id = crypto.randomUUID();
+
+  addSavedEvent({
+    ...eventData,
+    id,
+    sport: eventData.eventType,    // OR separate field if needed
+    format: eventData.scoringMode === "mixed" ? "Mixed" : "Ranking",
+    status: "DRAFT",
+    startDate: eventData.startDateTime,
+    athletes: eventData.participants ?? 0,
+    eventCode: Math.random().toString(36).substring(2, 8).toUpperCase()
+  });
+
+  resetEventData();
+
+  navigate("/dashboard");
+}
+  
 
   const heroImage =
     image ||
@@ -121,7 +141,7 @@ export default function SetupSummary() {
           </Button>
 
           <Button
-            onClick={() => alert("Saving disabled in prototype.")}
+            onClick={handleFinish}
             style={{ padding: "10px 24px" }}
           >
             Confirm & save

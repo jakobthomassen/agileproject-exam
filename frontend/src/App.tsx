@@ -5,6 +5,7 @@ import SetupMethod from "./pages/SetupMethod";
 import SetupManual from "./pages/SetupManual";
 import SetupAI from "./pages/SetupAI";
 import SetupSummary from "./pages/SetupSummary";
+import Dashboard from "./pages/Dashboard";
 
 export default function App() {
   return (
@@ -15,6 +16,8 @@ export default function App() {
       <Route path="/setup/manual" element={<SetupManual />} />
       <Route path="/setup/ai" element={<SetupAI />} />
       <Route path="/setup/summary" element={<SetupSummary />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+
     </Routes>
   );
 }
