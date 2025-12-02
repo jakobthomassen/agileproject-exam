@@ -36,3 +36,5 @@ tool_registry = {
             "update_event_details": update_event_details,
             "participant_notifier": participant_notifier
         }
+
+
