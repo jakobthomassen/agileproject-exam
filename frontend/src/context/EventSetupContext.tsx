@@ -44,12 +44,28 @@ export const defaultEventData: EventData = {
   image: null
 };
 
+export type SavedEvent = EventData & {
+  id: string;
+  sport: string | null;
+  format: string | null;
+  status: "DRAFT" | "OPEN" | "FINISHED";
+  startDate: string | null;
+  athletes: number;
+  eventCode: string | null;
+};
+
+
 type EventSetupContextValue = {
   eventData: EventData;
   setEventData: (patch: Partial<EventData>) => void;
   replaceEventData: (data: EventData) => void;
   resetEventData: () => void;
+
+  savedEvents: SavedEvent[];
+  addSavedEvent: (ev: SavedEvent) => void;
+  deleteSavedEvent: (id: string) => void;
 };
+
 
 const EventSetupContext = createContext<EventSetupContextValue | undefined>(
   undefined
@@ -57,6 +73,8 @@ const EventSetupContext = createContext<EventSetupContextValue | undefined>(
 
 export function EventSetupProvider({ children }: { children: ReactNode }) {
   const [eventData, setEventDataState] = useState<EventData>(defaultEventData);
+
+  const [savedEvents, setSavedEvents] = useState<SavedEvent[]>([]);
 
   const setEventData = (patch: Partial<EventData>) => {
     setEventDataState(prev => ({
@@ -73,14 +91,26 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
     setEventDataState(defaultEventData);
   };
 
+  const addSavedEvent = (ev: SavedEvent) => {
+    setSavedEvents(prev => [...prev, ev]);
+  };
+
+  const deleteSavedEvent = (id: string) => {
+    setSavedEvents(prev => prev.filter(e => e.id !== id));
+  };
+
   const value = useMemo(
     () => ({
       eventData,
       setEventData,
       replaceEventData,
-      resetEventData
+      resetEventData,
+
+      savedEvents,
+      addSavedEvent,
+      deleteSavedEvent
     }),
-    [eventData]
+    [eventData, savedEvents]
   );
 
   return (
@@ -89,6 +119,7 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
     </EventSetupContext.Provider>
   );
 }
+
 
 export function useEventSetup(): EventSetupContextValue {
   const ctx = useContext(EventSetupContext);
