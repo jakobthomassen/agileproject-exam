@@ -5,8 +5,17 @@ from .auth.dependencies import get_user_identifier
 from .auth.throttling import apply_rate_limit
 from src.DTOs.eventstate import ChatRequest, ChatResponse, EventState
 from google.genai import types
+from .db.database import Base, engine
 
 app = FastAPI()
+
+# Initialize database on app startup
+@app.on_event("startup")
+def startup_event():
+    print("Initializing database...")
+    Base.metadata.create_all(bind=engine)
+    print("Database ready.")
+
 
 # --- AI Configuration ---
 def load_system_prompt():

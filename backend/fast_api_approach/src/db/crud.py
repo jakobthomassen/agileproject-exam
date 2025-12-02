@@ -1,20 +1,21 @@
 from sqlalchemy.orm import Session
-from models import Event, EventStatus
+from ..DTOs.eventstate import EventState
+from .models import Event
 
-def get_event(db: Session, event_id: int):
-    return db.query(Event).filter(Event.id == event_id).first()
 
-def create_event(db: Session, id: int, customer_id: str, title: str, description: str, date, location: str):
+def create_event(db: Session, event_data: EventState):
     db_event = Event(
-        id=id,
-        customer_id=customer_id,
-        title=title,
-        description=description,
-        date=date,
-        location=location,
-        status=EventStatus.PENDING
+        eventname = event_data.eventname,
+        date = event_data.date,
+        time = event_data.time,
+        location = event_data.location,
+        participants = event_data.participants
     )
     db.add(db_event)
     db.commit()
     db.refresh(db_event)
     return db_event
+
+
+def get_all_events(db: Session):
+    return db.query(Event).all()
