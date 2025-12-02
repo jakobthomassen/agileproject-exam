@@ -3,10 +3,73 @@ import { useNavigate } from "react-router-dom";
 
 type TemplateType = "rating" | "judge_audience" | "blank";
 
+const infoBtnStyle: React.CSSProperties = {
+  position: "absolute",
+  top: "10px",
+  right: "10px",
+  width: "22px",
+  height: "22px",
+  borderRadius: "50%",
+  border: "1px solid rgba(255,255,255,0.4)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  cursor: "pointer",
+  fontSize: "14px",
+  color: "#d1d5db",
+  background: "rgba(255,255,255,0.05)"
+};
+
+type CardData = {
+  key: TemplateType;
+  title: string;
+  desc: string;
+};
+
+function TemplateCard({
+  data,
+  selected,
+  hovered,
+  setSelected,
+  setHovered,
+  setInfoOpen,
+  cardStyle
+}: {
+  data: CardData;
+  selected: TemplateType | null;
+  hovered: TemplateType | null;
+  setSelected: (t: TemplateType) => void;
+  setHovered: (t: TemplateType | null) => void;
+  setInfoOpen: (t: TemplateType) => void;
+  cardStyle: (active: boolean, isHover: boolean) => React.CSSProperties;
+}) {
+  return (
+    <div
+      style={cardStyle(selected === data.key, hovered === data.key)}
+      onClick={() => setSelected(data.key)}
+      onMouseEnter={() => setHovered(data.key)}
+      onMouseLeave={() => setHovered(null)}
+    >
+      <div
+        onClick={e => {
+          e.stopPropagation();
+          setInfoOpen(data.key);
+        }}
+        style={infoBtnStyle}
+      >
+        ?
+      </div>
+
+      <h3>{data.title}</h3>
+      <p style={{ color: "#9ca3af" }}>{data.desc}</p>
+    </div>
+  );
+}
+
 export default function SetupTemplates() {
   const navigate = useNavigate();
-  const [selected, setSelected] = useState<TemplateType | null>(null);
 
+  const [selected, setSelected] = useState<TemplateType | null>(null);
   const [infoOpen, setInfoOpen] = useState<TemplateType | null>(null);
   const [hovered, setHovered] = useState<TemplateType | null>(null);
 
@@ -33,7 +96,6 @@ export default function SetupTemplates() {
       background: "rgba(15,15,22,0.95)",
       cursor: "pointer",
       transition: "box-shadow 0.25s ease, border-color 0.25s ease",
-
       boxShadow: active
         ? "0 0 16px rgba(0,255,120,0.25)"
         : isHover
@@ -51,64 +113,11 @@ export default function SetupTemplates() {
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In vel pharetra tortor. Suspendisse potenti. Integer lacinia nisi at nunc mattis varius."
   };
 
-  function InfoModal() {
-    if (!infoOpen) return null;
-
-    return (
-      <div
-        onClick={() => setInfoOpen(null)}
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0,0,0,0.45)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 999
-        }}
-      >
-        <div
-          onClick={e => e.stopPropagation()}
-          style={{
-            width: "90%",
-            maxWidth: "420px",
-            padding: "24px",
-            borderRadius: "16px",
-            background: "rgba(15,15,22,1)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            color: "white"
-          }}
-        >
-          <h3 style={{ marginBottom: "12px" }}>
-            {infoOpen === "rating"
-              ? "Ranking template"
-              : infoOpen === "judge_audience"
-              ? "Battle template"
-              : "Poll template"}
-          </h3>
-
-          <p style={{ color: "#d1d5db", marginBottom: "24px" }}>
-            {infoText[infoOpen]}
-          </p>
-
-          <button
-            onClick={() => setInfoOpen(null)}
-            style={{
-              padding: "8px 20px",
-              borderRadius: "999px",
-              border: "1px solid rgba(148,163,184,0.7)",
-              background: "transparent",
-              color: "#e5e7eb",
-              cursor: "pointer",
-              fontSize: "14px"
-            }}
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const cards: CardData[] = [
+    { key: "rating", title: "Ranking", desc: "Lorem ipsum dolor sit amet." },
+    { key: "judge_audience", title: "Battle", desc: "Donec sit amet turpis nulla." },
+    { key: "blank", title: "Poll", desc: "Pellentesque a mi quam." }
+  ];
 
   return (
     <div
@@ -125,6 +134,7 @@ export default function SetupTemplates() {
     >
       <div style={{ width: "100%", maxWidth: "960px" }}>
         <h1 style={{ marginBottom: "10px" }}>Choose a ranking template</h1>
+
         <p
           style={{
             maxWidth: "520px",
@@ -132,8 +142,7 @@ export default function SetupTemplates() {
             marginBottom: "24px"
           }}
         >
-          Start from a predefined scoring setup, or go with a blank slate. You
-          can adjust details later.
+          Start from a predefined scoring setup, or go with a blank slate. You can adjust details later.
         </p>
 
         <div
@@ -144,122 +153,18 @@ export default function SetupTemplates() {
             marginBottom: "24px"
           }}
         >
-          {/* RATING */}
-          <div
-            style={cardStyle(selected === "rating", hovered === "rating")}
-            onClick={() => setSelected("rating")}
-            onMouseEnter={() => setHovered("rating")}
-            onMouseLeave={() => setHovered(null)}
-          >
-            <div
-              onClick={e => {
-                e.stopPropagation();
-                setInfoOpen("rating");
-              }}
-              style={{
-                position: "absolute",
-                top: "10px",
-                right: "10px",
-                width: "22px",
-                height: "22px",
-                borderRadius: "50%",
-                border: "1px solid rgba(255,255,255,0.4)",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                cursor: "pointer",
-                fontSize: "14px",
-                color: "#d1d5db",
-                background: "rgba(255,255,255,0.05)"
-              }}
-            >
-              ?
-            </div>
-
-            <h3>Ranking</h3>
-            <p style={{ color: "#9ca3af" }}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            </p>
-          </div>
-
-          {/* BATTLE */}
-          <div
-            style={cardStyle(
-              selected === "judge_audience",
-              hovered === "judge_audience"
-            )}
-            onClick={() => setSelected("judge_audience")}
-            onMouseEnter={() => setHovered("judge_audience")}
-            onMouseLeave={() => setHovered(null)}
-          >
-            <div
-              onClick={e => {
-                e.stopPropagation();
-                setInfoOpen("judge_audience");
-              }}
-              style={{
-                position: "absolute",
-                top: "10px",
-                right: "10px",
-                width: "22px",
-                height: "22px",
-                borderRadius: "50%",
-                border: "1px solid rgba(255,255,255,0.4)",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                cursor: "pointer",
-                fontSize: "14px",
-                color: "#d1d5db",
-                background: "rgba(255,255,255,0.05)"
-              }}
-            >
-              ?
-            </div>
-
-            <h3>Battle</h3>
-            <p style={{ color: "#9ca3af" }}>
-              Donec sit amet turpis nulla. Integer fringilla orci id porttitor fringilla.
-            </p>
-          </div>
-
-          {/* POLL */}
-          <div
-            style={cardStyle(selected === "blank", hovered === "blank")}
-            onClick={() => setSelected("blank")}
-            onMouseEnter={() => setHovered("blank")}
-            onMouseLeave={() => setHovered(null)}
-          >
-            <div
-              onClick={e => {
-                e.stopPropagation();
-                setInfoOpen("blank");
-              }}
-              style={{
-                position: "absolute",
-                top: "10px",
-                right: "10px",
-                width: "22px",
-                height: "22px",
-                borderRadius: "50%",
-                border: "1px solid rgba(255,255,255,0.4)",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                cursor: "pointer",
-                fontSize: "14px",
-                color: "#d1d5db",
-                background: "rgba(255,255,255,0.05)"
-              }}
-            >
-              ?
-            </div>
-
-            <h3>Poll</h3>
-            <p style={{ color: "#9ca3af" }}>
-              Pellentesque a mi quam. Nam felis nibh, congue vitae augue at, tempus iaculis dolor.
-            </p>
-          </div>
+          {cards.map(c => (
+            <TemplateCard
+              key={c.key}
+              data={c}
+              selected={selected}
+              hovered={hovered}
+              setSelected={setSelected}
+              setHovered={setHovered}
+              setInfoOpen={setInfoOpen}
+              cardStyle={cardStyle}
+            />
+          ))}
         </div>
 
         <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -296,7 +201,65 @@ export default function SetupTemplates() {
           </button>
         </div>
 
-        <InfoModal />
+        {infoOpen && (
+          <div
+            onClick={() => setInfoOpen(null)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.45)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 999
+            }}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{
+                width: "90%",
+                maxWidth: "420px",
+                padding: "24px",
+                borderRadius: "16px",
+                background: "rgba(15,15,22,1)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                color: "white"
+              }}
+            >
+              <h3 style={{ marginBottom: "12px" }}>
+                {infoOpen === "rating"
+                  ? "Ranking template"
+                  : infoOpen === "judge_audience"
+                  ? "Battle template"
+                  : "Poll template"}
+              </h3>
+
+              <p
+                style={{
+                  color: "#d1d5db",
+                  marginBottom: "24px"
+                }}
+              >
+                {infoText[infoOpen]}
+              </p>
+
+              <button
+                onClick={() => setInfoOpen(null)}
+                style={{
+                  padding: "8px 20px",
+                  borderRadius: "999px",
+                  border: "1px solid rgba(148,163,184,0.7)",
+                  background: "transparent",
+                  color: "#e5e7eb",
+                  cursor: "pointer",
+                  fontSize: "14px"
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

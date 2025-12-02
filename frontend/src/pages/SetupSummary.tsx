@@ -2,6 +2,12 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useEventSetup } from "../context/EventSetupContext";
 
+/* Layout + UI */
+import { PageContainer } from "../components/layout/PageContainer";
+import { Button } from "../components/ui/Button";
+import { leadText, muted } from "../components/ui/Text";
+import { cardBaseStyle } from "../components/ui/Card";
+
 export default function SetupSummary() {
   const navigate = useNavigate();
   const { eventData } = useEventSetup();
@@ -23,7 +29,6 @@ export default function SetupSummary() {
   } = eventData;
 
   const { dateLine, timeLine } = formatDateTimeRange(startDateTime, endDateTime);
-
   const scoringText = formatScoring(scoringMode, scoringAudience, scoringJudge);
 
   const heroImage =
@@ -31,31 +36,23 @@ export default function SetupSummary() {
     "https://img.redbull.com/images/c_crop,w_4105,h_2053,x_0,y_262/c_auto,w_1200,h_600/f_auto,q_auto/redbullcom/2020/9/14/o0lvketc4ibxdhngilos/fo-1m549fcrh2111-featuremedia";
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#0d1117",
-        color: "white",
-        padding: "40px 20px",
-        fontFamily: "Inter, sans-serif"
-      }}
-    >
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+    <PageContainer kind="solid">
+      <div style={{ width: "100%", maxWidth: 900, margin: "0 auto" }}>
         <h1 style={{ fontSize: 32, marginBottom: 6 }}>Event summary</h1>
-        <p style={{ color: "#94a3b8", marginBottom: 32 }}>
+        <p style={{ ...leadText, marginBottom: 32 }}>
           Review the event configuration before saving it.
         </p>
-
-        <div
-          style={{
-            background: "#111827",
-            border: "1px solid #1f2937",
-            borderRadius: 16,
-            padding: 32,
-            display: "flex",
-            gap: 32
-          }}
-        >
+          {/* MAIN PANEL */}
+          <div
+            style={{
+              background: cardBaseStyle.background,
+              border: cardBaseStyle.border,
+              borderRadius: cardBaseStyle.borderRadius,
+              padding: 32,
+              display: "flex",
+              gap: 32
+            }}
+          >
           {/* LEFT SIDE */}
           <div style={{ flex: 1 }}>
             <h2 style={{ fontSize: 24, marginBottom: 16 }}>
@@ -63,60 +60,28 @@ export default function SetupSummary() {
             </h2>
 
             {/* DATE */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                marginBottom: 10,
-                color: "#e2e8f0"
-              }}
-            >
-              <span style={{ fontSize: 18 }}>📅</span>
-              <span>{dateLine || "[placeholder]"}</span>
-            </div>
+            <SummaryIconRow icon="📅" text={dateLine || "[placeholder]"} />
 
             {/* LOCATION */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                marginBottom: 26,
-                color: "#e2e8f0"
-              }}
-            >
-              <span style={{ fontSize: 18 }}>📍</span>
-              <span>{venue || "[placeholder]"}</span>
-            </div>
+            <SummaryIconRow icon="📍" text={venue || "[placeholder]"} />
 
             {/* EVENT INFO */}
             <h3 style={{ fontSize: 18, marginBottom: 14 }}>Event Info</h3>
 
             <Field label="Type" value={eventType} />
-
             <Field
               label="Participants"
-              value={
-                participants !== null ? String(participants) : undefined
-              }
+              value={participants !== null ? String(participants) : undefined}
             />
-
             <Field label="Scoring" value={scoringText} />
-
-            {/* NEW: Sponsor and Audience limit moved here */}
             <Field label="Sponsor" value={sponsor} />
             <Field
               label="Audience limit"
-              value={
-                audienceLimit !== null ? String(audienceLimit) : undefined
-              }
+              value={audienceLimit !== null ? String(audienceLimit) : undefined}
             />
 
-            {/* RULES remains a text box */}
-            <h3 style={{ fontSize: 18, marginTop: 26, marginBottom: 10 }}>
-              Rules
-            </h3>
+            {/* RULES */}
+            <h3 style={{ fontSize: 18, marginTop: 26, marginBottom: 10 }}>Rules</h3>
             <div
               style={{
                 background: "#0f172a",
@@ -132,7 +97,7 @@ export default function SetupSummary() {
             </div>
           </div>
 
-          {/* RIGHT IMAGE */}
+          {/* HERO IMAGE */}
           <img
             src={heroImage}
             alt="Event"
@@ -147,41 +112,47 @@ export default function SetupSummary() {
 
         {/* BUTTONS */}
         <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
-          <button
+          <Button
+            variant="ghost"
             onClick={() => navigate("/setup/method")}
-            style={{
-              padding: "10px 18px",
-              borderRadius: 999,
-              border: "1px solid #1f2937",
-              background: "#111827",
-              color: "#e5e7eb",
-              cursor: "pointer"
-            }}
+            style={{ padding: "10px 18px" }}
           >
             Back
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => alert("Saving disabled in prototype.")}
-            style={{
-              padding: "10px 24px",
-              borderRadius: 999,
-              background: "#10b981",
-              border: "none",
-              color: "#0f172a",
-              cursor: "pointer",
-              fontWeight: 600
-            }}
+            style={{ padding: "10px 24px" }}
           >
             Confirm & save
-          </button>
+          </Button>
         </div>
       </div>
+    </PageContainer>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* COMPONENTS */
+/* -------------------------------------------------------------------------- */
+
+function SummaryIconRow({ icon, text }: { icon: string; text: string }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        marginBottom: 10,
+        color: "#e2e8f0"
+      }}
+    >
+      <span style={{ fontSize: 18 }}>{icon}</span>
+      <span>{text}</span>
     </div>
   );
 }
 
-/* INLINE FIELD */
 function Field({
   label,
   value
@@ -189,17 +160,22 @@ function Field({
   label: string;
   value: string | null | undefined;
 }) {
+  const isSet = value !== null && value !== undefined && value !== "";
+
   return (
     <div style={{ marginBottom: 12 }}>
       <span style={{ color: "#94a3b8" }}>{label}:</span>{" "}
-      <span style={{ color: value ? "#e2e8f0" : "#64748b" }}>
+      <span style={{ color: isSet ? "#e2e8f0" : "#64748b" }}>
         {value || "[placeholder]"}
       </span>
     </div>
   );
 }
 
-/* DATE/TIME UTILITIES */
+/* -------------------------------------------------------------------------- */
+/* HELPERS */
+/* -------------------------------------------------------------------------- */
+
 function formatDateTimeRange(
   start: string | null,
   end: string | null
@@ -261,7 +237,6 @@ function getDaySuffix(day: number) {
   return "th";
 }
 
-/* SCORING FORMAT OPTION B */
 function formatScoring(
   mode: string | null,
   audience: number | null,
