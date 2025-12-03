@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
 import { useEventSetup } from "../context/EventSetupContext";
 
 import { PageContainer } from "../components/layout/PageContainer";
@@ -44,7 +43,7 @@ const initialFields: AIFields = {
   endDateTime: null,
   sponsor: null,
   rules: null,
-  audienceLimit: null
+  audienceLimit: null,
 };
 
 const REQUIRED_KEYS = ["eventName", "eventType", "participants"] as const;
@@ -64,8 +63,8 @@ export default function SetupAI() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       sender: "assistant",
-      text: "Describe your event in one or two sentences, and I will help you capture the key details."
-    }
+      text: "Describe your event in one or two sentences, and I will help you capture the key details.",
+    },
   ]);
 
   const [input, setInput] = useState("");
@@ -82,12 +81,14 @@ export default function SetupAI() {
     endDateTime: eventData.endDateTime,
     sponsor: eventData.sponsor,
     rules: eventData.rules,
-    audienceLimit: eventData.audienceLimit
+    audienceLimit: eventData.audienceLimit,
   }));
 
   const [thinking, setThinking] = useState(false);
   const [hasShownCompletion, setHasShownCompletion] = useState(false);
-  const [lastFollowupKey, setLastFollowupKey] = useState<FollowupKey | null>(null);
+  const [lastFollowupKey, setLastFollowupKey] = useState<FollowupKey | null>(
+    null
+  );
   const [lastFollowupText, setLastFollowupText] = useState<string | null>(null);
 
   const requiredComplete = isRequiredComplete(fields);
@@ -101,9 +102,9 @@ export default function SetupAI() {
     setInput("");
     setThinking(true);
 
-    const apiMessages = newMessages.slice(-8).map(m => ({
+    const apiMessages = newMessages.slice(-8).map((m) => ({
       role: m.sender === "user" ? "user" : "assistant",
-      content: m.text
+      content: m.text,
     }));
 
     const knownFields = {
@@ -118,13 +119,13 @@ export default function SetupAI() {
       end_date_time: fields.endDateTime,
       sponsor: fields.sponsor,
       rules: fields.rules,
-      audience_limit: fields.audienceLimit
+      audience_limit: fields.audienceLimit,
     };
 
     try {
       const res = await axios.post("http://localhost:8000/ai/extract", {
         messages: apiMessages,
-        knownFields
+        knownFields,
       });
 
       const snap = res.data || {};
@@ -141,14 +142,14 @@ export default function SetupAI() {
         endDateTime: snap.endDateTime ?? fields.endDateTime,
         sponsor: snap.sponsor ?? fields.sponsor,
         rules: snap.rules ?? fields.rules,
-        audienceLimit: snap.audienceLimit ?? fields.audienceLimit
+        audienceLimit: snap.audienceLimit ?? fields.audienceLimit,
       };
 
       setFields(updated);
 
       setEventData({
         ...updated,
-        image: eventData.image ?? null
+        image: eventData.image ?? null,
       });
 
       const optionalComplete = isOptionalComplete(updated);
@@ -171,11 +172,14 @@ export default function SetupAI() {
       setLastFollowupKey(key);
       setLastFollowupText(followText);
 
-      setMessages(prev => [...prev, { sender: "assistant", text: followText }]);
-    } catch {
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
-        { sender: "assistant", text: "Something went wrong. Try again." }
+        { sender: "assistant", text: followText },
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { sender: "assistant", text: "Something went wrong. Try again." },
       ]);
     } finally {
       setThinking(false);
@@ -193,7 +197,7 @@ export default function SetupAI() {
     borderRadius: 8,
     display: "inline-block",
     maxWidth: "70%",
-    textAlign: "left"
+    textAlign: "left",
   };
 
   const chatBubbleAssistant = {
@@ -202,7 +206,7 @@ export default function SetupAI() {
     borderRadius: 8,
     display: "inline-block",
     maxWidth: "70%",
-    textAlign: "left"
+    textAlign: "left",
   };
 
   const inputStyle = {
@@ -212,17 +216,20 @@ export default function SetupAI() {
     boxSizing: "border-box",
     border: "1px solid #334155",
     background: "#020617",
-    color: "white"
+    color: "white",
   };
 
-  const dateInfo = formatDateTimeRange(fields.startDateTime, fields.endDateTime);
+  const dateInfo = formatDateTimeRange(
+    fields.startDateTime,
+    fields.endDateTime
+  );
   const hasDate = !!(dateInfo.dateLine || dateInfo.timeLine);
 
   return (
-    <PageContainer kind="solid" maxWidth={1200}>
+    <PageContainer kind='solid' maxWidth={1200}>
       <div style={{ width: "100%" }}>
         <Button
-          variant="ghost"
+          variant='ghost'
           onClick={() => navigate("/setup/method")}
           style={{ marginBottom: 16, padding: "6px 14px", fontSize: 13 }}
         >
@@ -230,12 +237,20 @@ export default function SetupAI() {
         </Button>
 
         <h1 style={{ marginBottom: 10 }}>AI Assisted Setup</h1>
-        <p style={leadText}>Describe your event and refine details interactively.</p>
+        <p style={leadText}>
+          Describe your event and refine details interactively.
+        </p>
 
         <TwoColumn>
           {/* CHAT PANEL */}
           <Card padding={16}>
-            <div style={{ height: "70vh", display: "flex", flexDirection: "column" }}>
+            <div
+              style={{
+                height: "70vh",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
                 {messages.map((m, i) => (
                   <div
@@ -244,7 +259,7 @@ export default function SetupAI() {
                       marginBottom: 10,
                       display: "flex",
                       justifyContent:
-                        m.sender === "user" ? "flex-end" : "flex-start"
+                        m.sender === "user" ? "flex-end" : "flex-start",
                     }}
                   >
                     <span
@@ -269,9 +284,9 @@ export default function SetupAI() {
               <div style={{ display: "flex", gap: 12 }}>
                 <input
                   value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && sendMessage()}
-                  placeholder="Write something..."
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                  placeholder='Write something...'
                   style={inputStyle}
                 />
                 <Button onClick={sendMessage}>Send</Button>
@@ -284,10 +299,10 @@ export default function SetupAI() {
             {/* Required */}
             <h3 style={{ marginBottom: 12 }}>Required</h3>
 
-            <CheckRow label="Name" value={fields.eventName} required />
-            <CheckRow label="Type" value={fields.eventType} required />
+            <CheckRow label='Name' value={fields.eventName} required />
+            <CheckRow label='Type' value={fields.eventType} required />
             <CheckRow
-              label="Contestants"
+              label='Contestants'
               value={
                 fields.participants !== null ? String(fields.participants) : ""
               }
@@ -297,11 +312,11 @@ export default function SetupAI() {
             {/* Optional */}
             <h3 style={{ marginTop: 24, marginBottom: 12 }}>Optional</h3>
 
-            <CheckRow label="Scoring" value={fields.scoringMode} />
-            <CheckRow label="Venue" value={fields.venue} />
+            <CheckRow label='Scoring' value={fields.scoringMode} />
+            <CheckRow label='Venue' value={fields.venue} />
 
             <CheckRow
-              label="Date & Time"
+              label='Date & Time'
               value={
                 hasDate
                   ? `${dateInfo.dateLine || ""}\n${dateInfo.timeLine || ""}`
@@ -309,13 +324,11 @@ export default function SetupAI() {
               }
             />
 
-            <CheckRow label="Sponsor" value={fields.sponsor} />
-            <CheckRow label="Rules" value={fields.rules} />
+            <CheckRow label='Sponsor' value={fields.sponsor} />
+            <CheckRow label='Rules' value={fields.rules} />
             <CheckRow
-              label="Audience limit"
-              value={
-                fields.audienceLimit !== null ? fields.audienceLimit : ""
-              }
+              label='Audience limit'
+              value={fields.audienceLimit !== null ? fields.audienceLimit : ""}
             />
 
             <Button
@@ -340,7 +353,7 @@ export default function SetupAI() {
 function CheckRow({
   label,
   value,
-  required
+  required,
 }: {
   label: string;
   value: string | number | null | undefined;
@@ -355,7 +368,7 @@ function CheckRow({
         gridTemplateColumns: "auto 1fr",
         gap: 12,
         marginBottom: 8,
-        alignItems: "baseline"
+        alignItems: "baseline",
       }}
     >
       <div style={{ display: "flex", gap: 6, fontSize: 14 }}>
@@ -375,11 +388,12 @@ function CheckRow({
 /* -------------------------------------------------------------------------- */
 
 function isRequiredComplete(f: AIFields): boolean {
-  return REQUIRED_KEYS.every(key => f[key] !== null);
+  return REQUIRED_KEYS.every((key) => f[key] !== null);
 }
 
 function isOptionalComplete(f: AIFields): boolean {
-  const hasDate = !!formatDateTimeRange(f.startDateTime, f.endDateTime).dateLine;
+  const hasDate = !!formatDateTimeRange(f.startDateTime, f.endDateTime)
+    .dateLine;
   return (
     !!f.scoringMode &&
     !!f.venue &&
