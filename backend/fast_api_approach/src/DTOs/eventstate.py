@@ -30,8 +30,8 @@ class EventState(BaseModel):
             missing.append("eventtime")
         if not self.eventlocation:
             missing.append("eventlocation")
-        if not self.participants:
-            missing.append("participants")
+        #if not self.participants:
+         #   missing.append("participants")
         return missing
     @property # check if all required fields are present
     def is_complete(self) -> bool: 

@@ -2,8 +2,8 @@
 
 def update_event_details(event_name: str = None, event_date: str = None, event_time: str = None, event_location: str = None):
     """
-    Saves ANY provided event details to the database. 
-    Call this tool immediately when the user provides new information.
+    Saves ANY provided event details to the eventstate. 
+    Call this tool immediately when the user provides you think might be relevant.
     
     Args:
         event_name: The official title of the event (e.g., "Birthday Party").

@@ -5,6 +5,7 @@ from ..agent.toolguide import TOOLS_4_SDK
 from google.genai import types
 from ..DTOs.eventstate import EventState
 from ..agent.dashboard import Dashboard
+from ..ai.event_handler import save_ai_generated_event
 
 
 
@@ -75,6 +76,8 @@ class Gemini(AIPlatform):
                     automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
                 )
             )
+        if self.event_state.is_complete:
+            save_ai_generated_event(self.event_state)
 
         return response.text
 
