@@ -4,6 +4,7 @@ from typing import Optional, List
 
 # -- Api request/response models
 
+
 # --- Pydantic Models ---
 class ChatRequest(BaseModel): # the input from the user
     prompt: str
@@ -11,6 +12,7 @@ class ChatRequest(BaseModel): # the input from the user
 
 class ChatResponse(BaseModel): # the response from the ai
     response: str
+
 
 # Event state 
 class EventState(BaseModel):
@@ -33,6 +35,7 @@ class EventState(BaseModel):
         #if not self.participants:
          #   missing.append("participants")
         return missing
+
     @property # check if all required fields are present
     def is_complete(self) -> bool: 
         #return len(self.missing_fields()) == 0 # if no missing fields, then complete. If any missing, then incomplete
@@ -40,3 +43,9 @@ class EventState(BaseModel):
             return "\nAll required event details are present."
         else:
             return "\nSome event details are missing."
+
+
+# DTO to send to image creation
+class EventImageCreate(BaseModel):
+    event_id: int = Field(None, description="FK to events table")
+    image_bytes: bytes = Field(None, description="Image stored in bytes")
