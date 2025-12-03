@@ -3,7 +3,7 @@ from fastapi import Depends, FastAPI
 from .ai.gemini import Gemini
 from .auth.dependencies import get_user_identifier
 from .auth.throttling import apply_rate_limit
-from src.DTOs.eventstate import ChatRequest, ChatResponse, EventState
+from src.DTOs.eventstate import ChatRequest, ChatResponse
 from google.genai import types
 
 app = FastAPI()

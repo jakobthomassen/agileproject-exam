@@ -1,12 +1,15 @@
 
 
-def update_event_details(name: str = None, date: str = None, participant: str = None):
+def update_event_details(event_name: str = None, event_date: str = None, event_time: str = None, event_location: str = None):
     """
-    Updates the event details in the system.
+    Saves ANY provided event details to the database. 
+    Call this tool immediately when the user provides new information.
+    
     Args:
-        name: The name/title of the event
-        date: The date of the event
-        participant: A person to add
+        event_name: The official title of the event (e.g., "Birthday Party").
+        event_date: The date of the event. Prefer absolute dates (e.g. "2023-12-01") if possible.
+        event_time: The start time of the event.
+        event_location: The physical address or place name.
     """
     pass # The SDK never actually runs this! It just reads the signature.
 

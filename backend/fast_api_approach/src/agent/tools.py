@@ -1,7 +1,8 @@
+from ..DTOs.eventstate import EventState
  # All functions must have an input and output, even if empty failure to do so will cause errors in Gemini tool calling
 
 
-def participant_notifier(state, reason: str="event creation") -> str: # A mock function to simulate notifying participants
+def participant_notifier(state: EventState, reason: str="event creation") -> str: # A mock function to simulate notifying participants
     """
     Notifies all participants about important updates or events.
     Returns a success message.
@@ -13,24 +14,26 @@ def participant_notifier(state, reason: str="event creation") -> str: # A mock f
 
 # src/agent/tools.py
 
-def update_event_details(state, name=None, date=None, participant=None)-> dict:
+def update_event_details(state: EventState, event_name: str = None, event_date: str = None,event_time: str = None,event_location: str = None) -> dict:
     """
     Updates the event details.
 
     Args:
-        name (str, optional): The new event name. Defaults to None.
-        date (str, optional): The new event date. Defaults to None.
-        participant (str, optional): The new participant to add. Defaults to None.
+        event_name (str, optional): The new event name. Defaults to None,
+        event_date (str, optional): The new event date. Defaults to None.
+        event_time (str, optional): The new event time. Defaults to None.
+        event_location (str, optional): The new event location. Defaults to None.
+        
     """
-    if name: state.event_name = name
-    if date: state.event_date = date
-    if participant: state.participants.append(participant)
+    if event_name: state.eventname = event_name
+    if event_date: state.eventdate = event_date
+    if event_time: state.eventtime = event_time
+    if event_location: state.eventlocation = event_location
     return {"status": "success", "updated": state.model_dump()}
 
 
 
 
-TOOLS = [participant_notifier]
 
 tool_registry = {
             "update_event_details": update_event_details,
