@@ -3,10 +3,32 @@ import { useNavigate } from "react-router-dom";
 import landscape1 from "../assets/landscape1.jpg";
 import landscape2 from "../assets/landscape2.jpg";
 import landscape3 from "../assets/landscape3.jpg";
+import LandingFaqBot from "../components/ui/FAQ";
+
 
 export default function Home() {
   const navigate = useNavigate();
-  const [showHelp, setShowHelp] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);  
+    const faqs = [
+    {
+      question: "What kind of events can I host?",
+      answer:
+        "Peers can support structured events like hackathons, pitch competitions, case competitions, talent shows and similar formats.",
+    },
+    {
+      question: "How does judge vs audience scoring work?",
+      answer:
+        "You can combine judge and audience votes by giving each group a weight. For example, judges might count for 70% of the final score and the audience for 30%.",
+    },
+    {
+      question: "What is a ranking template?",
+      answer:
+        "A ranking template is a predefined set of criteria and scoring scales, such as originality, impact and presentation, that you can reuse across events.",
+    },
+  ];
+
+  const [selectedFaqIndex, setSelectedFaqIndex] = useState<number | null>(null);
+
 
   return (
     <>
@@ -237,24 +259,86 @@ export default function Home() {
               flexDirection: "column"
             }}
           >
-            <div style={{ fontWeight: 600, marginBottom: "6px" }}>
-              Need help getting started?
+                <div style={{ fontWeight: 600, marginBottom: "6px" }}>
+        Need help getting started?
+      </div>
+      
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "6px",
+          marginBottom: "6px",
+        }}
+      >
+        {faqs.map((faq, index) => {
+          const isOpen = selectedFaqIndex === index;
+
+          return (
+            <div
+              key={faq.question}
+              style={{
+                borderRadius: "10px",
+                border: "1px solid rgba(148,163,184,0.6)",
+                background: isOpen ? "rgba(15,23,42,0.9)" : "transparent",
+                overflow: "hidden",
+              }}
+            >
+              <button
+                onClick={() =>
+                  setSelectedFaqIndex(isOpen ? null : index)
+                }
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  padding: "6px 10px",
+                  border: "none",
+                  background: "transparent",
+                  color: "#e5e7eb",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  fontSize: "12px",
+                }}
+              >
+                <span>{faq.question}</span>
+                <span
+                  style={{
+                    fontSize: "14px",
+                    transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
+                    transition: "transform 0.15s ease",
+                  }}
+                >
+                  &gt;
+                </span>
+              </button>
+
+              {isOpen && (
+                <div
+                  style={{
+                    borderTop: "1px solid rgba(51,65,85,0.9)",
+                    padding: "6px 10px 8px 10px",
+                    fontSize: "12px",
+                    color: "#cbd5f5",
+                    background: "rgba(15,23,42,0.95)",
+                  }}
+                >
+                  {faq.answer}
+                </div>
+              )}
             </div>
-            <p style={{ color: "#d4d4d4", marginBottom: "6px" }}>
-              This chatbot will eventually answer general questions like:
-            </p>
-            <ul style={{ paddingLeft: "18px", margin: 0 }}>
-              <li>What kind of events can I host?</li>
-              <li>How does judge vs audience scoring work?</li>
-              <li>What is a ranking template?</li>
-            </ul>
-            <p style={{ color: "#888", marginTop: "8px" }}>
-              For now, click <b>Get started</b> in the hero section to create an
-              event.
-            </p>
+          );
+        })}
+      </div>
+
+      <p style={{ color: "#888", marginTop: "4px" }}>
+        To create an event, click <b>Get started</b>.
+      </p>
           </div>
         </div>
       )}
+      <LandingFaqBot />
     </>
   );
 }
