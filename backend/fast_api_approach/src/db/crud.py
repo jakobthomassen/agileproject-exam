@@ -32,18 +32,19 @@ def update_event(db: Session, id: int, event_data: EventState):
     # Only update fields that were provided (not None)
     if event_data.eventname is not None:
         db_event.eventname = event_data.eventname
-    if event_data.date is not None:
-        db_event.date = event_data.date
-    if event_data.time is not None:
-        db_event.time = event_data.time
-    if event_data.location is not None:
-        db_event.location = event_data.location
+    if event_data.eventdate is not None:
+        db_event.date = event_data.eventdate
+    if event_data.eventtime is not None:
+        db_event.time = event_data.eventtime
+    if event_data.eventlocation is not None:
+        db_event.location = event_data.eventlocation
     if event_data.participants is not None:
         db_event.participants = event_data.participants
 
     db.commit()
     db.refresh(db_event)
     return db_event
+
 
 def delete_event(db: Session, id: int):
     db_event = get_single_event(db, id)
@@ -53,7 +54,7 @@ def delete_event(db: Session, id: int):
 
     db.delete(db_event)
     db.commit()
-    db.refresh()
+
 
 def create_image(db: Session, image_data: EventImageCreate):
     db_image = EventImage(

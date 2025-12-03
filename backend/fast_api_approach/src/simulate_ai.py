@@ -41,14 +41,14 @@ def simulate_ai_event():
     saved_image = save_event_image(fake_image)
 
     id = 1
-    print(f"Printing event with ID = {id}")
+    print(f"\nPrinting event with ID = {id}")
     single_event = debug_read_single_event(id)
 
     print(single_event.to_dict())
 
-    print(f"Updating event with ID = {id}")
+    print(f"\nUpdating event with ID = {id}")
     update_fake_event = EventState(
-        eventname="Redbull cliff diving2",
+        eventname="Moren din",
         eventdate=None,
         eventtime=None,
         eventlocation=None,
@@ -57,14 +57,13 @@ def simulate_ai_event():
     updated_event = debug_update_event(update_fake_event, id)
     print(updated_event.to_dict())
 
-    print(f"Deleting event with ID = {id}")
+    print(f"\nDeleting event with ID = {id}")
     debug_delete_event(id)
 
     print("\nReading all event from DB:")
     all_events = debug_read_all_events()
     for event in all_events:
         print(event.to_dict())
-
 
 
 if __name__ == "__main__":
