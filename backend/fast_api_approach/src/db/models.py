@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary
 from .database import Base
 from sqlalchemy.types import JSON
 
@@ -25,3 +25,11 @@ class Event(Base):
             "location": self.location,
             "participants": self.participants,
         }
+
+
+class EventImage(Base):
+    __tablename__ = "images"
+
+    id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(Integer, ForeignKey("events.id"))
+    image = Column(LargeBinary, nullable=False)
