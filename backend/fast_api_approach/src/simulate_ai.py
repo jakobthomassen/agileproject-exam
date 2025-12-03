@@ -1,6 +1,6 @@
 # ----- SCRIPT TO SIMULATE RESPONSE FROM AI -----
 from .DTOs.eventstate import EventState, EventImageCreate
-from .ai.event_handler import save_ai_generated_event, debug_read_all_events, save_event_image
+from .ai.event_handler import save_ai_generated_event, debug_read_all_events, save_event_image, debug_read_single_event, debug_update_event, debug_delete_event
 import os
 
 
@@ -39,6 +39,33 @@ def simulate_ai_event():
         image_bytes=image_bytes
     )
     saved_image = save_event_image(fake_image)
+
+    id = 1
+    print(f"Printing event with ID = {id}")
+    single_event = debug_read_single_event(id)
+
+    print(single_event.to_dict())
+
+    print(f"Updating event with ID = {id}")
+    update_fake_event = EventState(
+        eventname="Redbull cliff diving2",
+        eventdate=None,
+        eventtime=None,
+        eventlocation=None,
+        participants=None
+    )
+    updated_event = debug_update_event(update_fake_event, id)
+    print(updated_event.to_dict())
+
+    print(f"Deleting event with ID = {id}")
+    debug_delete_event(id)
+
+    print("\nReading all event from DB:")
+    all_events = debug_read_all_events()
+    for event in all_events:
+        print(event.to_dict())
+
+
 
 if __name__ == "__main__":
     simulate_ai_event()
