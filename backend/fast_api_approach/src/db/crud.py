@@ -17,5 +17,7 @@ def create_event(db: Session, event_data: EventState):
     return db_event
 
 
+
+
 def get_all_events(db: Session):
     return db.query(Event).all()

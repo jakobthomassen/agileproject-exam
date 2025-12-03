@@ -19,7 +19,7 @@ class Dashboard:
            action = f"your immediate action is to ask the user for the following missing details: {missing}"
            status = "Incomplete"
        else:
-           action = "All event details are complete. You may proceed to finalize the event."
+           action = "All event details are complete. The event has been saved in the database."
            status = "Complete"
        
        dashboard_text = f"""
@@ -27,16 +27,16 @@ class Dashboard:
         # ================= LIVE SYSTEM DASHBOARD =================
         # This section overrides all previous context.
         
-        ### 📊 CURRENT DATA
+        ### CURRENT DATA
         - Name:         {data.get('event_name') or "(MISSING)"}
         - Date:         {data.get('event_date') or "(MISSING)"}
         - Participants: {data.get('participants') or "[]"}
         
-        ### 🚦 STATUS
+        ### STATUS
         {status}
         Missing Fields: {missing}
         
-        ### 🎯 INSTRUCTION
+        ### INSTRUCTION
         {action}
         
         # =========================================================
