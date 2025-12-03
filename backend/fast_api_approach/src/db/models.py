@@ -1,21 +1,27 @@
 from sqlalchemy import Column, Integer, String
-from database import Base
-from sqlalchemy.types import DateTime
-import enum
-
-class EventStatus(enum.Enum):
-    PENDING = "pending"
-    CONFIRMED = "confirmed"
-    CANCELLED = "cancelled"
-    SUCCESS = "success"
+from .database import Base
+from sqlalchemy.types import JSON
 
 class Event(Base):
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True, index=True)
-    customer_id = Column(String, index=True)
-    title = Column(String, index=True)
-    description = Column(String, index=True)
-    date = Column(DateTime, index=True)
-    location = Column(String, index=True)
-    status = Column(enum.Enum(EventStatus), default=EventStatus.PENDING)
+    eventname = Column(String, nullable=True)
+    date = Column(String, nullable=True)
+    time = Column(String, nullable=True)
+    location = Column(String, nullable=True)
+
+    # Participants stored as a JSON list - this is for simplicity
+    # Will be changed with relationships later
+    participants = Column(JSON, nullable=True)
+
+    # Convert to dict for printing
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "eventname": self.eventname,
+            "date": self.date,
+            "time": self.time,
+            "location": self.location,
+            "participants": self.participants,
+        }
