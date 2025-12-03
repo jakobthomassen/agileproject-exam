@@ -1,6 +1,9 @@
 # ----- SCRIPT TO SIMULATE RESPONSE FROM AI -----
 from .DTOs.eventstate import EventState, EventImageCreate
-from .ai.event_handler import save_ai_generated_event, debug_read_all_events, save_event_image, debug_read_single_event, debug_update_event, debug_delete_event
+from .ai.event_handler import (save_ai_generated_event, debug_read_all_events, save_event_image,
+                               debug_read_single_event, debug_update_event, debug_delete_event,
+                               debug_read_event_image, debug_read_all_images, debug_delete_event_image,
+                               debug_update_image)
 import os
 
 
@@ -25,6 +28,7 @@ def simulate_ai_event():
     for event in all_events:
         print(event.to_dict())
 
+
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     image_path = os.path.join(BASE_DIR, "test_image.jpeg")
 
@@ -40,6 +44,10 @@ def simulate_ai_event():
     )
     saved_image = save_event_image(fake_image)
 
+
+
+
+#### Testing CRUD for Events
     id = 1
     print(f"\nPrinting event with ID = {id}")
     single_event = debug_read_single_event(id)

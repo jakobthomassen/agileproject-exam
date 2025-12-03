@@ -1,6 +1,8 @@
 from ..DTOs.eventstate import EventState, EventImageCreate
 from ..db.database import SessionLocal
-from ..db.crud import create_event, get_all_events, create_image, get_single_event, update_event, delete_event
+from ..db.crud import (create_event, get_all_events, create_image, get_single_event, update_event,
+                       delete_event, get_single_image, get_all_images, get_images_for_event, upadte_image,
+                       delete_images)
 
 
 # Saves output EventState object from AI to database
@@ -21,17 +23,6 @@ def debug_read_all_events():
         return all_events
     finally:
         db.close()
-
-
-# Save image DTO in DB
-def save_event_image(image_data: EventImageCreate):
-    db = SessionLocal()
-    try:
-        saved_event = create_image(db, image_data)
-        return saved_event
-    finally:
-        db.close()
-
 
 def debug_read_single_event(id: int):
     db = SessionLocal()
@@ -60,3 +51,44 @@ def debug_delete_event(id: int):
     finally:
         db.close()
 
+
+# Save image DTO in DB
+def save_event_image(image_data: EventImageCreate):
+    db = SessionLocal()
+    try:
+        saved_event = create_image(db, image_data)
+        return saved_event
+    finally:
+        db.close()
+
+# READ (single)
+def debug_read_event_image(id: int):
+    db = SessionLocal()
+    try:
+        return get_single_image(db, id)
+    finally:
+        db.close()
+
+# READ (all)
+def debug_read_all_images():
+    db = SessionLocal()
+    try:
+        return get_all_images(db)
+    finally:
+        db.close()
+
+# UPDATE
+def debug_update_image(image_data: EventImageCreate, id: int):
+    db = SessionLocal()
+    try:
+        return upadte_image(db, id, image_data)
+    finally:
+        db.close()
+
+#  DELETE
+def debug_delete_event_image(id: int):
+    db = SessionLocal()
+    try:
+        return delete_images(db, id) # returns True/False
+    finally:
+        db.close()
