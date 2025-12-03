@@ -17,10 +17,43 @@ def create_event(db: Session, event_data: EventState):
     return db_event
 
 
-
+def get_single_event(db: Session, id: int):
+    return db.query(Event).filter(Event.id == id).first()
 
 def get_all_events(db: Session):
     return db.query(Event).all()
+
+
+def update_event(db: Session, id: int, event_data: EventState):
+    db_event = get_single_event(db, id)
+    if not db_event:
+        return None
+
+    # Only update fields that were provided (not None)
+    if event_data.eventname is not None:
+        db_event.eventname = event_data.eventname
+    if event_data.eventdate is not None:
+        db_event.date = event_data.eventdate
+    if event_data.eventtime is not None:
+        db_event.time = event_data.eventtime
+    if event_data.eventlocation is not None:
+        db_event.location = event_data.eventlocation
+    if event_data.participants is not None:
+        db_event.participants = event_data.participants
+
+    db.commit()
+    db.refresh(db_event)
+    return db_event
+
+
+def delete_event(db: Session, id: int):
+    db_event = get_single_event(db, id)
+    if not db_event:
+        raise AttributeError(f"Event with ID: {id} does not exist")
+        return
+
+    db.delete(db_event)
+    db.commit()
 
 
 def create_image(db: Session, image_data: EventImageCreate):
