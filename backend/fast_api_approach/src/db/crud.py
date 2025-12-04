@@ -56,6 +56,7 @@ def delete_event(db: Session, id: int):
     db.delete(db_event)
     db.commit()
 
+
 # CRUD For images
 def create_image(db: Session, image_data: EventImageCreate):
     db_image = EventImage(
@@ -68,16 +69,20 @@ def create_image(db: Session, image_data: EventImageCreate):
 
     return db_image
 
+
 def get_single_image(db: Session, id: int):
-    return db.query(EventImage).filter(EventImage.event_id == id).first()
+    return db.query(EventImage).filter(EventImage.id == id).first()
+
 
 def get_all_images(db: Session):
     return db.query(EventImage).all()
 
+
 def get_images_for_event(db: Session, event_id: int):
     return db.query(EventImage).filter(EventImage.event_id == event_id).all()
 
-def upadte_image(db: Session, id: int, image_data: EventImageCreate):
+
+def update_image(db: Session, id: int, image_data: EventImageCreate):
     db_image = get_single_image(db, id)
     if not db_image:
         return None
@@ -93,13 +98,13 @@ def upadte_image(db: Session, id: int, image_data: EventImageCreate):
     db.refresh(db_image)
     return db_image
 
+
 def delete_images(db: Session, id: int):
     db_image = get_single_image(db, id)
     if not db_image:
-        raise AttributeError(f"Event with ID: {id} does not exist")
+        raise AttributeError(f"Image with ID: {id} does not exist")
         return
 
     db.delete(db_image)
     db.commit()
-    return True
 

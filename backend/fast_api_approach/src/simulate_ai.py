@@ -28,27 +28,9 @@ def simulate_ai_event():
     for event in all_events:
         print(event.to_dict())
 
-
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    image_path = os.path.join(BASE_DIR, "test_image.jpeg")
-
-    print("\nTrying to save test image...")
-    print("Looking for:", image_path)
-
-    with open(image_path, "rb") as test_image:
-        image_bytes = test_image.read()
-
-    fake_image = EventImageCreate(
-        event_id=1,
-        image_bytes=image_bytes
-    )
-    saved_image = save_event_image(fake_image)
-
-
-
-
-#### Testing CRUD for Events
     id = 1
+    # Testing CRUD for Events
+
     print(f"\nPrinting event with ID = {id}")
     single_event = debug_read_single_event(id)
 
@@ -72,6 +54,47 @@ def simulate_ai_event():
     all_events = debug_read_all_events()
     for event in all_events:
         print(event.to_dict())
+
+    # Testing CRUD for Images
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    image_path = os.path.join(BASE_DIR, "test_image.jpeg")
+
+    print("\nTrying to save test image...")
+    print("Looking for:", image_path)
+
+    with open(image_path, "rb") as test_image:
+        image_bytes = test_image.read()
+
+    fake_image = EventImageCreate(
+        event_id=1,
+        image_bytes=image_bytes
+    )
+    saved_image = save_event_image(fake_image)
+    print("Saved")
+
+    print(f"\nReading all images from database...")
+    all_images = debug_read_all_images()
+    for image in all_images:
+        print(image.to_dict())
+
+    print(f"\nReading image with ID: {id}")
+    single_image = debug_read_event_image(id)
+    print(single_image.to_dict())
+
+    print(f"\nUpdating image with ID: {id}")
+    updated_fake_image = EventImageCreate(
+        event_id=2
+    )
+    updated_image = debug_update_image(updated_fake_image, id)
+    print(updated_image.to_dict())
+
+    print(f"\nDeleting image with ID: {id}")
+    debug_delete_event_image(id)
+
+    print(f"\nReading all images from database...")
+    all_images = debug_read_all_images()
+    for image in all_images:
+        print(image.to_dict())
 
 
 if __name__ == "__main__":

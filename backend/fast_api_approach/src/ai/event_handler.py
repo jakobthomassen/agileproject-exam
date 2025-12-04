@@ -1,7 +1,7 @@
 from ..DTOs.eventstate import EventState, EventImageCreate
 from ..db.database import SessionLocal
 from ..db.crud import (create_event, get_all_events, create_image, get_single_event, update_event,
-                       delete_event, get_single_image, get_all_images, get_images_for_event, upadte_image,
+                       delete_event, get_single_image, get_all_images, get_images_for_event, update_image,
                        delete_images)
 
 
@@ -23,6 +23,7 @@ def debug_read_all_events():
         return all_events
     finally:
         db.close()
+
 
 def debug_read_single_event(id: int):
     db = SessionLocal()
@@ -61,6 +62,7 @@ def save_event_image(image_data: EventImageCreate):
     finally:
         db.close()
 
+
 # READ (single)
 def debug_read_event_image(id: int):
     db = SessionLocal()
@@ -68,6 +70,7 @@ def debug_read_event_image(id: int):
         return get_single_image(db, id)
     finally:
         db.close()
+
 
 # READ (all)
 def debug_read_all_images():
@@ -77,18 +80,22 @@ def debug_read_all_images():
     finally:
         db.close()
 
+
 # UPDATE
 def debug_update_image(image_data: EventImageCreate, id: int):
     db = SessionLocal()
     try:
-        return upadte_image(db, id, image_data)
+        return update_image(db, id, image_data)
     finally:
         db.close()
+
 
 #  DELETE
 def debug_delete_event_image(id: int):
     db = SessionLocal()
     try:
         return delete_images(db, id) # returns True/False
+    except Exception as e:
+        print(f"Error: {str(e)}")
     finally:
         db.close()
