@@ -1,0 +1,9 @@
+# 1. Block EVERYTHING (The asterisk is required)
+*
+
+# 2. Allow entry into the frontend folder
+!frontend/
+
+# 3. Allow only the src folder and its contents
+!frontend/src/
+!frontend/src/**

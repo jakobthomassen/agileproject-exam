@@ -1,91 +1,163 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
-type Faq = {
+type FAQItem = {
   question: string;
   answer: string;
 };
 
-const FAQS: Faq[] = [
+const FAQS: FAQItem[] = [
   {
     question: "What kind of events can I host?",
     answer:
-      "Peers can support a wide range of competitive or collaborative events, such as hackathons, pitch competitions, talent shows, case competitions and more. For now, to get started, click “Get started” in the hero section to create an event.",
+      "Peers can support structured events like hackathons, pitch competitions, case competitions, talent shows and similar formats.",
   },
   {
     question: "How does judge vs audience scoring work?",
     answer:
-      "Events can be set up so that judges, the audience, or a combination of both contribute to the final score. Weighting decides how much each group counts in the final result. In this prototype, scoring is not fully configurable yet. To try the flow, click “Get started” in the hero section and create an event.",
+      "You can combine judge and audience votes by giving each group a weight. Judges might count for 70 percent and the audience for 30 percent.",
   },
   {
     question: "What is a ranking template?",
     answer:
-      "A ranking template is a predefined structure for how participants are evaluated, for example by criteria such as originality, impact and presentation. Templates make it easier to keep scoring consistent across events. For now, click “Get started” in the hero section to create an event and explore the basic setup.",
+      "A ranking template is a predefined set of scoring criteria such as originality, impact and presentation.",
   },
 ];
 
-export default function LandingFaqBot() {
-  const [selectedFaq, setSelectedFaq] = useState<Faq | null>(null);
+export default function FAQWidget() {
+  const [open, setOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   return (
-    <section
-      aria-labelledby="faq-bot-title"
-      className="faq-bot"
-    >
-      <div className="faq-bot__card">
-        <header className="faq-bot__header">
-          <h2 id="faq-bot-title" className="faq-bot__title">
-            Need help getting started?
-          </h2>
-          <p className="faq-bot__subtitle">
-            Ask a quick question or use the “Get started” button in the hero section to create your event.
-          </p>
-        </header>
+    <>
+      {/* Toggle button */}
+      <button
+        onClick={() => setOpen(true)}
+        style={{
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
+          width: "60px",
+          height: "60px",
+          borderRadius: "50%",
+          border: "none",
+          background: "linear-gradient(135deg, #00ff99, #00cc77)",
+          color: "#05060a",
+          fontWeight: 700,
+          cursor: "pointer",
+          boxShadow: "0 0 18px rgba(0,255,120,0.5)",
+          zIndex: 900,
+        }}
+      >
+        ?
+      </button>
 
-        <div className="faq-bot__content">
-          <div className="faq-bot__questions" aria-label="Common questions">
-            {FAQS.map((faq) => (
-              <button
-                key={faq.question}
-                type="button"
-                className="faq-bot__question-btn"
-                onClick={() => setSelectedFaq(faq)}
-              >
-                {faq.question}
-              </button>
-            ))}
-          </div>
+      {/* Overlay */}
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "transparent",
+            zIndex: 949,
+          }}
+        >
+          {/* Widget card */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: "absolute",
+              bottom: "90px",
+              right: "20px",
+              width: "320px",
+              maxHeight: "60vh",
+              background: "rgba(10,10,15,0.97)",
+              backdropFilter: "blur(14px)",
+              borderRadius: "16px",
+              border: "1px solid rgba(255,255,255,0.1)",
+              padding: "14px",
+              fontSize: "13px",
+              zIndex: 950,
+              display: "flex",
+              flexDirection: "column",
+              overflowY: "auto",
+            }}
+          >
+            <div style={{ fontWeight: 600, marginBottom: "6px" }}>
+              Need help getting started?
+            </div>
 
-          <div className="faq-bot__chat-window" aria-live="polite">
-            {!selectedFaq && (
-              <div className="faq-bot__message faq-bot__message--system">
-                <p>
-                  Hi, I am the Peers FAQ helper. Pick one of the questions to see a quick explanation.
-                  For now, to create an event, use the <strong>Get started</strong> button in the hero section.
-                </p>
-              </div>
-            )}
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+            >
+              {FAQS.map((faq, index) => {
+                const openItem = selectedIndex === index;
 
-            {selectedFaq && (
-              <>
-                <div className="faq-bot__message faq-bot__message--user">
-                  <p>{selectedFaq.question}</p>
-                </div>
-                <div className="faq-bot__message faq-bot__message--bot">
-                  <p>{selectedFaq.answer}</p>
-                </div>
-              </>
-            )}
+                return (
+                  <div
+                    key={faq.question}
+                    style={{
+                      borderRadius: "10px",
+                      border: "1px solid rgba(148,163,184,0.6)",
+                      background: openItem
+                        ? "rgba(15,23,42,0.9)"
+                        : "transparent",
+                    }}
+                  >
+                    <button
+                      onClick={() => setSelectedIndex(openItem ? null : index)}
+                      style={{
+                        width: "100%",
+                        textAlign: "left",
+                        padding: "6px 10px",
+                        border: "none",
+                        background: "transparent",
+                        color: "#e5e7eb",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        fontSize: "12px",
+                      }}
+                    >
+                      <span>{faq.question}</span>
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          transform: openItem
+                            ? "rotate(90deg)"
+                            : "rotate(0deg)",
+                          transition: "transform 0.15s ease",
+                        }}
+                      >
+                        &gt;
+                      </span>
+                    </button>
+
+                    {openItem && (
+                      <div
+                        style={{
+                          borderTop: "1px solid rgba(51,65,85,0.9)",
+                          padding: "6px 10px 8px 10px",
+                          fontSize: "12px",
+                          color: "#cbd5f5",
+                          background: "rgba(15,23,42,0.95)",
+                        }}
+                      >
+                        {faq.answer}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <p style={{ color: "#888", marginTop: "8px" }}>
+              To create an event, click <b>Get started</b>.
+            </p>
           </div>
         </div>
-
-        <footer className="faq-bot__footer">
-          <span className="faq-bot__hint">
-            Want to try the full flow? Click <strong>Get started</strong> in the hero section.
-          </span>
-        </footer>
-      </div>
-    </section>
+      )}
+    </>
   );
 }
-
-

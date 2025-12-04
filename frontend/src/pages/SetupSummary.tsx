@@ -5,8 +5,10 @@ import { useEventSetup } from "../context/EventSetupContext";
 /* Layout + UI */
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
-import { leadText, muted } from "../components/ui/Text";
 import { cardBaseStyle } from "../components/ui/Card";
+import { BackButton } from "../components/ui/BackButton";
+import { SetupPageHeader } from "../components/ui/SetupPageHeader";
+import { FieldRow } from "../components/ui/FieldRow";
 
 export default function SetupSummary() {
   const navigate = useNavigate();
@@ -25,54 +27,58 @@ export default function SetupSummary() {
     sponsor,
     rules,
     audienceLimit,
-    image
+    image,
   } = eventData;
 
-  const { dateLine, timeLine } = formatDateTimeRange(startDateTime, endDateTime);
+  const { dateLine, timeLine } = formatDateTimeRange(
+    startDateTime,
+    endDateTime
+  );
   const scoringText = formatScoring(scoringMode, scoringAudience, scoringJudge);
 
   function handleFinish() {
-  const id = crypto.randomUUID();
+    const id = crypto.randomUUID();
 
-  addSavedEvent({
-    ...eventData,
-    id,
-    sport: eventData.eventType,    // OR separate field if needed
-    format: eventData.scoringMode === "mixed" ? "Mixed" : "Ranking",
-    status: "DRAFT",
-    startDate: eventData.startDateTime,
-    athletes: eventData.participants ?? 0,
-    eventCode: Math.random().toString(36).substring(2, 8).toUpperCase()
-  });
+    addSavedEvent({
+      ...eventData,
+      id,
+      sport: eventData.eventType, // OR separate field if needed
+      format: eventData.scoringMode === "mixed" ? "Mixed" : "Ranking",
+      status: "DRAFT",
+      startDate: eventData.startDateTime,
+      athletes: eventData.participants ?? 0,
+      eventCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+    });
 
-  resetEventData();
+    resetEventData();
 
-  navigate("/dashboard");
-}
-  
+    navigate("/dashboard");
+  }
 
   const heroImage =
     image ||
     "https://img.redbull.com/images/c_crop,w_4105,h_2053,x_0,y_262/c_auto,w_1200,h_600/f_auto,q_auto/redbullcom/2020/9/14/o0lvketc4ibxdhngilos/fo-1m549fcrh2111-featuremedia";
 
   return (
-    <PageContainer kind="solid">
+    <PageContainer kind='solid'>
       <div style={{ width: "100%", maxWidth: 900, margin: "0 auto" }}>
-        <h1 style={{ fontSize: 32, marginBottom: 6 }}>Event summary</h1>
-        <p style={{ ...leadText, marginBottom: 32 }}>
-          Review the event configuration before saving it.
-        </p>
-          {/* MAIN PANEL */}
-          <div
-            style={{
-              background: cardBaseStyle.background,
-              border: cardBaseStyle.border,
-              borderRadius: cardBaseStyle.borderRadius,
-              padding: 32,
-              display: "flex",
-              gap: 32
-            }}
-          >
+        <BackButton to="/setup/method">Back</BackButton>
+
+        <SetupPageHeader
+          title="Event summary"
+          description="Review the event configuration before saving it."
+        />
+        {/* MAIN PANEL */}
+        <div
+          style={{
+            background: cardBaseStyle.background,
+            border: cardBaseStyle.border,
+            borderRadius: cardBaseStyle.borderRadius,
+            padding: 32,
+            display: "flex",
+            gap: 32,
+          }}
+        >
           {/* LEFT SIDE */}
           <div style={{ flex: 1 }}>
             <h2 style={{ fontSize: 24, marginBottom: 16 }}>
@@ -80,28 +86,30 @@ export default function SetupSummary() {
             </h2>
 
             {/* DATE */}
-            <SummaryIconRow icon="📅" text={dateLine || "[placeholder]"} />
+            <SummaryIconRow icon='📅' text={dateLine || "[placeholder]"} />
 
             {/* LOCATION */}
-            <SummaryIconRow icon="📍" text={venue || "[placeholder]"} />
+            <SummaryIconRow icon='📍' text={venue || "[placeholder]"} />
 
             {/* EVENT INFO */}
             <h3 style={{ fontSize: 18, marginBottom: 14 }}>Event Info</h3>
 
-            <Field label="Type" value={eventType} />
-            <Field
-              label="Participants"
+            <FieldRow label='Type' value={eventType} />
+            <FieldRow
+              label='Participants'
               value={participants !== null ? String(participants) : undefined}
             />
-            <Field label="Scoring" value={scoringText} />
-            <Field label="Sponsor" value={sponsor} />
-            <Field
-              label="Audience limit"
+            <FieldRow label='Scoring' value={scoringText} />
+            <FieldRow label='Sponsor' value={sponsor} />
+            <FieldRow
+              label='Audience limit'
               value={audienceLimit !== null ? String(audienceLimit) : undefined}
             />
 
             {/* RULES */}
-            <h3 style={{ fontSize: 18, marginTop: 26, marginBottom: 10 }}>Rules</h3>
+            <h3 style={{ fontSize: 18, marginTop: 26, marginBottom: 10 }}>
+              Rules
+            </h3>
             <div
               style={{
                 background: "#0f172a",
@@ -110,7 +118,7 @@ export default function SetupSummary() {
                 borderRadius: 8,
                 minHeight: 48,
                 whiteSpace: "pre-wrap",
-                color: rules ? "#e2e8f0" : "#64748b"
+                color: rules ? "#e2e8f0" : "#64748b",
               }}
             >
               {rules || "[placeholder]"}
@@ -120,12 +128,12 @@ export default function SetupSummary() {
           {/* HERO IMAGE */}
           <img
             src={heroImage}
-            alt="Event"
+            alt='Event'
             style={{
               width: 320,
               height: 200,
               objectFit: "cover",
-              borderRadius: 12
+              borderRadius: 12,
             }}
           />
         </div>
@@ -133,17 +141,14 @@ export default function SetupSummary() {
         {/* BUTTONS */}
         <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
           <Button
-            variant="ghost"
+            variant='ghost'
             onClick={() => navigate("/setup/method")}
             style={{ padding: "10px 18px" }}
           >
             Back
           </Button>
 
-          <Button
-            onClick={handleFinish}
-            style={{ padding: "10px 24px" }}
-          >
+          <Button onClick={handleFinish} style={{ padding: "10px 24px" }}>
             Confirm & save
           </Button>
         </div>
@@ -164,30 +169,11 @@ function SummaryIconRow({ icon, text }: { icon: string; text: string }) {
         alignItems: "center",
         gap: 10,
         marginBottom: 10,
-        color: "#e2e8f0"
+        color: "#e2e8f0",
       }}
     >
       <span style={{ fontSize: 18 }}>{icon}</span>
       <span>{text}</span>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  value
-}: {
-  label: string;
-  value: string | null | undefined;
-}) {
-  const isSet = value !== null && value !== undefined && value !== "";
-
-  return (
-    <div style={{ marginBottom: 12 }}>
-      <span style={{ color: "#94a3b8" }}>{label}:</span>{" "}
-      <span style={{ color: isSet ? "#e2e8f0" : "#64748b" }}>
-        {value || "[placeholder]"}
-      </span>
     </div>
   );
 }
@@ -221,7 +207,7 @@ function formatDateTimeRange(
     "September",
     "October",
     "November",
-    "December"
+    "December",
   ];
   const month = monthNames[ref.getMonth()];
 

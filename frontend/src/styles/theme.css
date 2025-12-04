@@ -4,8 +4,8 @@
     sans-serif;
 
   /* Base colors - unified from your current palette */
-  --color-bg-body: #020617;          /* used for html/body already :contentReference[oaicite:0]{index=0} */
-  --color-bg-page: radial-gradient(circle at top, #0b1120, #020617);
+  --color-bg-body: radial-gradient(circle at top, #0b1120, #020617);
+  --color-bg-page: var(--color-bg-body);
   --color-text-primary: #e5e7eb;
   --color-text-muted: #9ca3af;
   --color-text-soft: #cbd5f5;

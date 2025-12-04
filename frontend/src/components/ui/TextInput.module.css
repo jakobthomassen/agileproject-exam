@@ -1,0 +1,15 @@
+.root {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-body);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.root::placeholder {
+  color: var(--color-text-muted);
+}
