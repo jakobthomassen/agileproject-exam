@@ -1,0 +1,69 @@
+.pageInner {
+  width: 100%;
+}
+
+.scoringSummary {
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.rangeInput {
+  width: 100%;
+}
+
+.dateTimeRow {
+  display: flex;
+  gap: 12px;
+}
+
+.dateTimeCol {
+  flex: 1;
+}
+
+.dateTimeArrow {
+  padding-top: 20px;
+}
+
+.rulesTextarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-strong);
+  background: #020617;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  margin-top: 4px;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.continueButton {
+  margin-top: 16px;
+}
+
+.livePreviewTitle {
+  margin-bottom: 12px;
+}
+
+.rulesPreview {
+  white-space: pre-wrap;
+}
+
+.fieldRoot {
+  margin-bottom: 16px;
+}
+
+.fieldHeader {
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-primary);
+  font-size: 13px;
+}
+
+.requiredBadge {
+  color: #f97316;
+  font-size: 11px;
+}

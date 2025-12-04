@@ -15,6 +15,7 @@ import { Section } from "../components/ui/Section";
 import { TwoColumn } from "../components/ui/Grid";
 import { FilePill } from "../components/ui/FilePill";
 import { muted } from "../components/ui/Text";
+import styles from "./SetupMethod.module.css";
 
 export default function SetupMethod() {
   const navigate = useNavigate();
@@ -107,17 +108,10 @@ export default function SetupMethod() {
           </Section>
         )}
 
-        <div
-          style={{
-            display: "flex",
-            gap: 16,
-            flexWrap: "wrap",
-            marginBottom: 32
-          }}
-        >
+        <div className={styles.methodCards}>
           <ClickableCard
             onClick={() => navigate("/setup/ai")}
-            style={{ flex: 1, minWidth: 260 }}
+            className={styles.methodCard}
           >
             <h3 style={{ marginBottom: 8, color: "var(--color-text-primary)" }}>
               AI assisted setup
@@ -130,7 +124,7 @@ export default function SetupMethod() {
 
           <ClickableCard
             onClick={() => navigate("/setup/manual")}
-            style={{ flex: 1, minWidth: 260 }}
+            className={styles.methodCard}
           >
             <h3 style={{ marginBottom: 8, color: "var(--color-text-primary)" }}>
               Manual setup

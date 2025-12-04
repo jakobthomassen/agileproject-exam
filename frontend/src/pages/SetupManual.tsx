@@ -13,6 +13,7 @@ import { BackButton } from "../components/ui/BackButton";
 import { SetupPageHeader } from "../components/ui/SetupPageHeader";
 import { TextInput } from "../components/ui/TextInput";
 import { FieldRow } from "../components/ui/FieldRow";
+import styles from "./SetupManual.module.css";
 
 function formatDateTime(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -76,7 +77,7 @@ export default function SetupManual() {
 
   return (
     <PageContainer kind='solid'>
-      <div style={{ width: "100%" }}>
+      <div className={styles.pageInner}>
         <BackButton to="/setup/method">Back</BackButton>
 
         <SetupPageHeader
@@ -115,7 +116,10 @@ export default function SetupManual() {
             </Field>
 
             <Field label='Scoring (audience vs judges)'>
-              <div style={{ marginBottom: 4, fontSize: 13, ...muted }}>
+              <div
+                className={styles.scoringSummary}
+                style={muted}
+              >
                 Audience {audienceWeight}% — Judges {judgesWeight}%
               </div>
               <input
@@ -124,7 +128,7 @@ export default function SetupManual() {
                 max={100}
                 value={audienceWeight}
                 onChange={(e) => setAudienceWeight(Number(e.target.value))}
-                style={{ width: "100%" }}
+                className={styles.rangeInput}
               />
             </Field>
 
@@ -136,8 +140,8 @@ export default function SetupManual() {
             </Field>
 
             <Field label='Event date and time range'>
-              <div style={{ display: "flex", gap: 12 }}>
-                <div style={{ flex: 1 }}>
+              <div className={styles.dateTimeRow}>
+                <div className={styles.dateTimeCol}>
                   <span style={{ fontSize: 12, ...muted }}>Start</span>
                   <TextInput
                     type='datetime-local'
@@ -146,9 +150,14 @@ export default function SetupManual() {
                   />
                 </div>
 
-                <div style={{ paddingTop: 20, ...muted }}>→</div>
+                <div
+                  className={styles.dateTimeArrow}
+                  style={muted}
+                >
+                  →
+                </div>
 
-                <div style={{ flex: 1 }}>
+                <div className={styles.dateTimeCol}>
                   <span style={{ fontSize: 12, ...muted }}>End</span>
                   <TextInput
                     type='datetime-local'
@@ -171,19 +180,7 @@ export default function SetupManual() {
               <textarea
                 value={rules}
                 onChange={(e) => setRules(e.target.value)}
-                style={{
-                  width: "100%",
-                  boxSizing: "border-box",
-                  padding: "8px 10px",
-                  borderRadius: 8,
-                  border: "1px solid #4b5563",
-                  background: "#020617",
-                  color: "#e5e7eb",
-                  fontSize: 14,
-                  marginTop: 4,
-                  resize: "vertical",
-                  minHeight: 80,
-                }}
+                className={styles.rulesTextarea}
               />
             </Field>
 
@@ -204,7 +201,7 @@ export default function SetupManual() {
               fullWidth
               onClick={handleContinue}
               disabled={!canContinue()}
-              style={{ marginTop: 16 }}
+              className={styles.continueButton}
             >
               Continue
             </Button>
@@ -212,7 +209,7 @@ export default function SetupManual() {
 
           {/* RIGHT: Live preview */}
           <Card padding={20}>
-            <h3 style={{ marginBottom: 12 }}>Live preview</h3>
+            <h3 className={styles.livePreviewTitle}>Live preview</h3>
 
             <FieldRow label='Name' value={eventName} />
             <FieldRow label='Type' value={eventType} />
@@ -242,7 +239,7 @@ export default function SetupManual() {
             />
             <FieldRow label='Rules'>
               {rules ? (
-                <div style={{ whiteSpace: "pre-wrap" }}>{rules}</div>
+                <div className={styles.rulesPreview}>{rules}</div>
               ) : null}
             </FieldRow>
           </Card>
@@ -269,20 +266,11 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ marginBottom: 16 }}>
-      <div
-        style={{
-          marginBottom: 4,
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          color: "#e5e7eb",
-          fontSize: 13,
-        }}
-      >
+    <div className={styles.fieldRoot}>
+      <div className={styles.fieldHeader}>
         <span>{label}</span>
         {required && (
-          <span style={{ color: "#f97316", fontSize: 11 }}>Required</span>
+          <span className={styles.requiredBadge}>Required</span>
         )}
       </div>
       {children}

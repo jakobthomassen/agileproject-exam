@@ -1,0 +1,87 @@
+.pageInner {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.mainPanel {
+  background: var(--card-bg);
+  border: var(--card-border);
+  border-radius: var(--card-border-radius);
+  padding: 32px;
+  display: flex;
+  gap: 32px;
+}
+
+.leftColumn {
+  flex: 1;
+}
+
+.title {
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.sectionHeading {
+  font-size: 18px;
+  margin-bottom: 14px;
+}
+
+.rulesHeading {
+  font-size: 18px;
+  margin-top: 26px;
+  margin-bottom: 10px;
+}
+
+.rulesBox {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  padding: 12px;
+  border-radius: 8px;
+  min-height: 48px;
+  white-space: pre-wrap;
+}
+
+.rulesText {
+  color: #e2e8f0;
+}
+
+.rulesPlaceholder {
+  color: #64748b;
+}
+
+.heroImage {
+  width: 320px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.buttonsRow {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.backButtonInner {
+  padding: 10px 18px;
+}
+
+.primaryButtonInner {
+  padding: 10px 24px;
+}
+
+.summaryIconRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: #e2e8f0;
+}
+
+.summaryIcon {
+  font-size: 18px;
+}
+
+.summaryText {
+}
