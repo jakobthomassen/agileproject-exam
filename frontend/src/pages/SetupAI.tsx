@@ -1,6 +1,6 @@
 /* THIS FILE IS A MESS. NEW AI AGENT WILL FIX THIS (HOPEFULLY, MAYBE) */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useEventSetup } from "../context/EventSetupContext";

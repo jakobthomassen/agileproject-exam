@@ -1,4 +1,3 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useEventSetup } from "../context/EventSetupContext";
 
@@ -77,7 +76,14 @@ export default function SetupSummary() {
             </h2>
 
             {/* DATE */}
-            <SummaryIconRow icon='📅' text={dateLine || "[placeholder]"} />
+            <SummaryIconRow
+              icon='📅'
+              text={
+                dateLine && timeLine
+                  ? `${dateLine}, ${timeLine}`
+                  : dateLine || timeLine || "[placeholder]"
+              }
+            />
 
             {/* LOCATION */}
             <SummaryIconRow icon='📍' text={venue || "[placeholder]"} />
