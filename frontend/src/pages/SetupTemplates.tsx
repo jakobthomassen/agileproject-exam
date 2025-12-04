@@ -120,7 +120,7 @@ export default function SetupTemplates() {
     { key: "judge_audience", title: "Battle", desc: "Donec sit amet turpis nulla." },
     { key: "blank", title: "Poll", desc: "Pellentesque a mi quam." }
   ];
-
+  
   return (
     <div
       style={{

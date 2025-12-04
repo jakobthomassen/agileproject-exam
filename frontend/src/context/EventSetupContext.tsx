@@ -7,6 +7,26 @@ import React, {
 } from "react";
 import type { ReactNode } from "react";
 
+export type JudgeGroupType = "audience" | "expert" | "athlete";
+
+export interface JudgeGroupConfig {
+  enabled: boolean;
+  weight: number;         // % contribution
+  criteria: string[];     // e.g. ["Overall"], ["Creativity","Difficulty"]
+}
+
+export interface JudgingSettings {
+  scoreMin: number;        // e.g. 0
+  scoreMax: number;        // e.g. 10
+  judgingDurationSec: number;
+  spectatorLimit: number | null;
+  allowAnonymousSpectators: boolean;
+  liveLeaderboard: boolean;
+  groups: Record<JudgeGroupType, JudgeGroupConfig>;
+}
+
+
+
 export type ScoringMode = "judges" | "audience" | "mixed" | null;
 
 export type EventData = {
@@ -15,35 +35,48 @@ export type EventData = {
   participants: number | null;
 
   scoringMode: ScoringMode;
-  scoringAudience: number | null;
-  scoringJudge: number | null;
-
+  scoringAudience: number;
+  scoringJudge: number;
   venue: string | null;
   startDateTime: string | null;
   endDateTime: string | null;
-
   sponsor: string | null;
   rules: string | null;
   audienceLimit: number | null;
+  image: string | null;
 
-  image: string | null; // for later backend images
+  judgingSettings: JudgingSettings | null;
 };
 
-export const defaultEventData: EventData = {
+const defaultEventData: EventData = {
   eventName: null,
   eventType: null,
   participants: null,
   scoringMode: null,
-  scoringAudience: null,
-  scoringJudge: null,
+  scoringAudience: 50,
+  scoringJudge: 50,
   venue: null,
   startDateTime: null,
   endDateTime: null,
   sponsor: null,
   rules: null,
   audienceLimit: null,
-  image: null
+  image: null,
+  judgingSettings: {
+    scoreMin: 0,
+    scoreMax: 10,
+    judgingDurationSec: 60,
+    spectatorLimit: 100,
+    allowAnonymousSpectators: false,
+    liveLeaderboard: true,
+    groups: {
+      audience: { enabled: true,  weight: 33, criteria: ["Overall"] },
+      expert:   { enabled: true,  weight: 34, criteria: ["Creativity","Difficulty","Execution"] },
+      athlete:  { enabled: true,  weight: 33, criteria: ["Creativity","Difficulty","Execution"] }
+    }
+  }
 };
+
 
 export type SavedEvent = EventData & {
   id: string;
