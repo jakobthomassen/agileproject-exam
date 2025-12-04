@@ -1,9 +1,12 @@
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useRef } from "react";
+import type { ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
 /* Corrected paths */
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
+import { BackButton } from "../components/ui/BackButton";
+import { SetupPageHeader } from "../components/ui/SetupPageHeader";
 
 /* UI primitives */
 import { ClickableCard } from "../components/ui/ClickableCard";
@@ -11,7 +14,7 @@ import { Section } from "../components/ui/Section";
 // import { Card } from "../components/ui/Card"; // not in use on this page
 import { TwoColumn } from "../components/ui/Grid";
 import { FilePill } from "../components/ui/FilePill";
-import { leadText, muted } from "../components/ui/Text";
+import { muted } from "../components/ui/Text";
 
 export default function SetupMethod() {
   const navigate = useNavigate();
@@ -64,19 +67,12 @@ export default function SetupMethod() {
   return (
     <PageContainer kind="solid">
       <div style={{ width: "100%" }}>
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/setup")}
-          style={{ marginBottom: 16, fontSize: 13, padding: "6px 14px" }}
-        >
-          ← Back to templates
-        </Button>
+        <BackButton to="/setup">Back to templates</BackButton>
 
-        <h1 style={{ marginBottom: 10 }}>{headerTitle}</h1>
-        <p style={leadText}>
-          You can use a standard form, or answer a few high-level questions and
-          let the assistant suggest values.
-        </p>
+        <SetupPageHeader
+          title={headerTitle}
+          description="You can use a standard form, or answer a few high-level questions and let the assistant suggest values."
+        />
 
         {fileUploaded && (
           <Section padding={24}>
@@ -123,7 +119,9 @@ export default function SetupMethod() {
             onClick={() => navigate("/setup/ai")}
             style={{ flex: 1, minWidth: 260 }}
           >
-            <h3 style={{ marginBottom: 8 }}>AI assisted setup</h3>
+            <h3 style={{ marginBottom: 8, color: "var(--color-text-primary)" }}>
+              AI assisted setup
+            </h3>
             <p style={muted}>
               Describe your event. The assistant will ask follow-up questions and
               suggest values.
@@ -134,7 +132,9 @@ export default function SetupMethod() {
             onClick={() => navigate("/setup/manual")}
             style={{ flex: 1, minWidth: 260 }}
           >
-            <h3 style={{ marginBottom: 8 }}>Manual setup</h3>
+            <h3 style={{ marginBottom: 8, color: "var(--color-text-primary)" }}>
+              Manual setup
+            </h3>
             <p style={muted}>
               Use a structured form to specify values step by step.
             </p>

@@ -7,8 +7,25 @@ import FAQWidget from "../components/ui/FAQ";
 /* Shared UI components */
 import { Card } from "../components/ui/Card";
 import { TwoColumn } from "../components/ui/Grid";
-import { leadText, muted } from "../components/ui/Text";
+import { muted } from "../components/ui/Text";
 import { Button } from "../components/ui/Button";
+import { BackButton } from "../components/ui/BackButton";
+import { SetupPageHeader } from "../components/ui/SetupPageHeader";
+import { TextInput } from "../components/ui/TextInput";
+import { FieldRow } from "../components/ui/FieldRow";
+
+function formatDateTime(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export default function SetupManual() {
   const navigate = useNavigate();
@@ -60,19 +77,12 @@ export default function SetupManual() {
   return (
     <PageContainer kind='solid'>
       <div style={{ width: "100%" }}>
-        <Button
-          variant='ghost'
-          onClick={() => navigate("/setup/method")}
-          style={{ marginBottom: 16, padding: "6px 14px", fontSize: 13 }}
-        >
-          ← Back
-        </Button>
+        <BackButton to="/setup/method">Back</BackButton>
 
-        <h1 style={{ marginBottom: 10 }}>Manual setup</h1>
-        <p style={leadText}>
-          Fill out your event details. Required fields must be completed before
-          continuing.
-        </p>
+        <SetupPageHeader
+          title="Manual setup"
+          description="Fill out your event details. Required fields must be completed before continuing."
+        />
 
         <TwoColumn>
           {/* LEFT: Form */}
@@ -162,7 +172,15 @@ export default function SetupManual() {
                 value={rules}
                 onChange={(e) => setRules(e.target.value)}
                 style={{
-                  ...inputBase,
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "8px 10px",
+                  borderRadius: 8,
+                  border: "1px solid #4b5563",
+                  background: "#020617",
+                  color: "#e5e7eb",
+                  fontSize: 14,
+                  marginTop: 4,
                   resize: "vertical",
                   minHeight: 80,
                 }}
@@ -196,37 +214,37 @@ export default function SetupManual() {
           <Card padding={20}>
             <h3 style={{ marginBottom: 12 }}>Live preview</h3>
 
-            <Preview label='Name' value={eventName} />
-            <Preview label='Type' value={eventType} />
-            <Preview
+            <FieldRow label='Name' value={eventName} />
+            <FieldRow label='Type' value={eventType} />
+            <FieldRow
               label='Contestants'
               value={participants !== "" ? participants : ""}
             />
-            <Preview
+            <FieldRow
               label='Scoring'
               value={`Audience ${audienceWeight}% — Judges ${judgesWeight}%`}
             />
-            <Preview label='Venue' value={venue} />
-            <Preview
+            <FieldRow label='Venue' value={venue} />
+            <FieldRow
               label='Date and time'
               value={
                 startDateTime || endDateTime
-                  ? `${startDateTime || "?"} to ${endDateTime || "?"}`
+                  ? `${formatDateTime(startDateTime) ?? "?"} to ${
+                      formatDateTime(endDateTime) ?? "?"
+                    }`
                   : ""
               }
             />
-            <Preview label='Sponsor' value={sponsor} />
-            <Preview
+            <FieldRow label='Sponsor' value={sponsor} />
+            <FieldRow
               label='Audience limit'
               value={audienceLimit !== "" ? audienceLimit : ""}
             />
-            <Preview label='Rules'>
+            <FieldRow label='Rules'>
               {rules ? (
                 <div style={{ whiteSpace: "pre-wrap" }}>{rules}</div>
-              ) : (
-                ""
-              )}
-            </Preview>
+              ) : null}
+            </FieldRow>
           </Card>
         </TwoColumn>
       </div>
@@ -271,44 +289,4 @@ function Field({
     </div>
   );
 }
-
-function Preview({
-  label,
-  value,
-  children,
-}: {
-  label: string;
-  value?: string | number | null;
-  children?: React.ReactNode;
-}) {
-  const hasValue = value !== "" && value !== null && value !== undefined;
-  return (
-    <div style={{ marginBottom: 8, fontSize: 14 }}>
-      <strong>{label}:</strong>{" "}
-      {children ? (
-        children
-      ) : hasValue ? (
-        value
-      ) : (
-        <span style={muted}>Not set</span>
-      )}
-    </div>
-  );
-}
-
-/* Input style shared locally */
-const inputBase = {
-  width: "100%",
-  boxSizing: "border-box",
-  padding: "8px 10px",
-  borderRadius: 8,
-  border: "1px solid #4b5563",
-  background: "#020617",
-  color: "#e5e7eb",
-  fontSize: 14,
-  marginTop: 4,
-};
-
-function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} style={inputBase} />;
-}
+/* Local textarea still uses inline style; inputs use shared TextInput component above. */

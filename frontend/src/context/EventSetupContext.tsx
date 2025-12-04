@@ -2,9 +2,10 @@ import React, {
   createContext,
   useContext,
   useState,
-  ReactNode,
-  useMemo
+  useMemo,
+  useEffect
 } from "react";
+import type { ReactNode } from "react";
 
 export type ScoringMode = "judges" | "audience" | "mixed" | null;
 
@@ -64,6 +65,7 @@ type EventSetupContextValue = {
   savedEvents: SavedEvent[];
   addSavedEvent: (ev: SavedEvent) => void;
   deleteSavedEvent: (id: string) => void;
+  updateSavedEvent: (id: string, patch: Partial<SavedEvent>) => void;
 };
 
 
@@ -74,7 +76,17 @@ const EventSetupContext = createContext<EventSetupContextValue | undefined>(
 export function EventSetupProvider({ children }: { children: ReactNode }) {
   const [eventData, setEventDataState] = useState<EventData>(defaultEventData);
 
-  const [savedEvents, setSavedEvents] = useState<SavedEvent[]>([]);
+  const [savedEvents, setSavedEvents] = useState<SavedEvent[]>(() => {
+    try {
+      const raw = sessionStorage.getItem("savedEvents");
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed as SavedEvent[];
+    } catch {
+      return [];
+    }
+  });
 
   const setEventData = (patch: Partial<EventData>) => {
     setEventDataState(prev => ({
@@ -99,6 +111,20 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
     setSavedEvents(prev => prev.filter(e => e.id !== id));
   };
 
+  const updateSavedEvent = (id: string, patch: Partial<SavedEvent>) => {
+    setSavedEvents(prev =>
+      prev.map(ev => (ev.id === id ? { ...ev, ...patch } : ev))
+    );
+  };
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("savedEvents", JSON.stringify(savedEvents));
+    } catch {
+      
+    }
+  }, [savedEvents]);
+
   const value = useMemo(
     () => ({
       eventData,
@@ -108,7 +134,8 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
 
       savedEvents,
       addSavedEvent,
-      deleteSavedEvent
+      deleteSavedEvent,
+      updateSavedEvent
     }),
     [eventData, savedEvents]
   );

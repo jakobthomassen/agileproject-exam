@@ -125,9 +125,9 @@ export default function SetupTemplates() {
     <div
       style={{
         minHeight: "100vh",
-        background: "radial-gradient(circle at top, #0b1120, #020617)",
-        color: "white",
-        fontFamily: "Inter, system-ui, sans-serif",
+        background: "var(--color-bg-page)",
+        color: "var(--color-text-primary)",
+        fontFamily: "var(--font-sans)",
         display: "flex",
         justifyContent: "center",
         alignItems: "flex-start",

@@ -7,7 +7,9 @@ import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { TwoColumn } from "../components/ui/Grid";
-import { leadText, muted } from "../components/ui/Text";
+import { BackButton } from "../components/ui/BackButton";
+import { SetupPageHeader } from "../components/ui/SetupPageHeader";
+import { TextInput } from "../components/ui/TextInput";
 
 type ChatMessage = {
   sender: "user" | "assistant";
@@ -97,7 +99,10 @@ export default function SetupAI() {
     const text = input.trim();
     if (!text) return;
 
-    const newMessages = [...messages, { sender: "user", text }];
+    const newMessages: ChatMessage[] = [
+      ...messages,
+      { sender: "user", text },
+    ];
     setMessages(newMessages);
     setInput("");
     setThinking(true);
@@ -169,7 +174,7 @@ export default function SetupAI() {
 
       if (key === "finalConfirmation") setHasShownCompletion(true);
 
-      setLastFollowupKey(key);
+      setLastFollowupKey(key as FollowupKey);
       setLastFollowupText(followText);
 
       setMessages((prev) => [
@@ -192,31 +197,30 @@ export default function SetupAI() {
   }
 
   const chatBubbleUser = {
-    background: "#1e293b",
-    padding: "8px 12px",
-    borderRadius: 8,
+    background: "linear-gradient(135deg, #38bdf8, #0ea5e9)",
+    padding: "10px 14px",
+    borderRadius: 18,
+    borderBottomRightRadius: 4,
     display: "inline-block",
-    maxWidth: "70%",
-    textAlign: "left",
+    maxWidth: "72%",
+    textAlign: "left" as const,
+    color: "#0b1120",
+    fontSize: 14,
+    boxShadow: "0 10px 25px rgba(15,23,42,0.45)",
   };
 
   const chatBubbleAssistant = {
-    background: "#14532d",
-    padding: "8px 12px",
-    borderRadius: 8,
+    background: "rgba(15,23,42,0.95)",
+    padding: "10px 14px",
+    borderRadius: 18,
+    borderBottomLeftRadius: 4,
     display: "inline-block",
-    maxWidth: "70%",
-    textAlign: "left",
-  };
-
-  const inputStyle = {
-    width: "100%",
-    padding: 10,
-    borderRadius: 8,
-    boxSizing: "border-box",
-    border: "1px solid #334155",
-    background: "#020617",
-    color: "white",
+    maxWidth: "72%",
+    textAlign: "left" as const,
+    color: "#e5e7eb",
+    fontSize: 14,
+    border: "1px solid rgba(148,163,184,0.45)",
+    boxShadow: "0 12px 30px rgba(15,23,42,0.6)",
   };
 
   const dateInfo = formatDateTimeRange(
@@ -228,18 +232,12 @@ export default function SetupAI() {
   return (
     <PageContainer kind='solid' maxWidth={1200}>
       <div style={{ width: "100%" }}>
-        <Button
-          variant='ghost'
-          onClick={() => navigate("/setup/method")}
-          style={{ marginBottom: 16, padding: "6px 14px", fontSize: 13 }}
-        >
-          ← Back
-        </Button>
+        <BackButton to="/setup/method">Back</BackButton>
 
-        <h1 style={{ marginBottom: 10 }}>AI Assisted Setup</h1>
-        <p style={leadText}>
-          Describe your event and refine details interactively.
-        </p>
+        <SetupPageHeader
+          title="AI Assisted Setup"
+          description="Describe your event and refine details interactively."
+        />
 
         <TwoColumn>
           {/* CHAT PANEL */}
@@ -249,14 +247,26 @@ export default function SetupAI() {
                 height: "70vh",
                 display: "flex",
                 flexDirection: "column",
+                background:
+                  "radial-gradient(circle at top left, rgba(37,99,235,0.18), transparent 55%), radial-gradient(circle at bottom, rgba(16,185,129,0.16), transparent 55%)",
+                borderRadius: 12,
+                border: "1px solid rgba(148,163,184,0.2)",
               }}
             >
-              <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: "auto",
+                  padding: "10px 10px 14px 10px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
                 {messages.map((m, i) => (
                   <div
                     key={i}
                     style={{
-                      marginBottom: 10,
                       display: "flex",
                       justifyContent:
                         m.sender === "user" ? "flex-end" : "flex-start",
@@ -275,19 +285,71 @@ export default function SetupAI() {
                 ))}
 
                 {thinking && (
-                  <div style={{ opacity: 0.7, marginBottom: 10 }}>
-                    Assistant is thinking...
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      opacity: 0.8,
+                      fontSize: 12,
+                      color: "#9ca3af",
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        gap: 4,
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "999px",
+                          background: "#6b7280",
+                          animation: "pulse 1.2s ease-in-out infinite",
+                        }}
+                      />
+                      <span
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "999px",
+                          background: "#9ca3af",
+                          animation: "pulse 1.2s ease-in-out infinite",
+                          animationDelay: "0.15s",
+                        }}
+                      />
+                      <span
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "999px",
+                          background: "#e5e7eb",
+                          animation: "pulse 1.2s ease-in-out infinite",
+                          animationDelay: "0.3s",
+                        }}
+                      />
+                    </span>
+                    <span>Assistant is thinking…</span>
                   </div>
                 )}
               </div>
 
-              <div style={{ display: "flex", gap: 12 }}>
-                <input
+              <div
+                style={{
+                  padding: "10px 10px 8px 10px",
+                  borderTop: "1px solid rgba(31,41,55,0.8)",
+                  display: "flex",
+                  gap: 10,
+                  alignItems: "center",
+                }}
+              >
+                <TextInput
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                  placeholder='Write something...'
-                  style={inputStyle}
+                  placeholder='Describe your event or ask a question…'
                 />
                 <Button onClick={sendMessage}>Send</Button>
               </div>
@@ -404,7 +466,7 @@ function isOptionalComplete(f: AIFields): boolean {
   );
 }
 
-/* buildFollowup and date utils kept unchanged */
+/* Build a short follow-up prompt based on which fields are filled in. */
 function buildFollowup(
   f: AIFields,
   requiredComplete: boolean,
@@ -412,10 +474,54 @@ function buildFollowup(
   hasShownCompletion: boolean,
   lastKey: FollowupKey | null,
   lastText: string | null
-) {
-  /* same content unchanged from your original code */
-  /* omitted here only to keep message short, but preserved in actual refactor */
-  return { text: "", key: "askOptional" };
+): { text: string; key: FollowupKey } {
+  // If required fields are missing, focus on those first.
+  if (!requiredComplete) {
+    const missing: string[] = [];
+    if (!f.eventName) missing.push("the event name");
+    if (!f.eventType) missing.push("the event type");
+    if (f.participants == null) missing.push("how many participants you expect");
+
+    const text =
+      missing.length > 0
+        ? `Got it. Could you specify ${missing.join(", ")} so we can lock in the basics?`
+        : "Tell me the core details like name, type and participant count.";
+
+    return { text, key: "askName" };
+  }
+
+  // Required fields are set, guide through optional details.
+  if (!optionalComplete) {
+    const missing: string[] = [];
+    if (!f.scoringMode) missing.push("how you want scoring to work");
+    if (!f.venue) missing.push("the venue");
+    if (!f.startDateTime || !f.endDateTime)
+      missing.push("the date and time range");
+    if (!f.sponsor) missing.push("any sponsor details");
+    if (!f.rules) missing.push("key rules or constraints");
+    if (f.audienceLimit == null)
+      missing.push("whether there's an audience limit");
+
+    const text =
+      missing.length > 0
+        ? `We have the basics. Next, tell me ${missing.join(", ")} and I’ll refine the setup.`
+        : "Share any extra preferences (format, mood, or constraints) you want reflected in the event.";
+
+    return { text, key: "askOptional" };
+  }
+
+  // Everything looks filled in.
+  if (!hasShownCompletion || lastKey !== "finalConfirmation") {
+    const text =
+      "Nice, we have a complete configuration. You can still tweak details or say 'looks good' to continue.";
+    return { text, key: "finalConfirmation" };
+  }
+
+  // After final confirmation, nudge toward summary.
+  const text =
+    lastText ||
+    "If you’re happy with this setup, you can proceed to the summary. Otherwise, tell me what you’d like to adjust.";
+  return { text, key: "postFinalAdjust" };
 }
 
 function formatDateTimeRange(

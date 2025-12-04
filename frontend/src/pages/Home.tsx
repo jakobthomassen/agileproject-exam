@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import landscape1 from "../assets/landscape1.jpg";
 import landscape2 from "../assets/landscape2.jpg";
-import landscape3 from "../assets/landscape3.jpg";
 import FAQWidget from "../components/ui/FAQ";
 
 export default function Home() {
@@ -12,9 +11,9 @@ export default function Home() {
       <div
         style={{
           minHeight: "100vh",
-          backgroundColor: "#05060a",
-          color: "white",
-          fontFamily: "Inter, system-ui, sans-serif",
+          background: "var(--color-bg-body)",
+          color: "var(--color-text-primary)",
+          fontFamily: "var(--font-sans)",
         }}
       >
         {/* Hero */}
