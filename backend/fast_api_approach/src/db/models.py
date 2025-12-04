@@ -33,3 +33,10 @@ class EventImage(Base):
     id = Column(Integer, primary_key=True, index=True)
     event_id = Column(Integer, ForeignKey("events.id"))
     image = Column(LargeBinary, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "event_id": self.event_id
+            # "image": self.image
+        }
