@@ -437,6 +437,40 @@ function formatDateTimeRange(
   start: string | null,
   end: string | null
 ): { dateLine: string | null; timeLine: string | null } {
-  /* unchanged */
-  return { dateLine: null, timeLine: null };
+  if (!start && !end) return { dateLine: null, timeLine: null };
+
+  const base = start || end;
+  const ref = base ? new Date(base) : null;
+  if (!ref || Number.isNaN(ref.getTime())) {
+    return { dateLine: null, timeLine: null };
+  }
+
+  const dateLine = ref.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+
+  const startD = start ? new Date(start) : null;
+  const endD = end ? new Date(end) : null;
+
+  const s =
+    startD && !Number.isNaN(startD.getTime())
+      ? startD.toLocaleTimeString(undefined, {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : null;
+
+  const e =
+    endD && !Number.isNaN(endD.getTime())
+      ? endD.toLocaleTimeString(undefined, {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : null;
+
+  const timeLine = s && e ? `${s} to ${e}` : s ?? e ?? null;
+
+  return { dateLine, timeLine };
 }

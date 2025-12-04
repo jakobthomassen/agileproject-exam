@@ -8,6 +8,19 @@ import { useEventSetup, type SavedEvent } from "../context/EventSetupContext";
 import { useNavigate } from "react-router-dom";
 import styles from "./Dashboard.module.css";
 
+function formatDateTime(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function Dashboard() {
   const { savedEvents, deleteSavedEvent, updateSavedEvent } = useEventSetup();
   const navigate = useNavigate();
@@ -243,7 +256,7 @@ function TableRow({
 
       <StatusBubble status={ev.status} />
 
-      <span>{ev.startDate || "—"}</span>
+      <span>{formatDateTime(ev.startDate) || "—"}</span>
       <span>{ev.athletes}</span>
       <span>{ev.eventCode || "No code"}</span>
 
