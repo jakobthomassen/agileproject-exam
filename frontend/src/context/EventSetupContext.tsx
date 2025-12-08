@@ -7,6 +7,62 @@ import React, {
 } from "react";
 import type { ReactNode } from "react";
 
+/* -------------------------------------------------------------------------- */
+/* Judging domain model                                                        */
+/* -------------------------------------------------------------------------- */
+
+export type JudgeGroupType = "audience" | "expert" | "athlete";
+
+export interface JudgeGroupConfig {
+  enabled: boolean;
+  weight: number;
+  criteria: string[];
+}
+
+export interface JudgingSettings {
+  scoreMin: number;
+  scoreMax: number;
+  judgingDurationSec: number;
+  spectatorLimit: number | null;
+  allowAnonymousSpectators: boolean;
+  liveLeaderboard: boolean;
+  groups: Record<JudgeGroupType, JudgeGroupConfig>;
+}
+
+/*
+  Context owns the canonical DEFAULTS,
+  but not all flows must immediately commit them.
+*/
+export const defaultJudgingSettings: JudgingSettings = {
+  scoreMin: 0,
+  scoreMax: 10,
+  judgingDurationSec: 60,
+  spectatorLimit: 100,
+  allowAnonymousSpectators: false,
+  liveLeaderboard: true,
+  groups: {
+    audience: {
+      enabled: true,
+      weight: 33,
+      criteria: ["Overall"]
+    },
+    expert: {
+      enabled: true,
+      weight: 34,
+      criteria: ["Creativity", "Difficulty", "Execution"]
+    },
+    athlete: {
+      enabled: true,
+      weight: 33,
+      criteria: ["Creativity", "Difficulty", "Execution"]
+    }
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+/* Event model                                                                 */
+/* -------------------------------------------------------------------------- */
+
 export type ScoringMode = "judges" | "audience" | "mixed" | null;
 
 export type EventData = {
@@ -26,24 +82,39 @@ export type EventData = {
   rules: string | null;
   audienceLimit: number | null;
 
-  image: string | null; // for later backend images
+  image: string | null;
+
+  /*
+    Judging settings are context-owned but optional.
+    Early setup steps may leave this null or partially defined.
+  */
+  judgingSettings: JudgingSettings | null;
 };
 
 export const defaultEventData: EventData = {
   eventName: null,
   eventType: null,
   participants: null,
+
   scoringMode: null,
   scoringAudience: null,
   scoringJudge: null,
+
   venue: null,
   startDateTime: null,
   endDateTime: null,
+
   sponsor: null,
   rules: null,
   audienceLimit: null,
-  image: null
+
+  image: null,
+  judgingSettings: null
 };
+
+/* -------------------------------------------------------------------------- */
+/* Saved events                                                                */
+/* -------------------------------------------------------------------------- */
 
 export type SavedEvent = EventData & {
   id: string;
@@ -55,12 +126,23 @@ export type SavedEvent = EventData & {
   eventCode: string | null;
 };
 
+/* -------------------------------------------------------------------------- */
+/* Context API                                                                 */
+/* -------------------------------------------------------------------------- */
 
 type EventSetupContextValue = {
   eventData: EventData;
+
   setEventData: (patch: Partial<EventData>) => void;
   replaceEventData: (data: EventData) => void;
   resetEventData: () => void;
+
+  /*
+    Explicit helper for judging settings.
+    Allows future pages to partially update without full ownership.
+  */
+  setJudgingSettings: (patch: Partial<JudgingSettings>) => void;
+  resetJudgingSettings: () => void;
 
   savedEvents: SavedEvent[];
   addSavedEvent: (ev: SavedEvent) => void;
@@ -68,13 +150,17 @@ type EventSetupContextValue = {
   updateSavedEvent: (id: string, patch: Partial<SavedEvent>) => void;
 };
 
-
 const EventSetupContext = createContext<EventSetupContextValue | undefined>(
   undefined
 );
 
+/* -------------------------------------------------------------------------- */
+/* Provider                                                                    */
+/* -------------------------------------------------------------------------- */
+
 export function EventSetupProvider({ children }: { children: ReactNode }) {
-  const [eventData, setEventDataState] = useState<EventData>(defaultEventData);
+  const [eventData, setEventDataState] =
+    useState<EventData>(defaultEventData);
 
   const [savedEvents, setSavedEvents] = useState<SavedEvent[]>(() => {
     try {
@@ -103,6 +189,23 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
     setEventDataState(defaultEventData);
   };
 
+  const setJudgingSettings = (patch: Partial<JudgingSettings>) => {
+    setEventDataState(prev => ({
+      ...prev,
+      judgingSettings: {
+        ...(prev.judgingSettings ?? defaultJudgingSettings),
+        ...patch
+      }
+    }));
+  };
+
+  const resetJudgingSettings = () => {
+    setEventDataState(prev => ({
+      ...prev,
+      judgingSettings: null
+    }));
+  };
+
   const addSavedEvent = (ev: SavedEvent) => {
     setSavedEvents(prev => [...prev, ev]);
   };
@@ -120,9 +223,7 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       sessionStorage.setItem("savedEvents", JSON.stringify(savedEvents));
-    } catch {
-      
-    }
+    } catch {}
   }, [savedEvents]);
 
   const value = useMemo(
@@ -131,6 +232,9 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
       setEventData,
       replaceEventData,
       resetEventData,
+
+      setJudgingSettings,
+      resetJudgingSettings,
 
       savedEvents,
       addSavedEvent,
@@ -147,6 +251,9 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* Hook                                                                        */
+/* -------------------------------------------------------------------------- */
 
 export function useEventSetup(): EventSetupContextValue {
   const ctx = useContext(EventSetupContext);
