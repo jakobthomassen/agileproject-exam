@@ -21,34 +21,6 @@
   width: 260px;
 }
 
-.editSection {
-  margin-top: 16px;
-}
-
-.editGrid {
-  display: grid;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.statusSelect {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border-strong);
-  background: #020617;
-  color: var(--color-text-primary);
-  font-size: 14px;
-  margin-top: 4px;
-}
-
-.editActions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
 .tableWrapper {
   width: 100%;
   border-radius: var(--radius-md);
@@ -95,15 +67,56 @@
 }
 
 .actionDelete {
-  cursor: pointer;
   color: #f87171;
+  cursor: pointer;
 }
 
 .statusBubble {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+
   color: #0f172a;
-  padding: 2px 8px;
+  padding: 2px 10px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
+
   justify-self: start;
+  width: fit-content;
+}
+
+
+/* -------------------------------------------------------------------------- */
+/* MODAL */
+/* -------------------------------------------------------------------------- */
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalCard {
+  width: 520px;
+  max-width: 90%;
+}
+
+.modalTitle {
+  margin-bottom: 16px;
+}
+
+.modalContent {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
 }
