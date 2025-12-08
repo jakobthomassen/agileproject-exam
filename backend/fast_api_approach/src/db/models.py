@@ -1,6 +1,5 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary, Enum
+from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary
 from .database import Base
-from sqlalchemy.types import JSON
 
 
 class Event(Base):

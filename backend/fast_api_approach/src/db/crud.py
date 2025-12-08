@@ -34,16 +34,6 @@ def update_event(db: Session, id: int, event_data: EventState):
     if not db_event:
         return None
 
-    # event_name = event_data.eventname,
-    # date = event_data.eventdate,
-    # time = event_data.eventtime,
-    # location = event_data.eventlocation,
-    # description = event_data.eventdescription,
-    # judge_type = event_data.eventjudgetype,
-    # audience_weight = event_data.eventaudienceweight,
-    # expert_weight = event_data.eventexpertweight,
-    # athlete_weight = event_data.eventathleteweight
-
     if event_data.eventname is not None:
         db_event.event_name = event_data.eventname
     if event_data.eventdate is not None:
