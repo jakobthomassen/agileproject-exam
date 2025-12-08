@@ -86,7 +86,7 @@ export default function SetupTemplates() {
   return (
     <div className={styles.container}>
       <div className={styles.content}>
-        <h1 className={styles.title}>Choose a ranking template</h1>
+        <h1 className={styles.title}>Choose a scoring template</h1>
 
         <p className={styles.description}>
           Start from a predefined scoring setup, or go with a blank slate. You can adjust details later.
