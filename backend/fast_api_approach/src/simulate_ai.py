@@ -9,11 +9,15 @@ import os
 
 def simulate_ai_event():
     fake_event = EventState(
-        eventname="Redbull cliff diving",
-        eventdate="2025-12-02",
-        eventtime="19:00",
-        eventlocation="Kragerø",
-        participants=["amund", "shefat", "hansim"]
+        eventname="REDBULL CLIFF DIVING",
+        evendescription="A cliff diving competition hosted by RedBull",
+        eventdate="2025-12-08",
+        eventtime="22:00",
+        eventlocation="Oslo Opera House",
+        eventjudgetype="Battle",
+        eventaudienceweight=33,
+        eventexpertweight=33,
+        eventathleteweight=34
     )
 
     print("Simulating AI event creation...")
@@ -38,11 +42,7 @@ def simulate_ai_event():
 
     print(f"\nUpdating event with ID = {id}")
     update_fake_event = EventState(
-        eventname="Moren din",
-        eventdate=None,
-        eventtime=None,
-        eventlocation=None,
-        participants=None
+        eventname="Moren din"
     )
     updated_event = debug_update_event(update_fake_event, id)
     print(updated_event.to_dict())
