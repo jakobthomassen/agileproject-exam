@@ -1,36 +1,56 @@
 .navbar {
+  position: fixed;
+  top: 0px;
+  left: 0;
+  right: 0;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
-  padding: 0 28px;
-  background: #020617;
-  border-bottom: 1px solid #1e293b;
+
+  padding: 12px 24px;
+  z-index: 1000;
+
+  pointer-events: auto;
+}
+
+/* Enable interaction only on controls */
+.navbar button {
+  pointer-events: auto;
 }
 
 .logo {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: #e5e7eb;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 1px;
+
+  color: #f8fafc;
   cursor: pointer;
+
+  padding: 6px 4px;
+  user-select: none;
 }
 
-.navLinks {
+
+.navButtons {
   display: flex;
-  gap: 18px;
+  gap: 10px;
 }
 
-.navLinks button {
-  background: none;
-  border: none;
+.navButtons button {
+  background: rgba(2, 6, 23, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.25);
   color: #cbd5f5;
+
+  padding: 8px 14px;
+  border-radius: 999px;
   font-size: 14px;
   cursor: pointer;
-  padding: 6px 8px;
-  border-radius: 6px;
+
+  backdrop-filter: blur(8px);
 }
 
-.navLinks button:hover {
-  background: #1e293b;
+.navButtons button:hover,
+.logo:hover {
+  background: rgba(2, 6, 23, 0.75);
 }

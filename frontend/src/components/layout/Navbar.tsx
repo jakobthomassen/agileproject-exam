@@ -9,7 +9,7 @@ export function Navbar() {
   }
 
   return (
-    <header className={styles.navbar}>
+    <div className={styles.navbar}>
       <div
         className={styles.logo}
         onClick={() => navigate("/")}
@@ -17,7 +17,8 @@ export function Navbar() {
         PEERS
       </div>
 
-      <nav className={styles.navLinks}>
+
+      <div className={styles.navButtons}>
         <button onClick={() => notImplemented("About us")}>
           About us
         </button>
@@ -30,7 +31,7 @@ export function Navbar() {
         <button onClick={() => navigate("/dashboard")}>
           Dashboard
         </button>
-      </nav>
-    </header>
+      </div>
+    </div>
   );
 }

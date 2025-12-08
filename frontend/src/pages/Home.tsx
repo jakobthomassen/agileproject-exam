@@ -26,7 +26,10 @@ export default function Home() {
               <button
                 type="button"
                 className={styles.heroPrimaryButton}
-                onClick={() => navigate("/setup")}
+                onClick={() => {
+                  const label = "Join Event";
+                  window.alert(`${label} page is not implemented yet.`);
+                }}
               >
                 Join Event
               </button>
