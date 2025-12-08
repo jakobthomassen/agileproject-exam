@@ -1,14 +1,13 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useEventSetup } from "../context/EventSetupContext";
 
 /* Layout + UI */
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
-import { cardBaseStyle } from "../components/ui/Card";
 import { BackButton } from "../components/ui/BackButton";
 import { SetupPageHeader } from "../components/ui/SetupPageHeader";
 import { FieldRow } from "../components/ui/FieldRow";
+import styles from "./SetupSummary.module.css";
 
 export default function SetupSummary() {
   const navigate = useNavigate();
@@ -61,7 +60,7 @@ export default function SetupSummary() {
 
   return (
     <PageContainer kind='solid'>
-      <div style={{ width: "100%", maxWidth: 900, margin: "0 auto" }}>
+      <div className={styles.pageInner}>
         <BackButton to="/setup/method">Back</BackButton>
 
         <SetupPageHeader
@@ -69,30 +68,28 @@ export default function SetupSummary() {
           description="Review the event configuration before saving it."
         />
         {/* MAIN PANEL */}
-        <div
-          style={{
-            background: cardBaseStyle.background,
-            border: cardBaseStyle.border,
-            borderRadius: cardBaseStyle.borderRadius,
-            padding: 32,
-            display: "flex",
-            gap: 32,
-          }}
-        >
+        <div className={styles.mainPanel}>
           {/* LEFT SIDE */}
-          <div style={{ flex: 1 }}>
-            <h2 style={{ fontSize: 24, marginBottom: 16 }}>
+          <div className={styles.leftColumn}>
+            <h2 className={styles.title}>
               {eventName || "[placeholder]"}
             </h2>
 
             {/* DATE */}
-            <SummaryIconRow icon='📅' text={dateLine || "[placeholder]"} />
+            <SummaryIconRow
+              icon='📅'
+              text={
+                dateLine && timeLine
+                  ? `${dateLine}, ${timeLine}`
+                  : dateLine || timeLine || "[placeholder]"
+              }
+            />
 
             {/* LOCATION */}
             <SummaryIconRow icon='📍' text={venue || "[placeholder]"} />
 
             {/* EVENT INFO */}
-            <h3 style={{ fontSize: 18, marginBottom: 14 }}>Event Info</h3>
+            <h3 className={styles.sectionHeading}>Event Info</h3>
 
             <FieldRow label='Type' value={eventType} />
             <FieldRow
@@ -107,21 +104,11 @@ export default function SetupSummary() {
             />
 
             {/* RULES */}
-            <h3 style={{ fontSize: 18, marginTop: 26, marginBottom: 10 }}>
-              Rules
-            </h3>
-            <div
-              style={{
-                background: "#0f172a",
-                border: "1px solid #1e293b",
-                padding: 12,
-                borderRadius: 8,
-                minHeight: 48,
-                whiteSpace: "pre-wrap",
-                color: rules ? "#e2e8f0" : "#64748b",
-              }}
-            >
-              {rules || "[placeholder]"}
+            <h3 className={styles.rulesHeading}>Rules</h3>
+            <div className={styles.rulesBox}>
+              <span className={rules ? styles.rulesText : styles.rulesPlaceholder}>
+                {rules || "[placeholder]"}
+              </span>
             </div>
           </div>
 
@@ -129,26 +116,24 @@ export default function SetupSummary() {
           <img
             src={heroImage}
             alt='Event'
-            style={{
-              width: 320,
-              height: 200,
-              objectFit: "cover",
-              borderRadius: 12,
-            }}
+            className={styles.heroImage}
           />
         </div>
 
         {/* BUTTONS */}
-        <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
+        <div className={styles.buttonsRow}>
           <Button
             variant='ghost'
             onClick={() => navigate("/setup/method")}
-            style={{ padding: "10px 18px" }}
+            className={styles.backButtonInner}
           >
             Back
           </Button>
 
-          <Button onClick={handleFinish} style={{ padding: "10px 24px" }}>
+          <Button
+            onClick={handleFinish}
+            className={styles.primaryButtonInner}
+          >
             Confirm & save
           </Button>
         </div>
@@ -163,17 +148,9 @@ export default function SetupSummary() {
 
 function SummaryIconRow({ icon, text }: { icon: string; text: string }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        marginBottom: 10,
-        color: "#e2e8f0",
-      }}
-    >
-      <span style={{ fontSize: 18 }}>{icon}</span>
-      <span>{text}</span>
+    <div className={styles.summaryIconRow}>
+      <span className={styles.summaryIcon}>{icon}</span>
+      <span className={styles.summaryText}>{text}</span>
     </div>
   );
 }

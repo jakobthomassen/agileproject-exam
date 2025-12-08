@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+/* THIS FILE IS A MESS. NEW AI AGENT WILL FIX THIS (HOPEFULLY, MAYBE) */
+
+import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useEventSetup } from "../context/EventSetupContext";
@@ -10,6 +12,7 @@ import { TwoColumn } from "../components/ui/Grid";
 import { BackButton } from "../components/ui/BackButton";
 import { SetupPageHeader } from "../components/ui/SetupPageHeader";
 import { TextInput } from "../components/ui/TextInput";
+import styles from "./SetupAI.module.css";
 
 type ChatMessage = {
   sender: "user" | "assistant";
@@ -196,33 +199,6 @@ export default function SetupAI() {
     navigate("/setup/summary");
   }
 
-  const chatBubbleUser = {
-    background: "linear-gradient(135deg, #38bdf8, #0ea5e9)",
-    padding: "10px 14px",
-    borderRadius: 18,
-    borderBottomRightRadius: 4,
-    display: "inline-block",
-    maxWidth: "72%",
-    textAlign: "left" as const,
-    color: "#0b1120",
-    fontSize: 14,
-    boxShadow: "0 10px 25px rgba(15,23,42,0.45)",
-  };
-
-  const chatBubbleAssistant = {
-    background: "rgba(15,23,42,0.95)",
-    padding: "10px 14px",
-    borderRadius: 18,
-    borderBottomLeftRadius: 4,
-    display: "inline-block",
-    maxWidth: "72%",
-    textAlign: "left" as const,
-    color: "#e5e7eb",
-    fontSize: 14,
-    border: "1px solid rgba(148,163,184,0.45)",
-    boxShadow: "0 12px 30px rgba(15,23,42,0.6)",
-  };
-
   const dateInfo = formatDateTimeRange(
     fields.startDateTime,
     fields.endDateTime
@@ -231,7 +207,7 @@ export default function SetupAI() {
 
   return (
     <PageContainer kind='solid' maxWidth={1200}>
-      <div style={{ width: "100%" }}>
+      <div className={styles.pageInner}>
         <BackButton to="/setup/method">Back</BackButton>
 
         <SetupPageHeader
@@ -242,41 +218,22 @@ export default function SetupAI() {
         <TwoColumn>
           {/* CHAT PANEL */}
           <Card padding={16}>
-            <div
-              style={{
-                height: "70vh",
-                display: "flex",
-                flexDirection: "column",
-                background:
-                  "radial-gradient(circle at top left, rgba(37,99,235,0.18), transparent 55%), radial-gradient(circle at bottom, rgba(16,185,129,0.16), transparent 55%)",
-                borderRadius: 12,
-                border: "1px solid rgba(148,163,184,0.2)",
-              }}
-            >
-              <div
-                style={{
-                  flex: 1,
-                  overflowY: "auto",
-                  padding: "10px 10px 14px 10px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 8,
-                }}
-              >
+            <div className={styles.chatPanel}>
+              <div className={styles.chatMessages}>
                 {messages.map((m, i) => (
                   <div
                     key={i}
-                    style={{
-                      display: "flex",
-                      justifyContent:
-                        m.sender === "user" ? "flex-end" : "flex-start",
-                    }}
+                    className={`${styles.chatRow} ${
+                      m.sender === "user"
+                        ? styles.chatRowUser
+                        : styles.chatRowAssistant
+                    }`}
                   >
                     <span
-                      style={
+                      className={
                         m.sender === "user"
-                          ? chatBubbleUser
-                          : chatBubbleAssistant
+                          ? styles.chatBubbleUser
+                          : styles.chatBubbleAssistant
                       }
                     >
                       {m.text}
@@ -285,50 +242,14 @@ export default function SetupAI() {
                 ))}
 
                 {thinking && (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      opacity: 0.8,
-                      fontSize: 12,
-                      color: "#9ca3af",
-                    }}
-                  >
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        gap: 4,
-                      }}
-                    >
+                  <div className={styles.thinkingRow}>
+                    <span className={styles.thinkingDots}>
+                      <span className={styles.thinkingDot} />
                       <span
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: "999px",
-                          background: "#6b7280",
-                          animation: "pulse 1.2s ease-in-out infinite",
-                        }}
+                        className={`${styles.thinkingDot} ${styles.thinkingDotMid}`}
                       />
                       <span
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: "999px",
-                          background: "#9ca3af",
-                          animation: "pulse 1.2s ease-in-out infinite",
-                          animationDelay: "0.15s",
-                        }}
-                      />
-                      <span
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: "999px",
-                          background: "#e5e7eb",
-                          animation: "pulse 1.2s ease-in-out infinite",
-                          animationDelay: "0.3s",
-                        }}
+                        className={`${styles.thinkingDot} ${styles.thinkingDotLight}`}
                       />
                     </span>
                     <span>Assistant is thinking…</span>
@@ -336,15 +257,7 @@ export default function SetupAI() {
                 )}
               </div>
 
-              <div
-                style={{
-                  padding: "10px 10px 8px 10px",
-                  borderTop: "1px solid rgba(31,41,55,0.8)",
-                  display: "flex",
-                  gap: 10,
-                  alignItems: "center",
-                }}
-              >
+              <div className={styles.chatInputRow}>
                 <TextInput
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -358,49 +271,53 @@ export default function SetupAI() {
 
           {/* CHECKLIST PANEL */}
           <Card padding={16}>
-            {/* Required */}
-            <h3 style={{ marginBottom: 12 }}>Required</h3>
+            <div className={styles.checklistCardInner}>
+              {/* Required */}
+              <h3 className={styles.checklistHeading}>Required</h3>
 
-            <CheckRow label='Name' value={fields.eventName} required />
-            <CheckRow label='Type' value={fields.eventType} required />
-            <CheckRow
-              label='Contestants'
-              value={
-                fields.participants !== null ? String(fields.participants) : ""
-              }
-              required
-            />
+              <CheckRow label='Name' value={fields.eventName} required />
+              <CheckRow label='Type' value={fields.eventType} required />
+              <CheckRow
+                label='Contestants'
+                value={
+                  fields.participants !== null ? String(fields.participants) : ""
+                }
+                required
+              />
 
-            {/* Optional */}
-            <h3 style={{ marginTop: 24, marginBottom: 12 }}>Optional</h3>
+              {/* Optional */}
+              <h3 className={styles.checklistHeadingOptional}>Optional</h3>
 
-            <CheckRow label='Scoring' value={fields.scoringMode} />
-            <CheckRow label='Venue' value={fields.venue} />
+              <CheckRow label='Scoring' value={fields.scoringMode} />
+              <CheckRow label='Venue' value={fields.venue} />
 
-            <CheckRow
-              label='Date & Time'
-              value={
-                hasDate
-                  ? `${dateInfo.dateLine || ""}\n${dateInfo.timeLine || ""}`
-                  : ""
-              }
-            />
+              <CheckRow
+                label='Date & Time'
+                value={
+                  hasDate
+                    ? `${dateInfo.dateLine || ""}\n${dateInfo.timeLine || ""}`
+                    : ""
+                }
+              />
 
-            <CheckRow label='Sponsor' value={fields.sponsor} />
-            <CheckRow label='Rules' value={fields.rules} />
-            <CheckRow
-              label='Audience limit'
-              value={fields.audienceLimit !== null ? fields.audienceLimit : ""}
-            />
+              <CheckRow label='Sponsor' value={fields.sponsor} />
+              <CheckRow label='Rules' value={fields.rules} />
+              <CheckRow
+                label='Audience limit'
+                value={
+                  fields.audienceLimit !== null ? fields.audienceLimit : ""
+                }
+              />
 
-            <Button
-              fullWidth
-              disabled={!requiredComplete}
-              onClick={continueClick}
-              style={{ marginTop: "auto" }}
-            >
-              Continue
-            </Button>
+              <Button
+                fullWidth
+                disabled={!requiredComplete}
+                onClick={continueClick}
+                className={styles.checklistContinueButton}
+              >
+                Continue
+              </Button>
+            </div>
           </Card>
         </TwoColumn>
       </div>
@@ -424,21 +341,13 @@ function CheckRow({
   const isSet = value !== null && value !== "" && value !== undefined;
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "auto 1fr",
-        gap: 12,
-        marginBottom: 8,
-        alignItems: "baseline",
-      }}
-    >
-      <div style={{ display: "flex", gap: 6, fontSize: 14 }}>
+    <div className={styles.checkRow}>
+      <div className={styles.checkRowLabel}>
         <span>{isSet ? (required ? "✔" : "•") : required ? "✗" : "○"}</span>
         <span>{label}</span>
       </div>
 
-      <div style={{ textAlign: "right", fontSize: 14, whiteSpace: "pre-line" }}>
+      <div className={styles.checkRowValue}>
         {isSet ? value : ""}
       </div>
     </div>
@@ -528,6 +437,40 @@ function formatDateTimeRange(
   start: string | null,
   end: string | null
 ): { dateLine: string | null; timeLine: string | null } {
-  /* unchanged */
-  return { dateLine: null, timeLine: null };
+  if (!start && !end) return { dateLine: null, timeLine: null };
+
+  const base = start || end;
+  const ref = base ? new Date(base) : null;
+  if (!ref || Number.isNaN(ref.getTime())) {
+    return { dateLine: null, timeLine: null };
+  }
+
+  const dateLine = ref.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+
+  const startD = start ? new Date(start) : null;
+  const endD = end ? new Date(end) : null;
+
+  const s =
+    startD && !Number.isNaN(startD.getTime())
+      ? startD.toLocaleTimeString(undefined, {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : null;
+
+  const e =
+    endD && !Number.isNaN(endD.getTime())
+      ? endD.toLocaleTimeString(undefined, {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : null;
+
+  const timeLine = s && e ? `${s} to ${e}` : s ?? e ?? null;
+
+  return { dateLine, timeLine };
 }

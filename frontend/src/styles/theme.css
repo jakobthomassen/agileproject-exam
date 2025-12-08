@@ -48,6 +48,22 @@
   --page-max-width: 960px;
   --section-padding-x: 40px;
   --section-padding-y: 60px;
+  --header-padding: 18px 40px;
+  --header-logo-size: 26px;
+  --header-logo-spacing: 0.08em;
+  --nav-gap: 24px;
+  --nav-opacity: 0.9;
+  --hero-content-max-width: 720px;
+  --hero-heading-size: 42px;
+  --hero-text-margin: 16px;
+  --hero-text-max-width: 540px;
+  --hero-text-color: #c5c5c5;
+  --card-padding: 24px;
+  --card-border-radius: 18px;
+  --card-bg: rgba(10,10,15,0.7);
+  --card-border: 1px solid rgba(255,255,255,0.08);
+  --card-blur: blur(14px);
+  --card-text-color: #d1d1d1;
 }
 
 /* Normalize body to use the theme fonts and colors */

@@ -1,0 +1,17 @@
+.methodCards {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.methodCard {
+  flex: 1;
+  min-width: 260px;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+
+.methodCard:hover {
+  box-shadow: 0 0 16px rgba(0, 255, 120, 0.18);
+  transform: translateY(-2px);
+}

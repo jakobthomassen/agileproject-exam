@@ -6,6 +6,20 @@ import { TextInput } from "../components/ui/TextInput";
 import { Card } from "../components/ui/Card";
 import { useEventSetup, type SavedEvent } from "../context/EventSetupContext";
 import { useNavigate } from "react-router-dom";
+import styles from "./Dashboard.module.css";
+
+function formatDateTime(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export default function Dashboard() {
   const { savedEvents, deleteSavedEvent, updateSavedEvent } = useEventSetup();
@@ -54,20 +68,20 @@ export default function Dashboard() {
 
   return (
     <PageContainer kind="solid" maxWidth={1100}>
-      <div style={{ width: "100%", marginTop: 12 }}>
-        <h1 style={{ marginBottom: 20 }}>My Events</h1>
+      <div className={styles.pageInner}>
+        <h1 className={styles.title}>My Events</h1>
 
         <Button
           onClick={() => navigate("/setup/method")}
-          style={{ marginBottom: 20 }}
+          className={styles.newEventButton}
         >
           New Peers Event
         </Button>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+        <div className={styles.searchRow}>
           <TextInput
             placeholder="Search my events..."
-            style={{ width: 260 }}
+            className={styles.searchInput}
           />
         </div>
 
@@ -78,11 +92,11 @@ export default function Dashboard() {
         />
 
         {editingId && editDraft && (
-          <div style={{ marginTop: 16 }}>
+          <div className={styles.editSection}>
             <Card padding={16}>
-              <h3 style={{ marginBottom: 12 }}>Edit event</h3>
+              <h3>Edit event</h3>
 
-              <div style={{ display: "grid", gap: 12, marginBottom: 12 }}>
+              <div className={styles.editGrid}>
                 <div>
                   <div style={{ fontSize: 13, ...muted }}>Event name</div>
                   <TextInput
@@ -148,17 +162,7 @@ export default function Dashboard() {
                           : d
                       )
                     }
-                    style={{
-                      width: "100%",
-                      boxSizing: "border-box",
-                      padding: "8px 10px",
-                      borderRadius: 8,
-                      border: "1px solid #4b5563",
-                      background: "#020617",
-                      color: "#e5e7eb",
-                      fontSize: 14,
-                      marginTop: 4,
-                    }}
+                    className={styles.statusSelect}
                   >
                     <option value="DRAFT">Draft</option>
                     <option value="OPEN">Open</option>
@@ -167,7 +171,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <div className={styles.editActions}>
                 <Button variant="ghost" onClick={cancelEdit}>
                   Cancel
                 </Button>
@@ -191,18 +195,11 @@ function EventsTable({
   onEdit: (ev: SavedEvent) => void;
 }) {
   return (
-    <div
-      style={{
-        width: "100%",
-        borderRadius: 12,
-        border: "1px solid #1f2937",
-        overflow: "hidden"
-      }}
-    >
+    <div className={styles.tableWrapper}>
       <TableHeader />
 
       {events.length === 0 && (
-        <div style={{ padding: 20, textAlign: "center", ...muted }}>
+        <div className={styles.emptyState} style={muted}>
           No events yet.
         </div>
       )}
@@ -221,17 +218,7 @@ function EventsTable({
 
 function TableHeader() {
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns:
-          "180px 140px 120px 120px 130px 100px 120px 100px",
-        padding: "12px 16px",
-        background: "#0f172a",
-        fontWeight: 600,
-        fontSize: 14
-      }}
-    >
+    <div className={styles.tableHeader}>
       <span>Event Name</span>
       <span>Sport</span>
       <span>Format</span>
@@ -256,19 +243,11 @@ function TableRow({
   const navigate = useNavigate();
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns:
-          "180px 140px 120px 120px 130px 100px 120px 100px",
-        padding: "12px 16px",
-        borderTop: "1px solid #1e293b",
-        alignItems: "center",
-        fontSize: 14
-      }}
-    >
-      <span style={{ color: "#7dd3fc", cursor: "pointer" }}
-            onClick={() => navigate(`/event/${ev.id}`)}>
+    <div className={styles.tableRow}>
+      <span
+        className={styles.eventNameLink}
+        onClick={() => navigate(`/event/${ev.id}`)}
+      >
         {ev.eventName || "Untitled Event"}
       </span>
 
@@ -277,13 +256,13 @@ function TableRow({
 
       <StatusBubble status={ev.status} />
 
-      <span>{ev.startDate || "—"}</span>
+      <span>{formatDateTime(ev.startDate) || "—"}</span>
       <span>{ev.athletes}</span>
       <span>{ev.eventCode || "No code"}</span>
 
-      <div style={{ display: "flex", gap: 10 }}>
+      <div className={styles.actionsRow}>
         <span
-          style={{ color: "#38bdf8", cursor: "pointer" }}
+          className={styles.actionEdit}
           onClick={onEdit}
         >
           Edit
@@ -291,7 +270,7 @@ function TableRow({
 
         <span
           onClick={onDelete}
-          style={{ cursor: "pointer", color: "#f87171" }}
+          className={styles.actionDelete}
         >
           🗑
         </span>
@@ -309,15 +288,8 @@ function StatusBubble({ status }: { status: string }) {
 
   return (
     <span
-      style={{
-        color: "#0f172a",
-        background: colors[status] || "#94a3b8",
-        padding: "2px 8px",
-        borderRadius: 999,
-        fontSize: 12,
-        fontWeight: 600,
-        justifySelf: "start"
-      }}
+      className={styles.statusBubble}
+      style={{ background: colors[status] || "#94a3b8" }}
     >
       {status}
     </span>

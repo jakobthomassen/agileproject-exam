@@ -1,0 +1,152 @@
+.pageInner {
+  width: 100%;
+}
+
+.chatPanel {
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.18), transparent 55%),
+    radial-gradient(circle at bottom, rgba(16, 185, 129, 0.16), transparent 55%);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.chatMessages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 10px 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chatRow {
+  display: flex;
+}
+
+.chatRowUser {
+  justify-content: flex-end;
+}
+
+.chatRowAssistant {
+  justify-content: flex-start;
+}
+
+.chatBubbleUser {
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  padding: 10px 14px;
+  border-radius: 18px;
+  border-bottom-right-radius: 4px;
+  display: inline-block;
+  max-width: 72%;
+  text-align: left;
+  color: #0b1120;
+  font-size: 14px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.45);
+}
+
+.chatBubbleAssistant {
+  background: rgba(15, 23, 42, 0.95);
+  padding: 10px 14px;
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
+  display: inline-block;
+  max-width: 72%;
+  text-align: left;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.6);
+}
+
+.thinkingRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.8;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.thinkingDots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.thinkingDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #6b7280;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.thinkingDotMid {
+  background: #9ca3af;
+  animation-delay: 0.15s;
+}
+
+.thinkingDotLight {
+  background: #e5e7eb;
+  animation-delay: 0.3s;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-2px);
+    opacity: 1;
+  }
+}
+
+.chatInputRow {
+  padding: 10px 10px 8px 10px;
+  border-top: 1px solid rgba(31, 41, 55, 0.8);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.checklistCardInner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.checklistHeading {
+  margin-bottom: 12px;
+}
+
+.checklistHeadingOptional {
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+
+.checklistContinueButton {
+  margin-top: auto;
+}
+
+.checkRow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  margin-bottom: 8px;
+  align-items: baseline;
+}
+
+.checkRowLabel {
+  display: flex;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.checkRowValue {
+  text-align: right;
+  font-size: 14px;
+  white-space: pre-line;
+}
