@@ -1,29 +1,35 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary
 from .database import Base
-from sqlalchemy.types import JSON
+
 
 class Event(Base):
     __tablename__ = "events"
 
+    # Required fields
     id = Column(Integer, primary_key=True, index=True)
-    eventname = Column(String, nullable=True)
-    date = Column(String, nullable=True)
-    time = Column(String, nullable=True)
-    location = Column(String, nullable=True)
+    event_name = Column(String, nullable=False)
+    date = Column(String, nullable=False)
+    time = Column(String, nullable=False)
+    location = Column(String, nullable=False)
 
-    # Participants stored as a JSON list - this is for simplicity
-    # Will be changed with relationships later
-    participants = Column(JSON, nullable=True)
+    description = Column(String, nullable=True)
+    judging_type = Column(String, nullable=True)
+    audience_weight = Column(Integer, nullable=True)
+    expert_weight = Column(Integer, nullable=True)
+    athlete_weight = Column(Integer, nullable=True)
 
-    # Convert to dict for printing
     def to_dict(self):
         return {
             "id": self.id,
-            "eventname": self.eventname,
+            "event_name": self.event_name,
             "date": self.date,
             "time": self.time,
             "location": self.location,
-            "participants": self.participants,
+            "description": self.description,
+            "judging_type": self.judging_type,
+            "audience_weight": self.audience_weight,
+            "expert_weight": self.expert_weight,
+            "athlete_weight": self.athlete_weight
         }
 
 
