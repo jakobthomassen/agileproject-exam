@@ -70,17 +70,17 @@ export default function SetupTemplates() {
 
   const infoText: Record<TemplateType, string> = {
     rating:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur quis mattis urna. Phasellus aliquam eros vel augue faucibus tempor.",
+      "Users score or order athletes from best to worst. Ideal when you want participants to provide a full, ordered list of preferences.",
     judge_audience:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce posuere libero sed semper fermentum. Cras ac ultrices nulla.",
+      "Athletes are shown in head-to-head matchups, and the audience chooses the winner each time. Perfect for quick comparisons and generating an overall winner through pairwise votes.",
     blank:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In vel pharetra tortor. Suspendisse potenti. Integer lacinia nisi at nunc mattis varius.",
-  };
+      "Audiences vote on a single Athlete or choose from multiple predefined athlete options. Best for simple, fast feedback without detailed comparisons.",
+};
 
   const cards: CardData[] = [
-    { key: "rating", title: "Ranking", desc: "Lorem ipsum dolor sit amet." },
-    { key: "judge_audience", title: "Battle", desc: "Donec sit amet turpis nulla." },
-    { key: "blank", title: "Poll", desc: "Pellentesque a mi quam." },
+    { key: "rating", title: "Ranking", desc: "Order all athletes from best to worst in one list."},
+    { key: "judge_audience", title: "Battle", desc: "Head-to-head matchups where the crowd picks the winner."},
+    { key: "blank", title: "Poll", desc: "Quick single-choice voting on one athlete or option."},
   ];
 
   return (
