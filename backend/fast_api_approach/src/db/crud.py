@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from ..DTOs.eventstate import EventState, EventImageCreate
 from .models import Event, EventImage
 
@@ -32,7 +33,8 @@ def get_all_events(db: Session):
 def update_event(db: Session, id: int, event_data: EventState):
     db_event = get_single_event(db, id)
     if not db_event:
-        return None
+        raise AttributeError(f"Event with ID: {id} does not exist")
+        return
 
     if event_data.eventname is not None:
         db_event.event_name = event_data.eventname
@@ -75,8 +77,13 @@ def create_image(db: Session, image_data: EventImageCreate):
         image = image_data.image_bytes
     )
     db.add(db_image)
-    db.commit()
-    db.refresh(db_image)
+
+    try:
+        db.commit()
+        db.refresh(db_image)
+    except IntegrityError:
+        db.rollback()
+        raise ValueError(f"Cannot create image: event with ID: {image_data.event_id} does not exist")
 
     return db_image
 
@@ -96,6 +103,7 @@ def get_images_for_event(db: Session, event_id: int):
 def update_image(db: Session, id: int, image_data: EventImageCreate):
     db_image = get_single_image(db, id)
     if not db_image:
+        raise ValueError(f"Image with ID {id} does not exist")
         return None
 
     # update only what is provided

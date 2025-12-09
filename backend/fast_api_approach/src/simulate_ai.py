@@ -70,7 +70,8 @@ def simulate_ai_event():
         image_bytes=image_bytes
     )
     saved_image = save_event_image(fake_image)
-    print("Saved")
+    if saved_image:
+        print("Saved")
 
     print(f"\nReading all images from database...")
     all_images = debug_read_all_images()
@@ -79,14 +80,16 @@ def simulate_ai_event():
 
     print(f"\nReading image with ID: {id}")
     single_image = debug_read_event_image(id)
-    print(single_image.to_dict())
+    if single_image:
+        print(single_image.to_dict())
 
     print(f"\nUpdating image with ID: {id}")
     updated_fake_image = EventImageCreate(
         event_id=2
     )
     updated_image = debug_update_image(updated_fake_image, id)
-    print(updated_image.to_dict())
+    if updated_image:
+        print(updated_image.to_dict())
 
     print(f"\nDeleting image with ID: {id}")
     debug_delete_event_image(id)
