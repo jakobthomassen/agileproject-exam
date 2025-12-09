@@ -40,3 +40,25 @@ class EventImage(Base):
             "event_id": self.event_id
             # "image": self.image
         }
+
+
+class Participant(Base):
+    """
+    Normalized Participants table.
+    TODO: The Event.participants JSON column still exists for backwards compatibility.
+          Consider migrating data and removing the JSON column in the future.
+    """
+    __tablename__ = "participants"
+
+    id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(Integer, ForeignKey("events.id"))
+    name = Column(String, nullable=True)
+    email = Column(String, nullable=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "event_id": self.event_id,
+            "name": self.name,
+            "email": self.email
+        }

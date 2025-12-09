@@ -49,3 +49,25 @@ class EventState(BaseModel):
 class EventImageCreate(BaseModel):
     event_id: int = Field(None, description="FK to events table")
     image_bytes: bytes = Field(None, description="Image stored in bytes")
+
+
+# DTO for participant creation/update
+class ParticipantCreate(BaseModel):
+    event_id: int = Field(None, description="FK to events table")
+    name: Optional[str] = Field(None, description="Name of the participant")
+    email: Optional[str] = Field(None, description="Email of the participant")
+
+
+# DTO for import error details
+class ImportError(BaseModel):
+    row: int = Field(..., description="Row number in the file (1-indexed)")
+    reason: str = Field(..., description="Why this row was skipped")
+
+
+# DTO for participant import result
+class ParticipantImportResult(BaseModel):
+    event_id: int = Field(..., description="The event ID participants were imported to")
+    total_rows: int = Field(..., description="Total rows found in the file")
+    created: int = Field(..., description="Number of participants created")
+    skipped: int = Field(..., description="Number of rows skipped")
+    errors: List[ImportError] = Field(default_factory=list, description="List of errors for skipped rows")

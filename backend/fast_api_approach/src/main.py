@@ -1,11 +1,13 @@
 import os
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, UploadFile, File, HTTPException
 from .ai.gemini import Gemini
 from .auth.dependencies import get_user_identifier
 from .auth.throttling import apply_rate_limit
-from src.DTOs.eventstate import ChatRequest, ChatResponse
+from src.DTOs.eventstate import ChatRequest, ChatResponse, ParticipantCreate, ParticipantImportResult, ImportError
 from google.genai import types
-from .db.database import Base, engine
+from .db.database import Base, engine, SessionLocal
+from .db.crud import get_single_event, create_participant
+from .utils.import_participants import parse_csv_participants, parse_excel_participants, is_row_valid
 
 app = FastAPI()
 
@@ -74,4 +76,91 @@ async def chat(request: ChatRequest, user_id: str = Depends(get_user_identifier)
 async def root():
     return {"message": "API is running"}
 
+
+# --- Participant Import Endpoint ---
+@app.post("/events/{event_id}/participants/import", response_model=ParticipantImportResult)
+async def import_participants(event_id: int, file: UploadFile = File(...)):
+    """
+    Import participants from a CSV or Excel (XLSX) file for a specific event.
+    
+    Expected columns in the file:
+    - name: Participant's name
+    - email: Participant's email
+    
+    At least one of 'name' or 'email' must be present for a row to be imported.
+    """
+    # Check file extension
+    filename = file.filename or ""
+    filename_lower = filename.lower()
+    
+    if filename_lower.endswith(".csv"):
+        file_type = "csv"
+    elif filename_lower.endswith(".xlsx"):
+        file_type = "xlsx"
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file type. Please upload a CSV (.csv) or Excel (.xlsx) file."
+        )
+    
+    # Read file content
+    file_content = await file.read()
+    
+    # Check if event exists
+    db = SessionLocal()
+    try:
+        event = get_single_event(db, event_id)
+        if not event:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Event with ID {event_id} not found."
+            )
+        
+        # Parse file based on type
+        if file_type == "csv":
+            rows = parse_csv_participants(file_content)
+        else:
+            rows = parse_excel_participants(file_content)
+        
+        # Process rows and create participants
+        total_rows = len(rows)
+        created = 0
+        skipped = 0
+        errors = []
+        
+        for idx, row in enumerate(rows):
+            row_number = idx + 2  # +2 because: idx is 0-based, and row 1 is the header
+            
+            # Validate row
+            is_valid, reason = is_row_valid(row)
+            if not is_valid:
+                skipped += 1
+                errors.append(ImportError(row=row_number, reason=reason))
+                continue
+            
+            # Build ParticipantCreate DTO
+            participant_data = ParticipantCreate(
+                event_id=event_id,
+                name=row.get("name", "").strip() or None,
+                email=row.get("email", "").strip() or None
+            )
+            
+            # Use existing CRUD function to create participant
+            try:
+                create_participant(db, participant_data)
+                created += 1
+            except Exception as e:
+                skipped += 1
+                errors.append(ImportError(row=row_number, reason=f"Database error: {str(e)}"))
+        
+        return ParticipantImportResult(
+            event_id=event_id,
+            total_rows=total_rows,
+            created=created,
+            skipped=skipped,
+            errors=errors
+        )
+    
+    finally:
+        db.close()
 
