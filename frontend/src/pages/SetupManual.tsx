@@ -52,15 +52,29 @@ export default function SetupManual() {
   const { setEventData } = useEventSetup();
 
   /* Core event fields */
+  
   const [eventName, setEventName] = useState("");
   const [eventType, setEventType] = useState("");
   const [participants, setParticipants] = useState<number | "">("");
   const [venue, setVenue] = useState("");
-  const [startDateTime, setStartDateTime] = useState("");
-  const [endDateTime, setEndDateTime] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [sponsor, setSponsor] = useState("");
   const [rules, setRules] = useState("");
   const [audienceLimit, setAudienceLimit] = useState<number | "">("");
+  const isInvalidTimeRange =
+  startTime !== "" && endTime !== "" && endTime < startTime;
+const combinedStart =
+  eventDate && startTime ? `${eventDate}T${startTime}` : null;
+const combinedEnd =
+  eventDate &&
+  startTime &&
+  endTime &&
+  endTime >= startTime
+    ? `${eventDate}T${endTime}`
+    : null;
+
 
   /* Template / scoring */
   const [selectedTemplate, setSelectedTemplate] =
@@ -199,7 +213,11 @@ export default function SetupManual() {
     return (
       eventName.trim().length > 0 &&
       eventType.trim().length > 0 &&
-      participants !== ""
+      participants !== "" &&
+      eventDate !== "" &&
+      startTime !== "" &&
+      endTime !== "" &&
+      endTime >= startTime
     );
   }
 
@@ -214,8 +232,8 @@ export default function SetupManual() {
       scoringAudience: null,
       scoringJudge: null,
       venue: venue || null,
-      startDateTime: startDateTime || null,
-      endDateTime: endDateTime || null,
+      startDateTime: combinedStart,
+      endDateTime: combinedEnd,
       sponsor: sponsor || null,
       rules: rules || null,
       audienceLimit: audienceLimit === "" ? null : Number(audienceLimit),
@@ -268,21 +286,42 @@ export default function SetupManual() {
             <Field label="Event date and time range">
               <div className={styles.dateTimeRow}>
                 <div className={styles.dateTimeCol}>
-                  <span style={{ fontSize: 12, ...muted }}>Start</span>
+                  <span className={styles.subLabel}>Date</span>
                   <TextInput
-                    type="datetime-local"
-                    value={startDateTime}
-                    onChange={e => setStartDateTime(e.target.value)}
+                    type="date"
+                    value={eventDate}
+                    onChange={e => setEventDate(e.target.value)}
                   />
                 </div>
-                <div className={styles.dateTimeArrow} style={muted}>→</div>
+
                 <div className={styles.dateTimeCol}>
-                  <span style={{ fontSize: 12, ...muted }}>End</span>
+                  <span className={styles.subLabel}>Start time</span>
                   <TextInput
-                    type="datetime-local"
-                    value={endDateTime}
-                    min={startDateTime || undefined}
-                    onChange={e => setEndDateTime(e.target.value)}
+                    type="time"
+                    value={startTime}
+                    onChange={e => {
+                      const newStart = e.target.value;
+                      setStartTime(newStart);
+
+                      if (endTime && endTime < newStart) {
+                        setEndTime("");
+                      }
+                    }}
+                  />
+                  {isInvalidTimeRange && (
+                    <span style={{ fontSize: 12, color: "#f97316" }}>
+                      End time must be after start time
+                    </span>
+                  )}
+                </div>
+
+                <div className={styles.dateTimeCol}>
+                  <span className={styles.subLabel}>End time</span>
+                  <TextInput
+                    type="time"
+                    min={startTime || undefined}
+                    value={endTime}
+                    onChange={e => setEndTime(e.target.value)}
                   />
                 </div>
               </div>
@@ -347,10 +386,8 @@ export default function SetupManual() {
             <FieldRow
               label="Date and time"
               value={
-                startDateTime || endDateTime
-                  ? `${formatDateTime(startDateTime) ?? "?"} to ${
-                      formatDateTime(endDateTime) ?? "?"
-                    }`
+                combinedStart && combinedEnd
+                  ? `${formatDateTime(combinedStart)} to ${formatDateTime(combinedEnd)}`
                   : ""
               }
             />

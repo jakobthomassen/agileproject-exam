@@ -33,22 +33,22 @@
   text-align: center;
 }
 
-.tableHeader {
-  display: grid;
-  grid-template-columns: 180px 140px 120px 120px 130px 100px 120px 100px;
-  padding: 12px 16px;
-  background: var(--color-surface);
-  font-weight: 600;
-  font-size: 14px;
-}
-
+.tableHeader,
 .tableRow {
   display: grid;
   grid-template-columns: 180px 140px 120px 120px 130px 100px 120px 100px;
   padding: 12px 16px;
-  border-top: 1px solid #1e293b;
   align-items: center;
   font-size: 14px;
+}
+
+.tableHeader {
+  background: var(--color-surface);
+  font-weight: 600;
+}
+
+.tableRow {
+  border-top: 1px solid #1e293b;
 }
 
 .eventNameLink {
@@ -72,24 +72,15 @@
 }
 
 .statusBubble {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-
   color: #0f172a;
   padding: 2px 10px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
-
-  justify-self: start;
   width: fit-content;
 }
 
-
-/* -------------------------------------------------------------------------- */
-/* MODAL */
-/* -------------------------------------------------------------------------- */
+/* MODAL SHELL ONLY */
 
 .modalBackdrop {
   position: fixed;
@@ -102,21 +93,12 @@
 }
 
 .modalCard {
-  width: 520px;
+  width: 560px;
   max-width: 90%;
-}
-
-.modalTitle {
-  margin-bottom: 16px;
-}
-
-.modalContent {
-  display: grid;
-  gap: 10px;
-  margin-bottom: 20px;
 }
 
 .modalActions {
   display: flex;
   justify-content: flex-end;
+  margin-top: 16px;
 }

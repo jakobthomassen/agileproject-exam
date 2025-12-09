@@ -2,27 +2,55 @@
   width: 100%;
 }
 
-.scoringSummary {
-  margin-bottom: 4px;
-  font-size: 13px;
+/* -------------------------------------------------------------------------- */
+/* Field wrapper                                                              */
+/* -------------------------------------------------------------------------- */
+
+.fieldRoot {
+  margin-bottom: 16px;
 }
 
-.rangeInput {
-  width: 100%;
+.fieldHeader {
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-primary);
 }
+
+.requiredBadge {
+  color: #f97316;
+  font-size: 11px;
+}
+
+.subLabel {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Date / time layout (NEW)                                                   */
+/* -------------------------------------------------------------------------- */
 
 .dateTimeRow {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .dateTimeCol {
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
   flex: 1;
 }
 
-.dateTimeArrow {
-  padding-top: 20px;
-}
+/* -------------------------------------------------------------------------- */
+/* Existing styles retained                                                   */
+/* -------------------------------------------------------------------------- */
 
 .rulesTextarea {
   width: 100%;
@@ -46,33 +74,12 @@
   margin-bottom: 12px;
 }
 
-.rulesPreview {
-  white-space: pre-wrap;
-}
-
-.fieldRoot {
-  margin-bottom: 16px;
-}
-
-.fieldHeader {
-  margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--color-text-primary);
-  font-size: 13px;
-}
-
-.requiredBadge {
-  color: #f97316;
-  font-size: 11px;
-}
-
 /* modal overlay */
+
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(15,23,42,0.65);
+  background: rgba(15, 23, 42, 0.65);
   z-index: 950;
   display: flex;
   justify-content: center;
@@ -80,7 +87,6 @@
   padding: 16px;
 }
 
-/* modal container */
 .modal {
   width: 100%;
   max-width: 720px;
@@ -88,12 +94,11 @@
   overflow-y: auto;
   background: #020617;
   border-radius: 16px;
-  border: 1px solid rgba(148,163,184,0.5);
+  border: 1px solid rgba(148, 163, 184, 0.5);
   padding: 20px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 
-/* modal header */
 .modalHeader {
   display: flex;
   align-items: center;
@@ -110,18 +115,12 @@
   line-height: 1;
 }
 
-/* section divider */
 .sectionDivider {
   margin-top: 24px;
   padding-top: 12px;
-  border-top: 1px solid rgba(148,163,184,0.4);
+  border-top: 1px solid rgba(148, 163, 184, 0.4);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-}
-
-/* live preview */
-.previewTitle {
-  margin-bottom: 12px;
 }
