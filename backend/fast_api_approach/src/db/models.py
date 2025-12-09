@@ -37,7 +37,7 @@ class EventImage(Base):
     __tablename__ = "images"
 
     id = Column(Integer, primary_key=True, index=True)
-    event_id = Column(Integer, ForeignKey("events.id"))
+    event_id = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"))
     image = Column(LargeBinary, nullable=False)
 
     def to_dict(self):
