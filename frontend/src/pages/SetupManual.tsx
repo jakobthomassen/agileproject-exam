@@ -23,7 +23,7 @@ import styles from "./SetupManual.module.css";
 /* -------------------------------------------------------------------------- */
 
 type TemplateType = "rating" | "judge_audience" | "blank";
-type ScoringFormat = "score-voting" | "scream-voting";
+type ScoringFormat = "score-voting" | "scream-voting" | "like-voting";
 type ExpertVoteFormat = "single" | "multiple";
 
 /* -------------------------------------------------------------------------- */
@@ -82,6 +82,10 @@ export default function SetupManual() {
   const [expertGroupWeight, setExpertGroupWeight] = useState(34);
   const [athleteGroupWeight, setAthleteGroupWeight] = useState(33);
 
+  const [audienceCriteria, setAudienceCriteria] = useState<string[]>(["Amplitude"]);
+  const [expertCriteria, setExpertCriteria] = useState<string[]>(["Amplitude"]);
+  const [athleteCriteria, setAthleteCriteria] = useState<string[]>(["Amplitude"]);
+
   const [expertVoteFormat, setExpertVoteFormat] =
     useState<ExpertVoteFormat>("multiple");
   const [expertCount, setExpertCount] = useState<number | "">(3);
@@ -92,68 +96,75 @@ export default function SetupManual() {
 
   const [showJudgingSettings, setShowJudgingSettings] = useState(false);
 
+  const [stageBracket, setStageBracket] = useState("");
+
   /* ---------------------------------------------------------------------- */
   /* Template defaults                                                       */
   /* ---------------------------------------------------------------------- */
 
-  function applyTemplateDefaults(tpl: TemplateType) {
-    switch (tpl) {
-      case "rating":
-        setScoringFormat("score-voting");
-        setScoreMin(0);
-        setScoreMax(10);
-        setJudgingDuration(60);
-        setSpectatorsMax(100);
-        setLiveLeaderboard(true);
+function applyTemplateDefaults(tpl: TemplateType) {
+  switch (tpl) {
+    case "rating":
+      setScoringFormat("like-voting");
+      setScoreMin(0);
+      setScoreMax(10);
+      setJudgingDuration(60);
+      setSpectatorsMax(100);
+      setLiveLeaderboard(true);
 
-        setAudienceEnabled(true);
-        setExpertEnabled(true);
-        setAthleteEnabled(true);
+      setAudienceEnabled(true);
+      setExpertEnabled(true);
+      setAthleteEnabled(true);
 
-        setAudienceGroupWeight(33);
-        setExpertGroupWeight(34);
-        setAthleteGroupWeight(33);
-        break;
+      setAudienceGroupWeight(33);
+      setExpertGroupWeight(34);
+      setAthleteGroupWeight(33);
 
-      case "judge_audience":
-        setScoringFormat("score-voting");
-        setScoreMin(0);
-        setScoreMax(10);
-        setJudgingDuration(45);
-        setSpectatorsMax(50);
+      // Ranking = Final
+      setStageBracket("Final");
+      break;
 
-        setAudienceEnabled(true);
-        setExpertEnabled(true);
-        setAthleteEnabled(false);
+    case "judge_audience":
+      setScoringFormat("score-voting");
+      setScoreMin(0);
+      setScoreMax(10);
+      setJudgingDuration(45);
+      setSpectatorsMax(50);
 
-        setAudienceGroupWeight(50);
-        setExpertGroupWeight(50);
-        setAthleteGroupWeight(0);
+      setAudienceEnabled(true);
+      setExpertEnabled(true);
+      setAthleteEnabled(false);
 
-        setAllowGuestSpectators(true);
-        setVoteAfterEachRound(false);
-        setExpertVoteFormat("multiple");
-        setExpertCount(3);
-        break;
+      setAudienceGroupWeight(50);
+      setExpertGroupWeight(50);
+      setAthleteGroupWeight(0);
 
-      case "blank":
-        setScoringFormat("score-voting");
-        setScoreMin(0);
-        setScoreMax(1);
-        setJudgingDuration(0);
-        setSpectatorsMax("");
+      
 
-        setAudienceEnabled(true);
-        setExpertEnabled(false);
-        setAthleteEnabled(false);
+      // Battle starts with None
+      setStageBracket("");
+      break;
 
-        setAudienceGroupWeight(100);
-        setExpertGroupWeight(0);
-        setAthleteGroupWeight(0);
-        setLiveLeaderboard(false);
-        break;
-    }
+    case "blank":
+      setScoringFormat("score-voting");
+      setScoreMin(0);
+      setScoreMax(1);
+      setJudgingDuration(0);
+      setSpectatorsMax("");
+
+      setAudienceEnabled(true);
+      setExpertEnabled(false);
+      setAthleteEnabled(false);
+
+      setAudienceGroupWeight(100);
+      setExpertGroupWeight(0);
+      setAthleteGroupWeight(0);
+      setLiveLeaderboard(false);
+
+      setStageBracket("");
+      break;
   }
+}
 
   useEffect(() => {
     const raw = sessionStorage.getItem("selectedTemplate");
@@ -167,7 +178,7 @@ export default function SetupManual() {
   /* Derived preview                                                         */
   /* ---------------------------------------------------------------------- */
 
-  function getJudgingSummary() {
+    function getJudgingSummary() {
     if (selectedTemplate === "judge_audience") {
       const groups: string[] = [];
       if (audienceEnabled) groups.push("Audience");
@@ -177,9 +188,11 @@ export default function SetupManual() {
       const spectators =
         spectatorsMax === "" ? "Unlimited spectators" : `${spectatorsMax} spectators`;
 
-      return `Battle voting · ${judgingDuration}s · ${spectators} · ${groups.join(
+      const base = `Battle voting · ${judgingDuration}s · ${spectators} · ${groups.join(
         " · "
       )}`;
+
+      return stageBracket ? `${base} · ${stageBracket}` : base;
     }
 
     const range = `${scoreMin}-${scoreMax}`;
@@ -188,8 +201,11 @@ export default function SetupManual() {
     if (expertEnabled) groups.push(`Expert ${expertGroupWeight}%`);
     if (athleteEnabled) groups.push(`Athlete ${athleteGroupWeight}%`);
 
-    return `Score voting ${range} | ${groups.join(" · ")}`;
+    const base = `Score voting ${range} | ${groups.join(" · ")}`;
+
+    return stageBracket ? `${base} · ${stageBracket}` : base;
   }
+
 
   /* ---------------------------------------------------------------------- */
   /* Navigation                                                              */
@@ -361,48 +377,49 @@ export default function SetupManual() {
       <FAQWidget />
 
       {showJudgingSettings && (
-        <JudgingSettingsModal
+  <JudgingSettingsModal
           template={selectedTemplate}
           onClose={() => setShowJudgingSettings(false)}
-
+          scoringFormat={scoringFormat}
+          setScoringFormat={setScoringFormat}
           scoreMin={scoreMin}
           setScoreMin={setScoreMin}
           scoreMax={scoreMax}
           setScoreMax={setScoreMax}
-
           judgingDuration={judgingDuration}
           setJudgingDuration={setJudgingDuration}
-
           spectatorsMax={spectatorsMax}
           setSpectatorsMax={setSpectatorsMax}
-
           liveLeaderboard={liveLeaderboard}
           setLiveLeaderboard={setLiveLeaderboard}
-
           allowGuestSpectators={allowGuestSpectators}
           setAllowGuestSpectators={setAllowGuestSpectators}
-
           voteAfterEachRound={voteAfterEachRound}
           setVoteAfterEachRound={setVoteAfterEachRound}
-
           audienceEnabled={audienceEnabled}
           setAudienceEnabled={setAudienceEnabled}
           expertEnabled={expertEnabled}
           setExpertEnabled={setExpertEnabled}
           athleteEnabled={athleteEnabled}
           setAthleteEnabled={setAthleteEnabled}
-
           audienceGroupWeight={audienceGroupWeight}
           setAudienceGroupWeight={setAudienceGroupWeight}
           expertGroupWeight={expertGroupWeight}
           setExpertGroupWeight={setExpertGroupWeight}
           athleteGroupWeight={athleteGroupWeight}
           setAthleteGroupWeight={setAthleteGroupWeight}
-
+          audienceCriteria={audienceCriteria}
+          setAudienceCriteria={setAudienceCriteria}
+          expertCriteria={expertCriteria}
+          setExpertCriteria={setExpertCriteria}
+          athleteCriteria={athleteCriteria}
+          setAthleteCriteria={setAthleteCriteria}
           expertVoteFormat={expertVoteFormat}
           setExpertVoteFormat={setExpertVoteFormat}
           expertCount={expertCount}
           setExpertCount={setExpertCount}
+          stageBracket={stageBracket}
+          setStageBracket={setStageBracket}
         />
       )}
     </PageContainer>
