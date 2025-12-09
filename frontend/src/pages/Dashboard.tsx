@@ -5,22 +5,9 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { TextInput } from "../components/ui/TextInput";
 import { muted } from "../components/ui/Text";
-import { FieldRow } from "../components/ui/FieldRow";
 import { useEventSetup, type SavedEvent } from "../context/EventSetupContext";
+import { EventSummary } from "../components/event/EventSummary";
 import styles from "./Dashboard.module.css";
-
-function formatDateTime(value: string | null | undefined): string | null {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export default function Dashboard() {
   const { savedEvents, deleteSavedEvent } = useEventSetup();
@@ -67,10 +54,24 @@ export default function Dashboard() {
         </div>
 
         {selectedEvent && (
-          <EventSummaryModal
-            event={selectedEvent}
-            onClose={() => setSelectedEvent(null)}
-          />
+          <div className={styles.modalBackdrop}>
+            <Card className={styles.modalCard}>
+              <EventSummary
+                event={selectedEvent}
+                compact
+                showHero
+              />
+
+              <div className={styles.modalActions}>
+                <Button
+                  variant="ghost"
+                  onClick={() => setSelectedEvent(null)}
+                >
+                  Close
+                </Button>
+              </div>
+            </Card>
+          </div>
         )}
       </div>
     </PageContainer>
@@ -78,6 +79,20 @@ export default function Dashboard() {
 }
 
 /* -------------------------------------------------------------------------- */
+function formatTableDate(value: string | null | undefined): string {
+  if (!value) return "—";
+
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+
+  return d.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 function TableHeader() {
   return (
@@ -114,7 +129,7 @@ function TableRow({
       <span>{ev.sport || "—"}</span>
       <span>{ev.format || "—"}</span>
       <StatusBubble status={ev.status} />
-      <span>{formatDateTime(ev.startDate) || "—"}</span>
+      <span>{formatTableDate(ev.startDate)}</span>
       <span>{ev.athletes}</span>
       <span>{ev.eventCode || "—"}</span>
 
@@ -129,49 +144,6 @@ function TableRow({
     </div>
   );
 }
-
-/* -------------------------------------------------------------------------- */
-
-function EventSummaryModal({
-  event,
-  onClose,
-}: {
-  event: SavedEvent;
-  onClose: () => void;
-}) {
-  return (
-    <div className={styles.modalBackdrop}>
-      <Card className={styles.modalCard}>
-        <h2 className={styles.modalTitle}>
-          {event.eventName || "Untitled Event"}
-        </h2>
-
-        <div className={styles.modalContent}>
-          <FieldRow label="Sport" value={event.sport} />
-          <FieldRow label="Format" value={event.format} />
-          <FieldRow label="Status" value={event.status} />
-          <FieldRow
-            label="Start"
-            value={formatDateTime(event.startDate) ?? undefined}
-          />
-          <FieldRow
-            label="Athletes"
-            value={event.athletes !== null ? String(event.athletes) : undefined}
-          />
-          <FieldRow label="Event code" value={event.eventCode} />
-        </div>
-
-        <div className={styles.modalActions}>
-          <Button variant="ghost" onClick={onClose}>
-            Close
-          </Button>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
 
 function StatusBubble({ status }: { status: string }) {
   const colors: Record<string, string> = {
