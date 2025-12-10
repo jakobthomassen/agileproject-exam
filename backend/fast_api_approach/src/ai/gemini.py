@@ -6,13 +6,15 @@ from google.genai import types
 from ..DTOs.eventstate import EventState
 from ..agent.dashboard import Dashboard
 from ..ai.event_handler import save_ai_generated_event
+from.event_handler import get_event_ui_payload
+
 
 
 
 class Gemini(AIPlatform):
     def __init__(self, api_key: str, system_prompt: str = None,sdk_tools = TOOLS_4_SDK, tools: dict = tool_registry,dashboard: Dashboard = Dashboard(), event_state: EventState = EventState()):
         self.client = genai.Client(api_key=api_key)
-        self.model = "gemini-2.5-flash-lite"
+        self.model = "gemini-2.5-flash"
         self.system_prompt = system_prompt
         self.tools = sdk_tools
         self.tool_registry = tools
@@ -36,12 +38,13 @@ class Gemini(AIPlatform):
             config= types.GenerateContentConfig
             (
                 system_instruction=self.system_prompt+dashboard_view, #System prompt if any
+                thinking_config=types.ThinkingConfig(include_thoughts=True), # Enable thoughts in the response
                 tools=self.tools, #List of tools
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(
-                    disable=True)) # Disable automatic function calling for scope access, we handle it manually which means no function isolation.
+                    disable=True),) # Disable automatic function calling for scope access, we handle it manually which means no function isolation.
         )
         
-        while response.function_calls: # While the ai still to call functions 
+        while response.function_calls: # While the ai still to call functions
             for tool_call in response.function_calls:
                 fnargs = tool_call.args
                 fn_name = tool_call.name
@@ -66,6 +69,7 @@ class Gemini(AIPlatform):
                         ]
                     )
                 )
+            
 
             response = self.client.models.generate_content(
                 model=self.model,
@@ -78,8 +82,12 @@ class Gemini(AIPlatform):
             )
         if self.event_state.is_complete:
             save_ai_generated_event(self.event_state)
+        ui_payload = None
+        if self.event_state.eventid:
+            ui_payload = get_event_ui_payload(self.event_state.eventid)
+        
 
-        return response.text
+        return response.text, ui_payload
 
     def chat(self, prompt: str) -> str:
-        return self.generate_text(prompt) 
+        return self.generate_text(prompt)

@@ -1,45 +1,71 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import styles from "./SetupTemplates.module.css";
 
 type TemplateType = "rating" | "judge_audience" | "blank";
 
+type CardData = {
+  key: TemplateType;
+  title: string;
+  desc: string;
+};
+
+function TemplateCard({
+  data,
+  selected,
+  setSelected,
+  setInfoOpen,
+}: {
+  data: CardData;
+  selected: TemplateType | null;
+  setSelected: (t: TemplateType) => void;
+  setInfoOpen: (t: TemplateType) => void;
+}) {
+  const isActive = selected === data.key;
+
+  const cardClasses = [
+    styles.card,
+    isActive ? styles.cardActive : "",
+  ].filter(Boolean).join(" ");
+
+  return (
+    <div
+      className={cardClasses}
+      onClick={() => setSelected(data.key)}
+    >
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setInfoOpen(data.key);
+        }}
+        onMouseEnter={(e) => e.stopPropagation()}
+        className={styles.infoButton}
+        aria-label={`More information about ${data.title}`}
+      >
+        ?
+      </button>
+
+      <h3 className={styles.cardTitle}>{data.title}</h3>
+      <p className={styles.cardDescription}>{data.desc}</p>
+    </div>
+  );
+}
+
 export default function SetupTemplates() {
   const navigate = useNavigate();
-  const [selected, setSelected] = useState<TemplateType | null>(null);
 
+  const [selected, setSelected] = useState<TemplateType | null>(null);
   const [infoOpen, setInfoOpen] = useState<TemplateType | null>(null);
-  const [hovered, setHovered] = useState<TemplateType | null>(null);
 
   function handleContinue() {
-    if (selected) {
-      sessionStorage.setItem("selectedTemplate", selected);
-    } else {
-      sessionStorage.removeItem("selectedTemplate");
-    }
+    if (!selected) return;
+    sessionStorage.setItem("selectedTemplate", selected);
     navigate("/setup/method");
   }
 
-  function cardStyle(active: boolean, isHover: boolean): React.CSSProperties {
-    return {
-      position: "relative",
-      flex: 1,
-      minWidth: "220px",
-      minHeight: "140px",
-      padding: "18px",
-      borderRadius: "16px",
-      border: active
-        ? "1px solid #00ff99"
-        : "1px solid rgba(255,255,255,0.15)",
-      background: "rgba(15,15,22,0.95)",
-      cursor: "pointer",
-      transition: "box-shadow 0.25s ease, border-color 0.25s ease",
-
-      boxShadow: active
-        ? "0 0 16px rgba(0,255,120,0.25)"
-        : isHover
-        ? "0 0 12px rgba(0,255,120,0.12)"
-        : "none"
-    };
+  function handleDecideLater() {
+    sessionStorage.removeItem("selectedTemplate");
+    navigate("/setup/method");
   }
 
   const infoText: Record<TemplateType, string> = {
@@ -48,231 +74,40 @@ export default function SetupTemplates() {
     judge_audience:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce posuere libero sed semper fermentum. Cras ac ultrices nulla.",
     blank:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In vel pharetra tortor. Suspendisse potenti. Integer lacinia nisi at nunc mattis varius."
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In vel pharetra tortor. Suspendisse potenti. Integer lacinia nisi at nunc mattis varius.",
   };
 
-  function InfoModal() {
-    if (!infoOpen) return null;
-
-    return (
-      <div
-        onClick={() => setInfoOpen(null)}
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0,0,0,0.45)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 999
-        }}
-      >
-        <div
-          onClick={e => e.stopPropagation()}
-          style={{
-            width: "90%",
-            maxWidth: "420px",
-            padding: "24px",
-            borderRadius: "16px",
-            background: "rgba(15,15,22,1)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            color: "white"
-          }}
-        >
-          <h3 style={{ marginBottom: "12px" }}>
-            {infoOpen === "rating"
-              ? "Ranking template"
-              : infoOpen === "judge_audience"
-              ? "Battle template"
-              : "Poll template"}
-          </h3>
-
-          <p style={{ color: "#d1d5db", marginBottom: "24px" }}>
-            {infoText[infoOpen]}
-          </p>
-
-          <button
-            onClick={() => setInfoOpen(null)}
-            style={{
-              padding: "8px 20px",
-              borderRadius: "999px",
-              border: "1px solid rgba(148,163,184,0.7)",
-              background: "transparent",
-              color: "#e5e7eb",
-              cursor: "pointer",
-              fontSize: "14px"
-            }}
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const cards: CardData[] = [
+    { key: "rating", title: "Ranking", desc: "Lorem ipsum dolor sit amet." },
+    { key: "judge_audience", title: "Battle", desc: "Donec sit amet turpis nulla." },
+    { key: "blank", title: "Poll", desc: "Pellentesque a mi quam." },
+  ];
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "radial-gradient(circle at top, #0b1120, #020617)",
-        color: "white",
-        fontFamily: "Inter, system-ui, sans-serif",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "flex-start",
-        padding: "60px 16px"
-      }}
-    >
-      <div style={{ width: "100%", maxWidth: "960px" }}>
-        <h1 style={{ marginBottom: "10px" }}>Choose a ranking template</h1>
-        <p
-          style={{
-            maxWidth: "520px",
-            color: "#d1d5db",
-            marginBottom: "24px"
-          }}
-        >
-          Start from a predefined scoring setup, or go with a blank slate. You
-          can adjust details later.
+    <div className={styles.container}>
+      <div className={styles.content}>
+        <h1 className={styles.title}>Choose a ranking template</h1>
+
+        <p className={styles.description}>
+          Start from a predefined scoring setup, or go with a blank slate. You can adjust details later.
         </p>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "16px",
-            flexWrap: "wrap",
-            marginBottom: "24px"
-          }}
-        >
-          {/* RATING */}
-          <div
-            style={cardStyle(selected === "rating", hovered === "rating")}
-            onClick={() => setSelected("rating")}
-            onMouseEnter={() => setHovered("rating")}
-            onMouseLeave={() => setHovered(null)}
-          >
-            <div
-              onClick={e => {
-                e.stopPropagation();
-                setInfoOpen("rating");
-              }}
-              style={{
-                position: "absolute",
-                top: "10px",
-                right: "10px",
-                width: "22px",
-                height: "22px",
-                borderRadius: "50%",
-                border: "1px solid rgba(255,255,255,0.4)",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                cursor: "pointer",
-                fontSize: "14px",
-                color: "#d1d5db",
-                background: "rgba(255,255,255,0.05)"
-              }}
-            >
-              ?
-            </div>
-
-            <h3>Ranking</h3>
-            <p style={{ color: "#9ca3af" }}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            </p>
-          </div>
-
-          {/* BATTLE */}
-          <div
-            style={cardStyle(
-              selected === "judge_audience",
-              hovered === "judge_audience"
-            )}
-            onClick={() => setSelected("judge_audience")}
-            onMouseEnter={() => setHovered("judge_audience")}
-            onMouseLeave={() => setHovered(null)}
-          >
-            <div
-              onClick={e => {
-                e.stopPropagation();
-                setInfoOpen("judge_audience");
-              }}
-              style={{
-                position: "absolute",
-                top: "10px",
-                right: "10px",
-                width: "22px",
-                height: "22px",
-                borderRadius: "50%",
-                border: "1px solid rgba(255,255,255,0.4)",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                cursor: "pointer",
-                fontSize: "14px",
-                color: "#d1d5db",
-                background: "rgba(255,255,255,0.05)"
-              }}
-            >
-              ?
-            </div>
-
-            <h3>Battle</h3>
-            <p style={{ color: "#9ca3af" }}>
-              Donec sit amet turpis nulla. Integer fringilla orci id porttitor fringilla.
-            </p>
-          </div>
-
-          {/* POLL */}
-          <div
-            style={cardStyle(selected === "blank", hovered === "blank")}
-            onClick={() => setSelected("blank")}
-            onMouseEnter={() => setHovered("blank")}
-            onMouseLeave={() => setHovered(null)}
-          >
-            <div
-              onClick={e => {
-                e.stopPropagation();
-                setInfoOpen("blank");
-              }}
-              style={{
-                position: "absolute",
-                top: "10px",
-                right: "10px",
-                width: "22px",
-                height: "22px",
-                borderRadius: "50%",
-                border: "1px solid rgba(255,255,255,0.4)",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                cursor: "pointer",
-                fontSize: "14px",
-                color: "#d1d5db",
-                background: "rgba(255,255,255,0.05)"
-              }}
-            >
-              ?
-            </div>
-
-            <h3>Poll</h3>
-            <p style={{ color: "#9ca3af" }}>
-              Pellentesque a mi quam. Nam felis nibh, congue vitae augue at, tempus iaculis dolor.
-            </p>
-          </div>
+        <div className={styles.cardsContainer}>
+          {cards.map((card) => (
+            <TemplateCard
+              key={card.key}
+              data={card}
+              selected={selected}
+              setSelected={setSelected}
+              setInfoOpen={setInfoOpen}
+            />
+          ))}
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <div className={styles.buttonsContainer}>
           <button
-            onClick={handleContinue}
-            style={{
-              padding: "10px 22px",
-              borderRadius: "999px",
-              border: "none",
-              background: "linear-gradient(135deg, #767978ff, #bdbcbcff)",
-              color: "#020617",
-              fontWeight: 600
-            }}
+            onClick={handleDecideLater}
+            className={`${styles.button} ${styles.buttonSecondary}`}
           >
             Decide Later
           </button>
@@ -280,24 +115,36 @@ export default function SetupTemplates() {
           <button
             onClick={handleContinue}
             disabled={!selected}
-            style={{
-              padding: "10px 22px",
-              borderRadius: "999px",
-              border: "none",
-              background: selected
-                ? "linear-gradient(135deg, #00ff99, #00cc77)"
-                : "rgba(75,85,99,0.8)",
-              color: selected ? "#020617" : "#9ca3af",
-              fontWeight: 600,
-              cursor: selected ? "pointer" : "not-allowed"
-            }}
+            className={`${styles.button} ${styles.buttonPrimary}`}
           >
             Continue
           </button>
         </div>
-
-        <InfoModal />
       </div>
+
+      {infoOpen && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setInfoOpen(null)}
+        >
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setInfoOpen(null)}
+              className={styles.closeButton}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h3 className={styles.modalTitle}>
+              {cards.find((c) => c.key === infoOpen)?.title} Template
+            </h3>
+            <p>{infoText[infoOpen]}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

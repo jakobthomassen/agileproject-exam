@@ -29,7 +29,25 @@ def update_event_details(state: EventState, event_name: str = None, event_date: 
     if event_date: state.eventdate = event_date
     if event_time: state.eventtime = event_time
     if event_location: state.eventlocation = event_location
-    return {"status": "success", "updated": state.model_dump()}
+    return f"updated sucessfully status: success", f"updated: {state.model_dump()}"
+
+def event_state_resetter(state: EventState) -> str:
+    """
+    Resets the event state to its initial empty state.
+
+    Args:
+        event_state (EventState): The current event state to be reset. meaning new event
+
+    Returns:
+        str: A message indicating the reset status.
+    """
+    state.eventid = None
+    state.eventname = None
+    state.eventdate = None
+    state.eventtime = None
+    state.eventlocation = None
+    state.participants = None
+    return "new event started."
 
 
 
@@ -37,7 +55,8 @@ def update_event_details(state: EventState, event_name: str = None, event_date: 
 
 tool_registry = {
             "update_event_details": update_event_details,
-            "participant_notifier": participant_notifier
+            "event_state_resetter": event_state_resetter,
+            #"participant_notifier": participant_notifier
         }
 
 

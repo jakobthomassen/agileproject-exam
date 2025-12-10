@@ -1,10 +1,27 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import type { ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
+
+/* Corrected paths */
+import { PageContainer } from "../components/layout/PageContainer";
+import { Button } from "../components/ui/Button";
+import { BackButton } from "../components/ui/BackButton";
+import { SetupPageHeader } from "../components/ui/SetupPageHeader";
+
+/* UI primitives */
+import { ClickableCard } from "../components/ui/ClickableCard";
+import { Section } from "../components/ui/Section";
+// import { Card } from "../components/ui/Card"; // not in use on this page
+import { TwoColumn } from "../components/ui/Grid";
+import { FilePill } from "../components/ui/FilePill";
+import { muted } from "../components/ui/Text";
+import styles from "./SetupMethod.module.css";
 
 export default function SetupMethod() {
   const navigate = useNavigate();
   const [fileUploaded, setFileUploaded] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const template = sessionStorage.getItem("selectedTemplate");
 
@@ -18,12 +35,16 @@ export default function SetupMethod() {
     ? `How do you want to set up your ${templateNameMap[template]} event?`
     : "How do you want to set up?";
 
-  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileUpload(e: ChangeEvent<HTMLInputElement>) {
     if (e.target.files && e.target.files.length > 0) {
       const fileName = e.target.files[0].name;
-      setUploadedFiles([...uploadedFiles, fileName]);
+      setUploadedFiles(prev => [...prev, fileName]);
       setFileUploaded(true);
     }
+  }
+
+  function triggerFileDialog() {
+    fileInputRef.current?.click();
   }
 
   const extractedData = {
@@ -35,219 +56,105 @@ export default function SetupMethod() {
     participants: 250
   };
 
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "radial-gradient(circle at top, #020617, #020617)",
-        color: "white",
-        fontFamily: "Inter, system-ui, sans-serif",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "flex-start",
-        padding: "60px 16px"
-      }}
-    >
-      <div style={{ width: "100%", maxWidth: "960px" }}>
-        <button
-          onClick={() => navigate("/setup")}
-          style={{
-            marginBottom: "16px",
-            padding: "6px 14px",
-            borderRadius: "999px",
-            border: "1px solid rgba(148,163,184,0.7)",
-            background: "transparent",
-            color: "#e5e7eb",
-            cursor: "pointer",
-            fontSize: "13px"
-          }}
-        >
-          ← Back to templates
-        </button>
+  const extractedEntries = [
+    { label: "Venue", value: extractedData.venue },
+    { label: "Date & Time", value: extractedData.dateTime },
+    { label: "Sponsor", value: extractedData.sponsor },
+    { label: "Event Name", value: extractedData.eventName },
+    { label: "Event Type", value: extractedData.eventType },
+    { label: "Participants", value: extractedData.participants }
+  ];
 
-        <h1 style={{ marginBottom: "10px" }}>{headerTitle}</h1>
-        <p
-          style={{
-            maxWidth: "520px",
-            color: "#d1d5db",
-            marginBottom: "24px"
-          }}
-        >
-          You can use a standard form, or answer a few high-level questions and
-          let the assistant suggest values.
-        </p>
+  return (
+    <PageContainer kind="solid">
+      <div style={{ width: "100%" }}>
+        <BackButton to="/setup">Back to templates</BackButton>
+
+        <SetupPageHeader
+          title={headerTitle}
+          description="You can use a standard form, or answer a few high-level questions and let the assistant suggest values."
+        />
 
         {fileUploaded && (
-          <div
-            style={{
-              marginBottom: "32px",
-              padding: "24px",
-              borderRadius: "16px",
-              border: "1px solid rgba(0,255,153,0.3)",
-              background: "rgba(15,15,22,0.95)",
-              display: "flex",
-              gap: "24px",
-              flexWrap: "wrap"
-            }}
-          >
-            <div style={{ flex: 1, minWidth: "260px" }}>
-              <h3 style={{ marginBottom: "16px" }}>Uploaded Files</h3>
-              <div style={{ marginBottom: "20px" }}>
-                {uploadedFiles.map((file, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      padding: "10px 14px",
-                      marginBottom: "8px",
-                      borderRadius: "8px",
-                      background: "rgba(0,255,153,0.1)",
-                      border: "1px solid rgba(0,255,153,0.2)",
-                      color: "#00ff99",
-                      fontSize: "14px"
-                    }}
-                  >
-                    📄 {file}
-                  </div>
-                ))}
-              </div>
-              <label
-                style={{
-                  display: "inline-block",
-                  padding: "10px 22px",
-                  borderRadius: "999px",
-                  border: "1px solid rgba(148,163,184,0.7)",
-                  background: "transparent",
-                  color: "#e5e7eb",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                  fontSize: "14px"
-                }}
-              >
-                + Add Another File
-                <input
-                  type="file"
-                  onChange={handleFileUpload}
-                  style={{ display: "none" }}
-                  accept=".json,.csv,.txt"
-                />
-              </label>
-            </div>
+          <Section padding={24}>
+            <TwoColumn>
+              <div>
+                <h3 style={{ marginBottom: 16 }}>Uploaded files</h3>
 
-            <div style={{ flex: 1, minWidth: "260px" }}>
-              <h3 style={{ marginBottom: "16px" }}>Extracted Data</h3>
-              <div style={{ fontSize: "14px", lineHeight: "1.8" }}>
-                <div style={{ marginBottom: "12px" }}>
-                  <span style={{ color: "#9ca3af" }}>Venue:</span>{" "}
-                  <span style={{ color: "#e5e7eb" }}>{extractedData.venue}</span>
+                <div style={{ marginBottom: 20 }}>
+                  {uploadedFiles.map((file, index) => (
+                    <FilePill key={index} name={file} />
+                  ))}
                 </div>
-                <div style={{ marginBottom: "12px" }}>
-                  <span style={{ color: "#9ca3af" }}>Date & Time:</span>{" "}
-                  <span style={{ color: "#e5e7eb" }}>{extractedData.dateTime}</span>
-                </div>
-                <div style={{ marginBottom: "12px" }}>
-                  <span style={{ color: "#9ca3af" }}>Sponsor:</span>{" "}
-                  <span style={{ color: "#e5e7eb" }}>{extractedData.sponsor}</span>
-                </div>
-                <div style={{ marginBottom: "12px" }}>
-                  <span style={{ color: "#9ca3af" }}>Event Name:</span>{" "}
-                  <span style={{ color: "#e5e7eb" }}>{extractedData.eventName}</span>
-                </div>
-                <div style={{ marginBottom: "12px" }}>
-                  <span style={{ color: "#9ca3af" }}>Event Type:</span>{" "}
-                  <span style={{ color: "#e5e7eb" }}>{extractedData.eventType}</span>
-                </div>
-                <div style={{ marginBottom: "12px" }}>
-                  <span style={{ color: "#9ca3af" }}>Participants:</span>{" "}
-                  <span style={{ color: "#e5e7eb" }}>{extractedData.participants}</span>
+
+                <Button variant="ghost" onClick={triggerFileDialog}>
+                  + Add another file
+                </Button>
+              </div>
+
+              <div>
+                <h3 style={{ marginBottom: 16 }}>Extracted data</h3>
+
+                <div style={{ fontSize: 14, lineHeight: 1.8 }}>
+                  {extractedEntries.map(entry => (
+                    <div key={entry.label} style={{ marginBottom: 12 }}>
+                      <span style={muted}>{entry.label}:</span>{" "}
+                      <span>{entry.value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-          </div>
+            </TwoColumn>
+          </Section>
         )}
 
-        <div
-          style={{
-            display: "flex",
-            gap: "16px",
-            flexWrap: "wrap"
-          }}
-        >
-          <div
-            style={{
-              flex: 1,
-              minWidth: "260px",
-              minHeight: "140px",
-              padding: "18px",
-              borderRadius: "16px",
-              border: "1px solid rgba(255,255,255,0.15)",
-              background: "rgba(15,15,22,0.95)",
-              cursor: "pointer"
-            }}
+        <div className={styles.methodCards}>
+          <ClickableCard
             onClick={() => navigate("/setup/ai")}
+            className={styles.methodCard}
           >
-            <h3>AI assisted setup</h3>
-            <p style={{ color: "#9ca3af" }}>
-              Describe your event. The assistant will ask follow-up questions and suggest values.
+            <h3 style={{ marginBottom: 8, color: "var(--color-text-primary)" }}>
+              AI assisted setup
+            </h3>
+            <p style={muted}>
+              Describe your event. The assistant will ask follow-up questions and
+              suggest values.
             </p>
-          </div>
+          </ClickableCard>
 
-          <div
-            style={{
-              flex: 1,
-              minWidth: "260px",
-              minHeight: "140px",
-              padding: "18px",
-              borderRadius: "16px",
-              border: "1px solid rgba(255,255,255,0.15)",
-              background: "rgba(15,15,22,0.95)",
-              cursor: "pointer"
-            }}
+          <ClickableCard
             onClick={() => navigate("/setup/manual")}
+            className={styles.methodCard}
           >
-            <h3>Manual setup</h3>
-            <p style={{ color: "#9ca3af" }}>
+            <h3 style={{ marginBottom: 8, color: "var(--color-text-primary)" }}>
+              Manual setup
+            </h3>
+            <p style={muted}>
               Use a structured form to specify values step by step.
             </p>
-          </div>
+          </ClickableCard>
         </div>
 
         {!fileUploaded && (
-          <div
-            style={{
-              marginTop: "48px",
-              padding: "24px",
-              borderRadius: "16px",
-              border: "1px solid rgba(255,255,255,0.15)",
-              background: "rgba(15,15,22,0.95)"
-            }}
-          >
-            <h3 style={{ marginBottom: "12px" }}>Import from file</h3>
-            <p style={{ color: "#9ca3af", marginBottom: "20px" }}>
+          <Section padding={24} style={{ marginTop: 48, marginBottom: 0 }}>
+            <h3 style={{ marginBottom: 12 }}>Import from file</h3>
+            <p style={{ ...muted, marginBottom: 20 }}>
               Upload a configuration file to set up your event quickly.
             </p>
-            <label
-              style={{
-                display: "inline-block",
-                padding: "10px 22px",
-                borderRadius: "999px",
-                border: "1px solid rgba(148,163,184,0.7)",
-                background: "transparent",
-                color: "#e5e7eb",
-                cursor: "pointer",
-                fontWeight: 600
-              }}
-            >
-              Choose File
-              <input
-                type="file"
-                onChange={handleFileUpload}
-                style={{ display: "none" }}
-                accept=".json,.csv,.txt"
-              />
-            </label>
-          </div>
+            <Button variant="ghost" onClick={triggerFileDialog}>
+              Choose file
+            </Button>
+          </Section>
         )}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          onChange={handleFileUpload}
+          style={{ display: "none" }}
+          accept=".json,.csv,.txt"
+        />
       </div>
-    </div>
+    </PageContainer>
   );
 }
