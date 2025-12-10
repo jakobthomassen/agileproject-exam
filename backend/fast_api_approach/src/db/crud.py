@@ -30,10 +30,10 @@ def get_all_events(db: Session):
     return db.query(Event).all()
 
 
-def update_event(db: Session, id: int, event_data: EventState):
-    db_event = get_single_event(db, id)
+def update_event(db: Session, event_data: EventState):
+    db_event = get_single_event(db, event_data.eventid)
     if not db_event:
-        raise AttributeError(f"Event with ID: {id} does not exist")
+        raise AttributeError(f"Event with ID: {event_data.eventid} does not exist")
         return
 
     if event_data.eventname is not None:
@@ -47,7 +47,7 @@ def update_event(db: Session, id: int, event_data: EventState):
     if event_data.eventdescription is not None:
         db_event.description = event_data.eventdescription
     if event_data.eventjudgetype is not None:
-        db_event.judge_type = event_data.eventjudgetype
+        db_event.judging_type = event_data.eventjudgetype
     if event_data.eventaudienceweight is not None:
         db_event.audience_weight = event_data.eventaudienceweight
     if event_data.eventexpertweight is not None:

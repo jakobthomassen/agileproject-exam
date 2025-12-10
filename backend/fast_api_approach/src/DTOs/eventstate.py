@@ -14,6 +14,7 @@ class ChatResponse(BaseModel): # the response from the ai
 
 # Event State
 class EventState(BaseModel):
+    eventid: Optional[int] = Field(None, description="Unique identifier for the event")
     eventname: Optional[str] = Field(None, description="Name of the event")
     eventdescription: Optional[str] = Field(None, description="Description of the event")
     eventdate: Optional[str] = Field(None, description="Date of the event in YYYY-MM-DD format")

@@ -1,5 +1,13 @@
 
-def update_event_details(event_name: str = None, event_date: str = None, event_time: str = None, event_location: str = None):
+def update_event_details(event_name: str = None, 
+                         event_date: str = None, 
+                         event_time: str = None, 
+                         event_location: str = None, 
+                         event_description: str = None, 
+                         judging_type: str = None, 
+                         audience_weight: float = None, 
+                         expert_weight: float = None, 
+                         athlete_weight: float = None):
     """
     Saves or updates partial event details. Call this tool IMMEDIATELY upon capturing new information.
     
@@ -13,6 +21,12 @@ def update_event_details(event_name: str = None, event_date: str = None, event_t
         event_date: The date in 'YYYY-MM-DD' format. you will ask for clarification if the format is different.
         event_time: The start time (e.g., "14:00" or "2:00 PM").
         event_location: The venue, address, or room name.
+        event_description: Additional details about the event.
+        judging_type: The method or criteria for judging the event.
+        audience_weight: The weight or importance given to audience opinions.
+        expert_weight: The weight or importance given to expert opinions.
+        athlete_weight: The weight or importance given to athlete opinions.
+        
     """
     pass # The SDK never actually runs this! It just reads the signature.
 

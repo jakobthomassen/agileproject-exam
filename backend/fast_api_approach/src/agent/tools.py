@@ -14,7 +14,16 @@ def participant_notifier(state: EventState, reason: str="event creation") -> str
 
 # src/agent/tools.py
 
-def update_event_details(state: EventState, event_name: str = None, event_date: str = None,event_time: str = None,event_location: str = None) -> dict:
+def update_event_details(state: EventState, 
+                         event_name: str = None, 
+                         event_date: str = None,
+                         event_time: str = None,
+                         event_location: str = None, 
+                         event_description: str = None, 
+                         judging_type: str = None, 
+                         audience_weight: float = None, 
+                         expert_weight: float = None, 
+                         athlete_weight: float = None) -> dict:
     """
     Updates the event details.
 
@@ -23,6 +32,12 @@ def update_event_details(state: EventState, event_name: str = None, event_date: 
         event_date (str, optional): The new event date. Defaults to None.
         event_time (str, optional): The new event time. Defaults to None.
         event_location (str, optional): The new event location. Defaults to None.
+        event_description (str, optional): The new event description. Defaults to None.
+        judging_type (str, optional): The new judging type. Defaults to None.
+        audience_weight (float, optional): The new audience weight. Defaults to None.
+        expert_weight (float, optional): The new expert weight. Defaults to None.
+        athlete_weight (float, optional): The new athlete weight. Defaults to None.
+        
         
     """
     if event_name: state.eventname = event_name

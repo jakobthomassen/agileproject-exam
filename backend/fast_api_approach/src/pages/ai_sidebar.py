@@ -15,7 +15,7 @@ class ComponentType(str, Enum):
 
 SIDEBAR_CONFIG = [
     {
-        "key": "eventname", # has to match the db column name
+        "key": "event_name", # has to match the db column name
         "label": "Event", # The label to show in the UI
         "component": ComponentType.TEXT # The type of UI component to render
     } ,
@@ -33,6 +33,31 @@ SIDEBAR_CONFIG = [
         "key": "location",
         "label": "Location",
         "component": ComponentType.LOCATION
+    },
+    {
+        "key": "description",
+        "label": "Description",
+        "component": ComponentType.TEXT
+    },
+    {
+        "key": "judging_type",
+        "label": "Judging Type",
+        "component": ComponentType.TEXT
+    },
+    {
+        "key": "audience_weight",
+        "label": "Audience Weight",
+        "component": ComponentType.NUMBER
+    },
+    {
+        "key": "expert_weight",
+        "label": "Expert Weight",
+        "component": ComponentType.NUMBER
+    },
+    {
+        "key": "athlete_weight",
+        "label": "Athlete Weight",
+        "component": ComponentType.NUMBER
     }
 ]
     

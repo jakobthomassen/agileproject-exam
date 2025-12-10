@@ -34,6 +34,11 @@ class Dashboard:
         - Date:         {data.get('event_date') or "(MISSING)"}
         - Time:         {data.get('event_time') or "(MISSING)"}
         - Location:     {data.get('event_location') or "(MISSING)"}
+        - Description:  {data.get('event_description') or "(MISSING)"}
+        - Judging Type: {data.get('judging_type') or "(MISSING)"}
+        - Audience Wt:  {data.get('audience_weight') or "(MISSING)"}
+        - Expert Wt:    {data.get('expert_weight') or "(MISSING)"}
+        - Athlete Wt:   {data.get('athlete_weight') or "(MISSING)"}
         
         ### STATUS
         {status}
