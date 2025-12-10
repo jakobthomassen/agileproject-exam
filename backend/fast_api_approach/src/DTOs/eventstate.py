@@ -14,6 +14,7 @@ class ChatResponse(BaseModel): # the response from the ai
 
 # Event State
 class EventState(BaseModel):
+    eventid: Optional[int] = Field(None, description="Unique identifier for the event")
     eventname: Optional[str] = Field(None, description="Name of the event")
     eventdescription: Optional[str] = Field(None, description="Description of the event")
     eventdate: Optional[str] = Field(None, description="Date of the event in YYYY-MM-DD format")
@@ -29,21 +30,23 @@ class EventState(BaseModel):
         missing = []
         if not self.eventname:
             missing.append("eventname")
-        if not self.eventdate:
-            missing.append("eventdate")
-        if not self.eventtime:
-            missing.append("eventtime")
-        if not self.eventlocation:
-            missing.append("eventlocation")
+        #if not self.eventdate:
+        #    missing.append("eventdate")
+        #if not self.eventtime:
+        #    missing.append("eventtime")
+        #if not self.eventlocation:
+        #    missing.append("eventlocation")
+        #if not self.participants:
+         #   missing.append("participants")
         return missing
 
     @property # check if all required fields are present
-    def is_complete(self) -> str:
-        missing_fields = self.missing_fields()
-        if len(missing_fields) == 0:
+    def is_complete(self) -> bool: 
+        #return len(self.missing_fields()) == 0 # if no missing fields, then complete. If any missing, then incomplete
+        if len(self.missing_fields()) == 0:
             return "\nAll required event details are present."
         else:
-            return f"\nMissing fields: {', '.join(missing_fields)}"
+            return "\nSome event details are missing."
 
 
 # DTO to send to image creation

@@ -6,6 +6,8 @@ Here is where the dynamic dashboard which will help the agent visualize event de
 
 
 """
+
+# add conversation history to strengthen context
 class Dashboard:
     @staticmethod
     def render(EventState: EventState) -> str:
@@ -16,10 +18,10 @@ class Dashboard:
        data = EventState.model_dump() # Get the dictionary representation of the EventState
        missing = EventState.missing_fields() # Get the list of missing fields
        if missing:
-           action = f"your immediate action is to ask the user for the following missing details: {missing}"
+           action = f"your next action is to ask the user for the following missing details: {missing}"
            status = "Incomplete"
        else:
-           action = "All event details are complete. The event has been saved in the database."
+           action = "All event details are complete. The event has been saved in the database, stand by for changes or new event creation."
            status = "Complete"
        
        dashboard_text = f"""
@@ -30,7 +32,13 @@ class Dashboard:
         ### CURRENT DATA
         - Name:         {data.get('event_name') or "(MISSING)"}
         - Date:         {data.get('event_date') or "(MISSING)"}
-        - Participants: {data.get('participants') or "[]"}
+        - Time:         {data.get('event_time') or "(MISSING)"}
+        - Location:     {data.get('event_location') or "(MISSING)"}
+        - Description:  {data.get('event_description') or "(MISSING)"}
+        - Judging Type: {data.get('judging_type') or "(MISSING)"}
+        - Audience Wt:  {data.get('audience_weight') or "(MISSING)"}
+        - Expert Wt:    {data.get('expert_weight') or "(MISSING)"}
+        - Athlete Wt:   {data.get('athlete_weight') or "(MISSING)"}
         
         ### STATUS
         {status}

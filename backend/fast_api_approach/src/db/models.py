@@ -1,16 +1,15 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary
 from .database import Base
 
-
 class Event(Base):
     __tablename__ = "events"
 
     # Required fields
     id = Column(Integer, primary_key=True, index=True)
-    event_name = Column(String, nullable=False)
-    date = Column(String, nullable=False)
-    time = Column(String, nullable=False)
-    location = Column(String, nullable=False)
+    event_name = Column(String, nullable=True)
+    date = Column(String, nullable=True)
+    time = Column(String, nullable=True)
+    location = Column(String, nullable=True)
 
     description = Column(String, nullable=True)
     judging_type = Column(String, nullable=True)
