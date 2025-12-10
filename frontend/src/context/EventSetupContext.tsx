@@ -29,6 +29,7 @@ export interface JudgingSettings {
   groups: Record<JudgeGroupType, JudgeGroupConfig>;
 }
 
+
 /*
   Context owns the canonical DEFAULTS,
   but not all flows must immediately commit them.
@@ -89,6 +90,7 @@ export type EventData = {
     Early setup steps may leave this null or partially defined.
   */
   judgingSettings: JudgingSettings | null;
+  ui_payload?: { label: string; value: any; type: string }[];
 };
 
 export const defaultEventData: EventData = {
@@ -262,3 +264,4 @@ export function useEventSetup(): EventSetupContextValue {
   }
   return ctx;
 }
+
