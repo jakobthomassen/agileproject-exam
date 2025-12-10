@@ -6,7 +6,8 @@ from google.genai import types
 from ..DTOs.eventstate import EventState
 from ..agent.dashboard import Dashboard
 from ..ai.event_handler import save_ai_generated_event
-from.event_handler import get_event_ui_payload
+from .event_handler import get_event_ui_payload
+from ..utils.retry import retry_api_call
 
 
 
@@ -32,16 +33,20 @@ class Gemini(AIPlatform):
             allmissing += f"\n- {field}"
 
             
-        response = self.client.models.generate_content(
-            model=self.model,
-            contents=contents,
-            config= types.GenerateContentConfig
-            (
-                system_instruction=self.system_prompt+dashboard_view, #System prompt if any
-                thinking_config=types.ThinkingConfig(include_thoughts=True), # Enable thoughts in the response
-                tools=self.tools, #List of tools
-                automatic_function_calling=types.AutomaticFunctionCallingConfig(
-                    disable=True),) # Disable automatic function calling for scope access, we handle it manually which means no function isolation.
+        # Use retry_api_call to handle temporary Gemini API failures/overload
+        response = retry_api_call(
+            lambda: self.client.models.generate_content(
+                model=self.model,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    system_instruction=self.system_prompt+dashboard_view,  # System prompt if any
+                    thinking_config=types.ThinkingConfig(include_thoughts=True),  # Enable thoughts in the response
+                    tools=self.tools,  # List of tools
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                        disable=True),  # Disable automatic function calling for scope access
+                )
+            ),
+            max_attempts=5
         )
         
         while response.function_calls: # While the ai still to call functions
@@ -71,14 +76,18 @@ class Gemini(AIPlatform):
                 )
             
 
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    system_instruction=self.system_prompt+dashboard_view,
-                    tools=self.tools,
-                    automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
-                )
+            # Use retry_api_call to handle temporary Gemini API failures/overload
+            response = retry_api_call(
+                lambda: self.client.models.generate_content(
+                    model=self.model,
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        system_instruction=self.system_prompt+dashboard_view,
+                        tools=self.tools,
+                        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
+                    )
+                ),
+                max_attempts=5
             )
         if self.event_state.is_complete:
             save_ai_generated_event(self.event_state)

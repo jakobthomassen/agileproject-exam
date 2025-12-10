@@ -1,4 +1,13 @@
 # ----- SCRIPT TO SIMULATE RESPONSE FROM AI -----
+#
+# This script tests CRUD operations for Events, Images, and Participants.
+#
+# To test the NEW participant import endpoint (CSV/Excel), use:
+#   curl -X POST "http://127.0.0.1:8000/events/1/participants/import" -F "file=@your_file.csv"
+#
+# Or use any HTTP client (Postman, Insomnia) to POST a file to:
+#   POST /events/{event_id}/participants/import
+#
 from .DTOs.eventstate import EventState, EventImageCreate, ParticipantCreate
 from .ai.event_handler import (save_ai_generated_event, debug_read_all_events, save_event_image,
                                debug_read_single_event, debug_update_event, debug_delete_event,
@@ -11,15 +20,11 @@ import os
 
 def simulate_ai_event():
     fake_event = EventState(
-        eventname="REDBULL CLIFF DIVING",
-        evendescription="A cliff diving competition hosted by RedBull",
-        eventdate="2025-12-08",
-        eventtime="22:00",
-        eventlocation="Oslo Opera House",
-        eventjudgetype="Battle",
-        eventaudienceweight=33,
-        eventexpertweight=33,
-        eventathleteweight=34
+        eventname="Redbull cliff diving",
+        eventdate="2025-12-02",
+        eventtime="19:00",
+        eventlocation="Kragerø",
+        participants=["amund", "shefat", "hansim"]
     )
 
     print("Simulating AI event creation...")
@@ -44,7 +49,11 @@ def simulate_ai_event():
 
     print(f"\nUpdating event with ID = {id}")
     update_fake_event = EventState(
-        eventname="Moren din"
+        eventname="Moren din",
+        eventdate=None,
+        eventtime=None,
+        eventlocation=None,
+        participants=None
     )
     updated_event = debug_update_event(update_fake_event, id)
     print(updated_event.to_dict())
@@ -72,8 +81,7 @@ def simulate_ai_event():
         image_bytes=image_bytes
     )
     saved_image = save_event_image(fake_image)
-    if saved_image:
-        print("Saved")
+    print("Saved")
 
     print(f"\nReading all images from database...")
     all_images = debug_read_all_images()
@@ -82,16 +90,14 @@ def simulate_ai_event():
 
     print(f"\nReading image with ID: {id}")
     single_image = debug_read_event_image(id)
-    if single_image:
-        print(single_image.to_dict())
+    print(single_image.to_dict())
 
     print(f"\nUpdating image with ID: {id}")
     updated_fake_image = EventImageCreate(
         event_id=2
     )
     updated_image = debug_update_image(updated_fake_image, id)
-    if updated_image:
-        print(updated_image.to_dict())
+    print(updated_image.to_dict())
 
     print(f"\nDeleting image with ID: {id}")
     debug_delete_event_image(id)
@@ -102,9 +108,6 @@ def simulate_ai_event():
         print(image.to_dict())
 
     # Testing CRUD for Participants
-    print("\n" + "="*50)
-    print("Testing CRUD for Participants")
-    print("="*50)
 
     # Create participants
     print("\nCreating participants...")

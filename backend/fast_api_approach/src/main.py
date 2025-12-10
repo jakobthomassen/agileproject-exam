@@ -1,3 +1,27 @@
+"""
+FastAPI Backend for Event Management System.
+
+This backend runs on both macOS and Windows.
+
+How to run:
+-----------
+1. Create a virtual environment:
+   - Mac/Linux: python3 -m venv venv && source venv/bin/activate
+   - Windows:   python -m venv venv && venv\\Scripts\\activate
+
+2. Install dependencies:
+   pip install -r requirements.txt
+
+3. Set environment variable for Gemini API key:
+   - Mac/Linux: export GEMINI_API_KEY="your-key-here"
+   - Windows (PowerShell): $env:GEMINI_API_KEY="your-key-here"
+   - Windows (CMD): set GEMINI_API_KEY=your-key-here
+
+4. Start the server (from the backend/fast_api_approach directory):
+   uvicorn src.main:app --reload
+
+The server will run on http://127.0.0.1:8000
+"""
 import os
 import json
 from typing import List, Dict, Any
@@ -15,9 +39,15 @@ import shutil
 from .ai.gemini import Gemini
 from .auth.dependencies import get_user_identifier
 from .auth.throttling import apply_rate_limit
-from src.DTOs.eventstate import ChatRequest, ChatResponse
-from .db.database import Base, engine
+from src.DTOs.eventstate import ChatRequest, ChatResponse, ParticipantCreate
+from .db.database import Base, engine, SessionLocal
 from .ai.event_handler import get_event_ui_payload
+from .db.crud import get_single_event, create_participant
+from .utils.import_participants import (
+    parse_csv_participants,
+    parse_excel_participants,
+    validate_participant_row
+)
 
 app = FastAPI()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -49,10 +79,14 @@ def startup_event():
 # 2. AGENT INITIALIZATION
 # ---------------------------------------------------------
 def load_system_prompt():
+    """Load the system prompt file. Uses os.path.join for cross-platform compatibility."""
     try:
-        with open("src/prompts/system_prompt.md", "r") as f:
+        # Use os.path.join for cross-platform path handling (Mac + Windows)
+        prompt_path = os.path.join(BASE_DIR, "prompts", "system_prompt.md")
+        with open(prompt_path, "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
+        print(f"Warning: System prompt not found at {prompt_path}")
         return None
     
 system_prompt = load_system_prompt()
@@ -171,6 +205,116 @@ def get_details_endpoint(event_id: int):
         raise HTTPException(status_code=404, detail="Event not found")
         
     return payload
+
+
+# ---------------------------------------------------------
+# 4. PARTICIPANT IMPORT ENDPOINT (CSV / Excel)
+# ---------------------------------------------------------
+# This endpoint is INDEPENDENT of the chat UI.
+# Frontend can call it directly to import participants for an event.
+
+# Allowed file types for participant import
+ALLOWED_IMPORT_EXTENSIONS = [".csv", ".xlsx"]
+ALLOWED_IMPORT_MIME_TYPES = [
+    "text/csv",
+    "application/csv",
+    "application/vnd.ms-excel",
+    "text/plain",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]
+
+
+@app.post("/events/{event_id}/participants/import")
+async def import_participants(event_id: int, file: UploadFile = File(...)):
+    """
+    Import participants from a CSV or Excel (XLSX) file for a specific event.
+    
+    This endpoint is separate from the chat UI and can be called directly.
+    
+    Expected file format:
+        - CSV or XLSX file
+        - Headers (case-insensitive): name, email, phone (optional)
+        
+    Returns:
+        JSON summary of the import operation with counts and any errors.
+    """
+    # 1. Validate event exists
+    db = SessionLocal()
+    try:
+        event = get_single_event(db, event_id)
+        if not event:
+            raise HTTPException(status_code=404, detail=f"Event with ID {event_id} not found")
+    finally:
+        db.close()
+    
+    # 2. Check file extension
+    filename = file.filename.lower() if file.filename else ""
+    file_ext = os.path.splitext(filename)[1]
+    
+    if file_ext not in ALLOWED_IMPORT_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type '{file_ext}'. Only CSV and XLSX files are allowed."
+        )
+    
+    # 3. Read file content
+    try:
+        file_content = await file.read()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to read file: {str(e)}")
+    
+    # 4. Parse the file based on extension
+    try:
+        if file_ext == ".csv":
+            participants_data = parse_csv_participants(file_content)
+        else:  # .xlsx
+            participants_data = parse_excel_participants(file_content)
+    except ImportError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to parse file: {str(e)}")
+    
+    # 5. Process each row and create participants
+    total_rows = len(participants_data)
+    created_count = 0
+    skipped_count = 0
+    errors = []
+    
+    db = SessionLocal()
+    try:
+        for idx, row_data in enumerate(participants_data):
+            row_number = idx + 2  # +2 because: idx is 0-based, and row 1 is headers
+            
+            # Validate the row
+            error_msg = validate_participant_row(row_data, row_number)
+            if error_msg:
+                errors.append({"row": row_number, "reason": error_msg})
+                skipped_count += 1
+                continue
+            
+            # Create participant using existing CRUD function
+            try:
+                participant_dto = ParticipantCreate(
+                    event_id=event_id,
+                    name=row_data.get('name'),
+                    email=row_data.get('email')
+                )
+                create_participant(db, participant_dto)
+                created_count += 1
+            except Exception as e:
+                errors.append({"row": row_number, "reason": f"Database error: {str(e)[:50]}"})
+                skipped_count += 1
+    finally:
+        db.close()
+    
+    # 6. Return summary
+    return {
+        "event_id": event_id,
+        "total_rows": total_rows,
+        "created": created_count,
+        "skipped": skipped_count,
+        "errors": errors
+    }
 # Update valid MIME types for CSV
 # Note: Some browsers send 'application/vnd.ms-excel' or 'text/plain' for CSVs
 ALLOWED_CSV_TYPES = ["text/csv", "application/csv", "application/vnd.ms-excel", "text/plain"]
@@ -192,9 +336,14 @@ async def validate_and_save_csv(file: UploadFile):
     safe_filename = f"{uuid.uuid4()}.csv"
     
     # 4. Save to secure directory (Ensure 'uploads' folder exists)
-    upload_path = f"uploads/{safe_filename}"
+    # Use os.path.join for cross-platform compatibility
+    upload_path = os.path.join(UPLOAD_DIR, safe_filename)
     
     with open(upload_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
         
     return safe_filename
+
+
+# Include the router in the app
+app.include_router(router)
