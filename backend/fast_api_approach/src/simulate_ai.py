@@ -11,11 +11,15 @@ import os
 
 def simulate_ai_event():
     fake_event = EventState(
-        eventname="Redbull cliff diving",
-        eventdate="2025-12-02",
-        eventtime="19:00",
-        eventlocation="Kragerø",
-        participants=["amund", "shefat", "hansim"]
+        eventname="REDBULL CLIFF DIVING",
+        evendescription="A cliff diving competition hosted by RedBull",
+        eventdate="2025-12-08",
+        eventtime="22:00",
+        eventlocation="Oslo Opera House",
+        eventjudgetype="Battle",
+        eventaudienceweight=33,
+        eventexpertweight=33,
+        eventathleteweight=34
     )
 
     print("Simulating AI event creation...")
@@ -40,11 +44,7 @@ def simulate_ai_event():
 
     print(f"\nUpdating event with ID = {id}")
     update_fake_event = EventState(
-        eventname="Moren din",
-        eventdate=None,
-        eventtime=None,
-        eventlocation=None,
-        participants=None
+        eventname="Moren din"
     )
     updated_event = debug_update_event(update_fake_event, id)
     print(updated_event.to_dict())
@@ -72,7 +72,8 @@ def simulate_ai_event():
         image_bytes=image_bytes
     )
     saved_image = save_event_image(fake_image)
-    print("Saved")
+    if saved_image:
+        print("Saved")
 
     print(f"\nReading all images from database...")
     all_images = debug_read_all_images()
@@ -81,14 +82,16 @@ def simulate_ai_event():
 
     print(f"\nReading image with ID: {id}")
     single_image = debug_read_event_image(id)
-    print(single_image.to_dict())
+    if single_image:
+        print(single_image.to_dict())
 
     print(f"\nUpdating image with ID: {id}")
     updated_fake_image = EventImageCreate(
         event_id=2
     )
     updated_image = debug_update_image(updated_fake_image, id)
-    print(updated_image.to_dict())
+    if updated_image:
+        print(updated_image.to_dict())
 
     print(f"\nDeleting image with ID: {id}")
     debug_delete_event_image(id)

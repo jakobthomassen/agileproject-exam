@@ -40,6 +40,8 @@ def debug_update_event(event_state: EventState, id: int):
     try:
         event_to_update = update_event(db, id, event_state)
         return event_to_update
+    except Exception as e:
+        print(f"Error: {str(e)}")
     finally:
         db.close()
 
@@ -60,6 +62,8 @@ def save_event_image(image_data: EventImageCreate):
     try:
         saved_event = create_image(db, image_data)
         return saved_event
+    except Exception as e:
+        print(f"Error: {str(e)}")
     finally:
         db.close()
 
@@ -87,6 +91,8 @@ def debug_update_image(image_data: EventImageCreate, id: int):
     db = SessionLocal()
     try:
         return update_image(db, id, image_data)
+    except Exception as e:
+        print(f"Error: {str(e)}")
     finally:
         db.close()
 

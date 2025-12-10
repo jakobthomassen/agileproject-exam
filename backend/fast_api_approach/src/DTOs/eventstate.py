@@ -2,8 +2,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
-# -- Api request/response models
-
 
 # --- Pydantic Models ---
 class ChatRequest(BaseModel): # the input from the user
@@ -14,14 +12,19 @@ class ChatResponse(BaseModel): # the response from the ai
     response: str
 
 
-# Event state 
+# Event State
 class EventState(BaseModel):
     eventname: Optional[str] = Field(None, description="Name of the event")
+    eventdescription: Optional[str] = Field(None, description="Description of the event")
     eventdate: Optional[str] = Field(None, description="Date of the event in YYYY-MM-DD format")
     eventtime: Optional[str] = Field(None, description="Time of the event in HH:MM format")
     eventlocation: Optional[str] = Field(None, description="Location of the event")
-    participants: Optional[List[str]] = Field(None, description="List of participants' names or emails")
+    eventjudgetype: Optional[str] = Field(None, description="Which of the three judging formats are chosen")
+    eventaudienceweight: Optional[int] = Field(None, description="How much audience votes weigh")
+    eventexpertweight: Optional[int] = Field(None, description="How much expert panel votes weigh")
+    eventathleteweight: Optional[int] = Field(None, description="How much athlete votes weigh")
 
+    # Function to return list of all missing fields that are required to create an event
     def missing_fields(self) -> List[str]:
         missing = []
         if not self.eventname:
@@ -32,17 +35,15 @@ class EventState(BaseModel):
             missing.append("eventtime")
         if not self.eventlocation:
             missing.append("eventlocation")
-        #if not self.participants:
-         #   missing.append("participants")
         return missing
 
     @property # check if all required fields are present
-    def is_complete(self) -> bool: 
-        #return len(self.missing_fields()) == 0 # if no missing fields, then complete. If any missing, then incomplete
-        if len(self.missing_fields()) == 0:
+    def is_complete(self) -> str:
+        missing_fields = self.missing_fields()
+        if len(missing_fields) == 0:
             return "\nAll required event details are present."
         else:
-            return "\nSome event details are missing."
+            return f"\nMissing fields: {', '.join(missing_fields)}"
 
 
 # DTO to send to image creation

@@ -1,16 +1,20 @@
 from sqlalchemy.orm import Session
 from ..DTOs.eventstate import EventState, EventImageCreate, ParticipantCreate
 from .models import Event, EventImage, Participant
+from sqlalchemy.exc import IntegrityError
 
 
-# CRUD for Events
 def create_event(db: Session, event_data: EventState):
     db_event = Event(
-        eventname = event_data.eventname,
-        date = event_data.eventdate,
-        time = event_data.eventtime,
-        location = event_data.eventlocation,
-        participants = event_data.participants
+        event_name=event_data.eventname,
+        date=event_data.eventdate,
+        time=event_data.eventtime,
+        location=event_data.eventlocation,
+        description=event_data.eventdescription,
+        judging_type=event_data.eventjudgetype,
+        audience_weight=event_data.eventaudienceweight,
+        expert_weight=event_data.eventexpertweight,
+        athlete_weight=event_data.eventathleteweight
     )
     db.add(db_event)
     db.commit()
@@ -21,6 +25,7 @@ def create_event(db: Session, event_data: EventState):
 def get_single_event(db: Session, id: int):
     return db.query(Event).filter(Event.id == id).first()
 
+
 def get_all_events(db: Session):
     return db.query(Event).all()
 
@@ -28,19 +33,27 @@ def get_all_events(db: Session):
 def update_event(db: Session, id: int, event_data: EventState):
     db_event = get_single_event(db, id)
     if not db_event:
-        return None
+        raise AttributeError(f"Event with ID: {id} does not exist")
+        return
 
-    # Only update fields that were provided (not None)
     if event_data.eventname is not None:
-        db_event.eventname = event_data.eventname
+        db_event.event_name = event_data.eventname
     if event_data.eventdate is not None:
         db_event.date = event_data.eventdate
     if event_data.eventtime is not None:
         db_event.time = event_data.eventtime
     if event_data.eventlocation is not None:
         db_event.location = event_data.eventlocation
-    if event_data.participants is not None:
-        db_event.participants = event_data.participants
+    if event_data.eventdescription is not None:
+        db_event.description = event_data.eventdescription
+    if event_data.eventjudgetype is not None:
+        db_event.judge_type = event_data.eventjudgetype
+    if event_data.eventaudienceweight is not None:
+        db_event.audience_weight = event_data.eventaudienceweight
+    if event_data.eventexpertweight is not None:
+        db_event.expert_weight = event_data.eventexpertweight
+    if event_data.eventathleteweight is not None:
+        db_event.athlete_weight = event_data.eventathleteweight
 
     db.commit()
     db.refresh(db_event)
@@ -64,8 +77,13 @@ def create_image(db: Session, image_data: EventImageCreate):
         image = image_data.image_bytes
     )
     db.add(db_image)
-    db.commit()
-    db.refresh(db_image)
+
+    try:
+        db.commit()
+        db.refresh(db_image)
+    except IntegrityError:
+        db.rollback()
+        raise ValueError(f"Cannot create image: event with ID: {image_data.event_id} does not exist")
 
     return db_image
 
@@ -85,6 +103,7 @@ def get_images_for_event(db: Session, event_id: int):
 def update_image(db: Session, id: int, image_data: EventImageCreate):
     db_image = get_single_image(db, id)
     if not db_image:
+        raise ValueError(f"Image with ID {id} does not exist")
         return None
 
     # update only what is provided
