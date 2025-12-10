@@ -85,6 +85,17 @@ To open the Vite development server in the browser, press `o` and then Enter in 
 **Note:** If an error appears in the browser, check the terminal running the backend server. Missing **Python** libraries are the most common cause.
 
 -----
+-----
+
+## Stopping the Server
+
+Press `Ctrl + C` in both terminals to stop the frontend and backend servers.
+
+-----
+
+
+
+-----
 
 ## API Endpoints
 
@@ -123,40 +134,4 @@ curl -X POST "http://127.0.0.1:8000/events/1/participants/import" \
 }
 ```
 
------
-
-## Stopping the Server
-
-Press `Ctrl + C` in both terminals to stop the frontend and backend servers.
-
------
-
-# To-Do
-
-## XL
-
-  - [ ] Create dashboard
-  - [ ] Standardize frontend formatting with shared css styles
-
-## L
-
-  - [ ] AI assistant on manual setup
-  - [ ] Edit button in summary list on AI setup page
-  - [ ] Ability to change scoring type in SetupAI and SetupManual (and dashboard)
-  - [ ] Adjust scoring weights in setup based on selected scoring type
-
-## M
-
-  - [ ] Sponsor image upload for public card showcase and event image (also in `SetupMethod.tsx` and `SetupSummary`)
-  - [x] Clean up event summary
-  - [x] Information pop-ups on SetupTemplates
-
-## S
-
-  - [x] Optional field for audience members allowed
-  - [x] Scoring type display on Method page
-  - [x] Change Date and Time to a range with automatic access cut-off
-  - [ ] Decide later button logic separated from continue button
-  - [ ] Remove backend/requirements.txt
-
-<!-- end list -->
+#
