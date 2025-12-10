@@ -44,6 +44,11 @@ def update_event_details(state: EventState,
     if event_date: state.eventdate = event_date
     if event_time: state.eventtime = event_time
     if event_location: state.eventlocation = event_location
+    if event_description: state.eventdescription = event_description
+    if judging_type: state.eventjudgetype = judging_type
+    if audience_weight: state.eventaudienceweight = audience_weight
+    if expert_weight: state.eventexpertweight = expert_weight
+    if athlete_weight: state.eventathleteweight = athlete_weight
     return f"updated sucessfully status: success", f"updated: {state.model_dump()}"
 
 def event_state_resetter(state: EventState) -> str:
@@ -61,7 +66,11 @@ def event_state_resetter(state: EventState) -> str:
     state.eventdate = None
     state.eventtime = None
     state.eventlocation = None
-    state.participants = None
+    state.eventdescription = None
+    state.eventjudgetype = None
+    state.eventaudienceweight = None
+    state.eventexpertweight = None
+    state.eventathleteweight = None
     return "new event started."
 
 
