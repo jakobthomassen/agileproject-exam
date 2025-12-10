@@ -50,3 +50,10 @@ class EventState(BaseModel):
 class EventImageCreate(BaseModel):
     event_id: int = Field(None, description="FK to events table")
     image_bytes: bytes = Field(None, description="Image stored in bytes")
+
+
+# DTO for participant creation/update
+class ParticipantCreate(BaseModel):
+    event_id: Optional[int] = Field(None, description="FK to events table")
+    name: Optional[str] = Field(None, description="Name of the participant")
+    email: Optional[str] = Field(None, description="Email of the participant")

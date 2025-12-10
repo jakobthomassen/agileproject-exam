@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
+from ..DTOs.eventstate import EventState, EventImageCreate, ParticipantCreate
+from .models import Event, EventImage, Participant
 from sqlalchemy.exc import IntegrityError
-from ..DTOs.eventstate import EventState, EventImageCreate
-from .models import Event, EventImage
 
 
 def create_event(db: Session, event_data: EventState):
@@ -125,5 +125,58 @@ def delete_images(db: Session, id: int):
         return
 
     db.delete(db_image)
+    db.commit()
+
+
+# CRUD for Participants
+def create_participant(db: Session, participant_data: ParticipantCreate):
+    db_participant = Participant(
+        event_id=participant_data.event_id,
+        name=participant_data.name,
+        email=participant_data.email
+    )
+    db.add(db_participant)
+    db.commit()
+    db.refresh(db_participant)
+    return db_participant
+
+
+def get_single_participant(db: Session, id: int):
+    return db.query(Participant).filter(Participant.id == id).first()
+
+
+def get_all_participants(db: Session):
+    return db.query(Participant).all()
+
+
+def get_participants_for_event(db: Session, event_id: int):
+    return db.query(Participant).filter(Participant.event_id == event_id).all()
+
+
+def update_participant(db: Session, id: int, participant_data: ParticipantCreate):
+    db_participant = get_single_participant(db, id)
+    if not db_participant:
+        return None
+
+    # Only update fields that were provided (not None)
+    if participant_data.event_id is not None:
+        db_participant.event_id = participant_data.event_id
+    if participant_data.name is not None:
+        db_participant.name = participant_data.name
+    if participant_data.email is not None:
+        db_participant.email = participant_data.email
+
+    db.commit()
+    db.refresh(db_participant)
+    return db_participant
+
+
+def delete_participant(db: Session, id: int):
+    db_participant = get_single_participant(db, id)
+    if not db_participant:
+        raise AttributeError(f"Participant with ID: {id} does not exist")
+        return
+
+    db.delete(db_participant)
     db.commit()
 
