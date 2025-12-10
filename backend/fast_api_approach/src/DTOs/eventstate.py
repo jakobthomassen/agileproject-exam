@@ -53,6 +53,6 @@ class EventImageCreate(BaseModel):
 
 # DTO for participant creation/update
 class ParticipantCreate(BaseModel):
-    event_id: int = Field(None, description="FK to events table")
+    event_id: Optional[int] = Field(None, description="FK to events table")
     name: Optional[str] = Field(None, description="Name of the participant")
     email: Optional[str] = Field(None, description="Email of the participant")
