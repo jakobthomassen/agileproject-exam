@@ -22,6 +22,8 @@ How to run:
 
 The server will run on http://127.0.0.1:8000
 """
+from __future__ import annotations
+
 import os
 import json
 import uuid
