@@ -2,11 +2,17 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useEventSetup } from "../context/EventSetupContext";
-import ReactMarkdown from 'react-markdown';
-import { 
-  MapPin, Calendar, Clock, Type, Hash, HelpCircle, 
-  Loader2, Paperclip
-} from 'lucide-react'; 
+import ReactMarkdown from "react-markdown";
+import {
+  MapPin,
+  Calendar,
+  Clock,
+  Type,
+  Hash,
+  HelpCircle,
+  Loader2,
+  Paperclip,
+} from "lucide-react";
 
 // Components
 import { PageContainer } from "../components/layout/PageContainer";
@@ -27,22 +33,28 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   number: <Hash size={16} />,
   date: <Calendar size={16} />,
   time: <Clock size={16} />,
-  location: <MapPin size={16} />
+  location: <MapPin size={16} />,
 };
 
 export default function SetupAI() {
   const navigate = useNavigate();
   const { eventData, setEventData } = useEventSetup();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([{ sender: "assistant", text: "Hi! Describe your event" }]);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { sender: "assistant", text: "Hi! Describe your event" },
+  ]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
   
   // NOTE: If you haven't updated EventData interface yet, this might still show red.
   // Update src/context/EventSetupContext.tsx to include 'ui_payload' to fix it completely.
-  const [checklistData, setChecklistData] = useState<ChecklistItem[]>(eventData?.ui_payload || []);
+  const [checklistData, setChecklistData] = useState<ChecklistItem[]>(
+    eventData?.ui_payload || []
+  );
 
   useEffect(() => {
     if (eventData?.ui_payload) {
@@ -50,16 +62,22 @@ export default function SetupAI() {
     }
   }, [eventData]);
 
+  useEffect(() => {
+    const el = chatContainerRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages, thinking]);
+
   // --- 1. HANDLE FILE SELECT (Triggers Auto-Send) ---
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.name.toLowerCase().endsWith('.csv')) {
+      if (!file.name.toLowerCase().endsWith(".csv")) {
         alert("Only CSV files are allowed.");
         return;
       }
       sendMessage(file);
-      e.target.value = ""; 
+      e.target.value = "";
     }
   };
 
@@ -73,22 +91,33 @@ export default function SetupAI() {
       userMessageText = `📄 Uploaded file: **${fileToUpload.name}**`;
     }
 
-    const newMessages: ChatMessage[] = [...messages, { sender: "user", text: userMessageText }];
+    const newMessages: ChatMessage[] = [
+      ...messages,
+      { sender: "user", text: userMessageText },
+    ];
     setMessages(newMessages);
-    
+
     setInput("");
     setThinking(true);
 
     try {
       const formData = new FormData();
-      formData.append("messages_json", JSON.stringify(newMessages.map(m => ({ role: m.sender, content: m.text }))));
+      formData.append(
+        "messages_json",
+        JSON.stringify(
+          newMessages.map((m) => ({ role: m.sender, content: m.text }))
+        )
+      );
       formData.append("known_fields_json", JSON.stringify(eventData || {}));
 
       if (fileToUpload) {
         formData.append("file", fileToUpload);
       }
 
-      const res = await axios.post("http://localhost:8000/ai/extract", formData);
+      const res = await axios.post(
+        "http://localhost:8000/ai/extract",
+        formData
+      );
       const data = res.data;
 
       // --- FIX: Spread object directly instead of using a function ---
@@ -99,12 +128,26 @@ export default function SetupAI() {
       }
 
       if (data.message) {
-        setMessages(prev => [...prev, { sender: "assistant", text: data.message }]);
+        setMessages((prev) => [
+          ...prev,
+          { sender: "assistant", text: data.message },
+        ]);
+      }
+    } catch (error: any) {
+      console.error("AI Request Failed:", error);
+
+      let message = "Error: Could not process request.";
+
+      if (axios.isAxiosError(error) && error.response) {
+        const status = error.response.status;
+        const detail = error.response.data?.detail;
+
+        if (status === 503 && typeof detail === "string") {
+          message = detail;
+        }
       }
 
-    } catch (error) {
-      console.error("AI Request Failed:", error);
-      setMessages(prev => [...prev, { sender: "assistant", text: "Error: Could not process request." }]);
+      setMessages((prev) => [...prev, { sender: "assistant", text: message }]);
     } finally {
       setThinking(false);
     }
@@ -113,67 +156,89 @@ export default function SetupAI() {
   return (
     <PageContainer kind='solid' maxWidth={1200}>
       <div className={styles.pageInner}>
-        <BackButton to="/setup/method">Back</BackButton>
-        <SetupPageHeader title="AI Assisted Setup" description="Chat with the agent to configure your event." />
+        <BackButton to='/setup/method'>Back</BackButton>
+        <SetupPageHeader
+          title='AI Assisted Setup'
+          description='Chat with the agent to configure your event.'
+        />
 
         <TwoColumn>
           {/* Chat Panel */}
           <Card padding={16}>
             <div className={styles.chatPanel}>
-              <div className={styles.chatMessages}>
+              <div className={styles.chatMessages} ref={chatContainerRef}>
                 {messages.map((m, i) => (
-                  <div key={i} className={`${styles.chatRow} ${m.sender === "user" ? styles.chatRowUser : styles.chatRowAssistant}`}>
-                    <span className={m.sender === "user" ? styles.chatBubbleUser : styles.chatBubbleAssistant}>
+                  <div
+                    key={i}
+                    className={`${styles.chatRow} ${
+                      m.sender === "user"
+                        ? styles.chatRowUser
+                        : styles.chatRowAssistant
+                    }`}
+                  >
+                    <span
+                      className={
+                        m.sender === "user"
+                          ? styles.chatBubbleUser
+                          : styles.chatBubbleAssistant
+                      }
+                    >
                       <ReactMarkdown>{m.text}</ReactMarkdown>
                     </span>
                   </div>
                 ))}
                 {thinking && (
                   <div className={styles.thinkingRow}>
-                    <Loader2 className="animate-spin text-green-400" size={18} />
-                    <span className="ml-2 text-gray-400 text-sm">Thinking...</span>
+                    <Loader2
+                      className='animate-spin text-green-400'
+                      size={18}
+                    />
+                    <span className='ml-2 text-gray-400 text-sm'>
+                      Thinking...
+                    </span>
                   </div>
                 )}
               </div>
 
               {/* Input Row */}
               <div className={styles.chatInputRow}>
-                
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  accept=".csv,text/csv" 
-                  className="hidden" 
-                  style={{ display: 'none' }}
+                <input
+                  type='file'
+                  ref={fileInputRef}
+                  accept='.csv,text/csv'
+                  className='hidden'
+                  style={{ display: "none" }}
                   onChange={handleFileSelect}
                 />
 
                 {/* --- UPLOAD BUTTON: NOW USES <Button> --- */}
-                <Button 
+                <Button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={thinking}
-                  title="Upload CSV"
+                  title='Upload CSV'
                   // Overriding styles to keep it square and icon-centered
                   style={{
                     padding: 0,
-                    width: '42px',       
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
+                    width: "42px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
                   }}
                 >
-                  <Paperclip size={20} /> 
+                  <Paperclip size={20} />
                 </Button>
 
-                <TextInput 
-                  value={input} 
-                  onChange={(e) => setInput(e.target.value)} 
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage()} 
-                  placeholder='Type here...' 
+                <TextInput
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                  placeholder='Type here...'
                 />
-                
-                <Button onClick={() => sendMessage()} disabled={thinking}>Send</Button>
+
+                <Button onClick={() => sendMessage()} disabled={thinking}>
+                  Send
+                </Button>
               </div>
             </div>
           </Card>
@@ -182,25 +247,29 @@ export default function SetupAI() {
           <Card padding={16}>
             <div className={styles.checklistCardInner}>
               <h3 className={styles.checklistHeading}>Event Details</h3>
-              
-              <div className="space-y-0 mb-4">
-                {(!checklistData || checklistData.length === 0) ? (
-                   <div className="text-gray-500 italic text-sm py-4 text-center">
-                     Details will appear here...
-                   </div>
+
+              <div className='space-y-0 mb-4'>
+                {!checklistData || checklistData.length === 0 ? (
+                  <div className='text-gray-500 italic text-sm py-4 text-center'>
+                    Details will appear here...
+                  </div>
                 ) : (
                   checklistData.map((field, index) => (
-                    <DynamicCheckRow 
-                      key={`${field.label}-${index}`} 
-                      label={field.label} 
-                      value={field.value} 
-                      type={field.type} 
+                    <DynamicCheckRow
+                      key={`${field.label}-${index}`}
+                      label={field.label}
+                      value={field.value}
+                      type={field.type}
                     />
                   ))
                 )}
               </div>
-              
-              <Button fullWidth onClick={() => navigate("/setup/summary")} className={styles.checklistContinueButton}>
+
+              <Button
+                fullWidth
+                onClick={() => navigate("/setup/summary")}
+                className={styles.checklistContinueButton}
+              >
                 Continue
               </Button>
             </div>
@@ -212,22 +281,40 @@ export default function SetupAI() {
 }
 
 // Helper Component: Timecard Style
-function DynamicCheckRow({ label, value, type }: { label: string; value: any; type: string }) {
+function DynamicCheckRow({
+  label,
+  value,
+  type,
+}: {
+  label: string;
+  value: any;
+  type: string;
+}) {
   const Icon = ICON_MAP[type] || <HelpCircle size={16} />;
 
   let displayValue = value;
-  if (type === 'date' && value) {
-    try { displayValue = new Date(value).toLocaleDateString(); } catch (e) {}
+  if (type === "date" && value) {
+    try {
+      displayValue = new Date(value).toLocaleDateString();
+    } catch (e) {}
   }
 
   return (
-    <div className="flex justify-between items-start py-3 border-b border-gray-800 last:border-0 group hover:bg-gray-800/50 transition-colors px-2 rounded-sm">
-      <div className="flex items-center gap-3 text-gray-500 mt-0.5">
-        <span className="text-gray-600 group-hover:text-green-400 transition-colors">{Icon}</span>
-        <span className="text-xs font-bold uppercase tracking-wider opacity-80">{label}</span>
+    <div className='flex justify-between items-start py-3 border-b border-gray-800 last:border-0 group hover:bg-gray-800/50 transition-colors px-2 rounded-sm'>
+      <div className='flex items-center gap-3 text-gray-500 mt-0.5'>
+        <span className='text-gray-600 group-hover:text-green-400 transition-colors'>
+          {Icon}
+        </span>
+        <span className='text-xs font-bold uppercase tracking-wider opacity-80'>
+          {label}
+        </span>
       </div>
-      <div className="text-white text-sm font-medium text-right max-w-[60%] leading-snug">
-        {displayValue ? <span className="break-words">{String(displayValue)}</span> : <span className="text-gray-700 text-xs italic">--</span>}
+      <div className='text-white text-sm font-medium text-right max-w-[60%] leading-snug'>
+        {displayValue ? (
+          <span className='break-words'>{String(displayValue)}</span>
+        ) : (
+          <span className='text-gray-700 text-xs italic'>--</span>
+        )}
       </div>
     </div>
   );
