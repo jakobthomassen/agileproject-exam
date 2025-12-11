@@ -36,24 +36,45 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch events from backend
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await axios.get<BackendEvent[]>(`${API_BASE_URL}/events`);
+      setBackendEvents(response.data);
+    } catch (err) {
+      console.error("Failed to fetch events:", err);
+      setError("Failed to load events from server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch events from backend on mount
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await axios.get<BackendEvent[]>(`${API_BASE_URL}/events`);
-        setBackendEvents(response.data);
-      } catch (err) {
-        console.error("Failed to fetch events:", err);
-        setError("Failed to load events from server.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchEvents();
   }, []);
+
+  // Delete event from backend
+  const deleteBackendEvent = async (eventId: string) => {
+    if (!window.confirm("Are you sure you want to delete this event?")) {
+      return;
+    }
+    try {
+      await axios.delete(`${API_BASE_URL}/events/${eventId}`);
+      // Refresh the list after deletion
+      fetchEvents();
+    } catch (err) {
+      console.error("Failed to delete event:", err);
+      alert("Failed to delete event. Please try again.");
+    }
+  };
+
+  // Check if an event ID is from backend (numeric) or local (uuid string)
+  const isBackendEvent = (id: string) => {
+    return /^\d+$/.test(id);
+  };
 
   // Convert backend events to SavedEvent format for the table
   const mappedBackendEvents: SavedEvent[] = backendEvents.map(ev => ({
@@ -127,8 +148,22 @@ export default function Dashboard() {
             <TableRow
               key={ev.id}
               ev={ev}
-              onDelete={() => deleteSavedEvent(ev.id)}
-              onEdit={() => navigate(`/dashboard/edit/${ev.id}`)}
+              onDelete={() => {
+                if (isBackendEvent(ev.id)) {
+                  deleteBackendEvent(ev.id);
+                } else {
+                  deleteSavedEvent(ev.id);
+                }
+              }}
+              onEdit={() => {
+                // For now, go to setup method page to edit/re-create
+                // Backend events go to AI page, local events go to manual
+                if (isBackendEvent(ev.id)) {
+                  navigate("/setup/ai");
+                } else {
+                  navigate("/setup/manual");
+                }
+              }}
               onOpen={() => setSelectedEvent(ev)}
             />
           ))}

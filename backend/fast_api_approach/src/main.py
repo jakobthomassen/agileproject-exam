@@ -42,7 +42,7 @@ from .auth.throttling import apply_rate_limit
 from src.DTOs.eventstate import ChatRequest, ChatResponse, ParticipantCreate, EventOut
 from .db.database import Base, engine, SessionLocal
 from .ai.event_handler import get_event_ui_payload
-from .db.crud import get_single_event, create_participant, get_all_events, get_participants_for_event
+from .db.crud import get_single_event, create_participant, get_all_events, get_participants_for_event, delete_event
 from .utils.import_participants import (
     parse_csv_participants,
     parse_excel_participants,
@@ -232,6 +232,26 @@ def list_all_events():
             ))
         
         return result
+    finally:
+        db.close()
+
+
+@app.delete("/events/{event_id}")
+def delete_event_endpoint(event_id: int):
+    """
+    Delete an event by ID.
+    Used by the "My Events" page for the delete action.
+    """
+    db = SessionLocal()
+    try:
+        event = get_single_event(db, event_id)
+        if not event:
+            raise HTTPException(status_code=404, detail=f"Event with ID {event_id} not found")
+        
+        delete_event(db, event_id)
+        return {"message": f"Event {event_id} deleted successfully"}
+    except AttributeError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     finally:
         db.close()
 
