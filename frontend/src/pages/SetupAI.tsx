@@ -39,6 +39,8 @@ export default function SetupAI() {
   const [thinking, setThinking] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
   
   // NOTE: If you haven't updated EventData interface yet, this might still show red.
   // Update src/context/EventSetupContext.tsx to include 'ui_payload' to fix it completely.
@@ -49,6 +51,12 @@ export default function SetupAI() {
       setChecklistData(eventData.ui_payload);
     }
   }, [eventData]);
+
+  useEffect(() => {
+    const el = chatContainerRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages, thinking]);
 
   // --- 1. HANDLE FILE SELECT (Triggers Auto-Send) ---
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,7 +128,7 @@ export default function SetupAI() {
           {/* Chat Panel */}
           <Card padding={16}>
             <div className={styles.chatPanel}>
-              <div className={styles.chatMessages}>
+              <div className={styles.chatMessages} ref={chatContainerRef}>
                 {messages.map((m, i) => (
                   <div key={i} className={`${styles.chatRow} ${m.sender === "user" ? styles.chatRowUser : styles.chatRowAssistant}`}>
                     <span className={m.sender === "user" ? styles.chatBubbleUser : styles.chatBubbleAssistant}>
