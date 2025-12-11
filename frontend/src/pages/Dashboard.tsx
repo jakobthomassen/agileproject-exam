@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
@@ -9,10 +10,78 @@ import { useEventSetup, type SavedEvent } from "../context/EventSetupContext";
 import { EventSummary } from "../components/event/EventSummary";
 import styles from "./Dashboard.module.css";
 
+// Backend API base URL
+const API_BASE_URL = "http://localhost:8000";
+
+// Type for events coming from the backend API
+interface BackendEvent {
+  id: number;
+  name: string | null;
+  sport: string | null;
+  format: string | null;
+  status: string;
+  start_date: string | null;
+  athletes: number;
+  event_code: string | null;
+  location: string | null;
+}
+
 export default function Dashboard() {
   const { savedEvents, deleteSavedEvent } = useEventSetup();
   const navigate = useNavigate();
   const [selectedEvent, setSelectedEvent] = useState<SavedEvent | null>(null);
+
+  // State for backend events
+  const [backendEvents, setBackendEvents] = useState<BackendEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch events from backend on mount
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await axios.get<BackendEvent[]>(`${API_BASE_URL}/events`);
+        setBackendEvents(response.data);
+      } catch (err) {
+        console.error("Failed to fetch events:", err);
+        setError("Failed to load events from server.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  // Convert backend events to SavedEvent format for the table
+  const mappedBackendEvents: SavedEvent[] = backendEvents.map(ev => ({
+    id: String(ev.id),
+    eventName: ev.name,
+    eventType: null,
+    participants: ev.athletes,
+    scoringMode: null,
+    scoringAudience: null,
+    scoringJudge: null,
+    venue: ev.location,
+    startDateTime: ev.start_date,
+    endDateTime: null,
+    sponsor: null,
+    rules: null,
+    audienceLimit: null,
+    image: null,
+    judgingSettings: null,
+    sport: ev.sport,
+    format: ev.format,
+    status: (ev.status as "DRAFT" | "OPEN" | "FINISHED") || "DRAFT",
+    startDate: ev.start_date,
+    athletes: ev.athletes,
+    eventCode: ev.event_code,
+  }));
+
+  // Combine backend events with local saved events (backend first)
+  const allEvents = [...mappedBackendEvents, ...savedEvents];
 
   return (
     <PageContainer kind="solid" maxWidth={1100}>
@@ -36,13 +105,25 @@ export default function Dashboard() {
         <div className={styles.tableWrapper}>
           <TableHeader />
 
-          {savedEvents.length === 0 && (
+          {loading && (
+            <div className={styles.emptyState} style={muted}>
+              Loading events...
+            </div>
+          )}
+
+          {error && (
+            <div className={styles.emptyState} style={{ ...muted, color: "#f87171" }}>
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && allEvents.length === 0 && (
             <div className={styles.emptyState} style={muted}>
               No events yet.
             </div>
           )}
 
-          {savedEvents.map(ev => (
+          {!loading && allEvents.map(ev => (
             <TableRow
               key={ev.id}
               ev={ev}
