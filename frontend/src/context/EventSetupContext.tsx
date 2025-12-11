@@ -82,6 +82,7 @@ export type EventData = {
 
   judgingSettings: JudgingSettings | null;
   ui_payload?: { label: string; value: any; type: string }[];
+  athleteList: { number: number; name: string }[];
 };
 
 export const defaultEventData: EventData = {
@@ -102,7 +103,9 @@ export const defaultEventData: EventData = {
   audienceLimit: null,
 
   image: null,
-  judgingSettings: null
+  judgingSettings: null,
+
+  athleteList: []
 };
 
 /* -------------------------------------------------------------------------- */

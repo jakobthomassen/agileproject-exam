@@ -57,6 +57,7 @@
 
 .textarea {
   width: 100%;
+  max-width: 360px;
   min-height: 120px;
   padding: 10px;
   border-radius: 6px;

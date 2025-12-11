@@ -1,3 +1,18 @@
+/*
+README!
+
+This page stores everything in local storage. The idea is we sync the most important fields to db and leave the rest in sessionstorage for demo purposes.
+
+Athlete count updates dynamically with our added athletes, so the number of athletes defined earlier is currently redundant.
+
+Scoring to be implemented.
+
+Experts to be implemented.
+
+Minor format inconsistencies to be fixed.
+
+*/
+
 import { useMemo, useRef, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { PageContainer } from "../components/layout/PageContainer";
@@ -24,7 +39,7 @@ export default function DashboardEdit() {
   >("general");
 
   /* ------------------------------------------------------------
-     DRAFT STATE (fixed: now loads AFTER event becomes available)
+     DRAFT STATE (loads AFTER event becomes available)
   ------------------------------------------------------------ */
   const [draft, setDraft] = useState<any>(null);
 
@@ -43,7 +58,7 @@ export default function DashboardEdit() {
   }, [event]);
 
   /* ------------------------------------------------------------
-     ATHLETES (persistent per event using sessionStorage)
+     ATHLETES (persist with saved event, no cross-tab persistence needed)
   ------------------------------------------------------------ */
 
   const [athletes, setAthletes] = useState<
@@ -52,24 +67,15 @@ export default function DashboardEdit() {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Load athletes after event + id is stable
+  // Load athletes from saved event when available
   useEffect(() => {
-    if (!id) return;
-    const key = `athletes_${id}`;
-    const saved = sessionStorage.getItem(key);
-    if (saved) {
-      try {
-        setAthletes(JSON.parse(saved));
-      } catch {}
+    if (!event) return;
+    if (Array.isArray((event as any).athleteList)) {
+      setAthletes((event as any).athleteList as { number: number; name: string }[]);
+    } else {
+      setAthletes([]);
     }
-  }, [id]);
-
-  // Persist athletes
-  useEffect(() => {
-    if (!id) return;
-    const key = `athletes_${id}`;
-    sessionStorage.setItem(key, JSON.stringify(athletes));
-  }, [athletes, id]);
+  }, [event]);
 
   // Modal for "Import Athletes" explanation
   const [importInfoOpen, setImportInfoOpen] = useState(false);
@@ -114,8 +120,11 @@ export default function DashboardEdit() {
       eventName: draft.eventName || null,
       sport: draft.sport || null,
       startDate: draft.startDate || null,
-      athletes: draft.athletes,
-      status: draft.status
+      // keep numeric athletes field in sync with table length
+      athletes: athletes.length,
+      status: draft.status,
+      // persist full athlete list on the event so it is available on reopen
+      athleteList: athletes
     });
 
     navigate("/dashboard");
@@ -199,10 +208,10 @@ export default function DashboardEdit() {
         return (
           <div className={styles.tabContent}>
             <div className={styles.field}>
-              <label>Scoring rules</label>
+              <label>Scoring rules (WIP)</label>
               <textarea
                 className={styles.textarea}
-                placeholder="Define scoring calculations here..."
+                placeholder="This tab should reuse the SetupManual scoring config modal. WIP."
                 value={draft.scoringRules}
                 onChange={e =>
                   setDraft(d => d && { ...d, scoringRules: e.target.value })
@@ -359,10 +368,10 @@ export default function DashboardEdit() {
         return (
           <div className={styles.tabContent}>
             <div className={styles.field}>
-              <label>Expert notes</label>
+              <label>Experts (WIP)</label>
               <textarea
                 className={styles.textarea}
-                placeholder="Expert assignments and notes..."
+                placeholder="Not sure what to do here. (WIP)"
                 value={draft.expertNotes}
                 onChange={e =>
                   setDraft(d => d && { ...d, expertNotes: e.target.value })
