@@ -3,16 +3,11 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useEventSetup } from "../context/EventSetupContext";
 import ReactMarkdown from "react-markdown";
-import {
-  MapPin,
-  Calendar,
-  Clock,
-  Type,
-  Hash,
-  HelpCircle,
-  Loader2,
-  Paperclip,
-} from "lucide-react";
+import { 
+  MapPin, Calendar, Clock, Type, Hash, HelpCircle, 
+  Loader2, Paperclip,
+  Pencil, Check, X          
+} from 'lucide-react';
 
 // Components
 import { PageContainer } from "../components/layout/PageContainer";
@@ -35,6 +30,67 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   time: <Clock size={16} />,
   location: <MapPin size={16} />,
 };
+
+function DynamicCheckRow({
+  label,
+  value,
+  type,
+  onChange,
+}: {
+  label: string;
+  value: any;
+  type: string;
+  onChange: (newValue: any) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value);
+
+  const handleSave = () => {
+    onChange(editValue);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditValue(value);
+    setIsEditing(false);
+  };
+
+  const icon = ICON_MAP[type] || <HelpCircle size={16} />;
+
+  return (
+    <div className={styles.checkRow}>
+      <div className={styles.checkRowLeft}>
+        {icon}
+        <span className={styles.checkRowLabel}>{label}</span>
+      </div>
+      <div className={styles.checkRowRight}>
+        {isEditing ? (
+          <>
+            <input
+              type={type === "number" ? "number" : type === "date" ? "date" : type === "time" ? "time" : "text"}
+              value={editValue || ""}
+              onChange={(e) => setEditValue(e.target.value)}
+              className={styles.checkRowInput}
+            />
+            <button onClick={handleSave} className={styles.iconButton}>
+              <Check size={16} />
+            </button>
+            <button onClick={handleCancel} className={styles.iconButton}>
+              <X size={16} />
+            </button>
+          </>
+        ) : (
+          <>
+            <span className={styles.checkRowValue}>{value || "—"}</span>
+            <button onClick={() => setIsEditing(true)} className={styles.iconButton}>
+              <Pencil size={16} />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function SetupAI() {
   const navigate = useNavigate();
@@ -296,101 +352,3 @@ export default function SetupAI() {
   );
 }
 
-// Helper Component: Timecard Style
-function DynamicCheckRow({
-  label,
-  value,
-  type,
-  onChange
-}: {
-  label: string;
-  value: any;
-  type: string;
-  onChange?: (val: any) => void;
-}) {
-  const Icon = ICON_MAP[type] || <HelpCircle size={16} />;
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState<string>("");
-
-  useEffect(() => {
-    setDraft(value ?? "");
-  }, [value]);
-
-  let displayValue = value;
-  if (type === "date" && value) {
-    try {
-      displayValue = new Date(value).toLocaleDateString();
-    } catch (e) {}
-  }
-
-  const canEdit = Boolean(onChange);
-
-  const handleSave = () => {
-    if (onChange) {
-      onChange(draft);
-    }
-    setIsEditing(false);
-  };
-
-  return (
-    <div className="flex justify-between items-start py-3 border-b border-gray-800 last:border-0 group hover:bg-gray-800/50 transition-colors px-2 rounded-sm">
-      <div className="flex items-center gap-3 text-gray-500 mt-0.5">
-        <span className="text-gray-600 group-hover:text-green-400 transition-colors">
-          {Icon}
-        </span>
-        <span className="text-xs font-bold uppercase tracking-wider opacity-80">
-          {label}
-        </span>
-      </div>
-
-      <div className="text-right max-w-[60%] leading-snug flex flex-col items-end gap-1">
-        {isEditing && canEdit ? (
-          <input
-            className="bg-slate-900/60 border border-slate-600 rounded px-2 py-1 text-xs text-white max-w-[180px]"
-            type={
-              type === "number"
-                ? "number"
-                : type === "date"
-                ? "date"
-                : "text"
-            }
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={handleSave}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                handleSave();
-              }
-              if (e.key === "Escape") {
-                e.preventDefault();
-                setIsEditing(false);
-                setDraft(value ?? "");
-              }
-            }}
-          />
-        ) : (
-          <>
-            <div className="text-white text-sm font-medium">
-              {displayValue ? (
-                <span className="break-words">{String(displayValue)}</span>
-              ) : (
-                <span className="text-gray-700 text-xs italic">--</span>
-              )}
-            </div>
-            {canEdit && (
-              <button
-                type="button"
-                className="mt-1 text-[11px] px-2 py-0.5 rounded-full border border-gray-500/60 text-gray-300 hover:border-green-400 hover:text-green-300 transition-colors"
-                onClick={() => setIsEditing(true)}
-              >
-                Edit
-              </button>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
