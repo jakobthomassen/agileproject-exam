@@ -2,7 +2,7 @@
 setlocal
 
 echo Starting Backend...
-start "Backend Server" cmd /k "cd backend && uvicorn app.main:app --reload"
+start "Backend Server" cmd /k "cd backend\fast_api_approach && uvicorn src.main:app --reload"
 
 echo Starting Frontend...
 start "Frontend Server" cmd /k "cd frontend && npm run dev"
