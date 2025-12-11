@@ -1,4 +1,13 @@
 # ----- SCRIPT TO SIMULATE RESPONSE FROM AI -----
+#
+# This script tests CRUD operations for Events, Images, and Participants.
+#
+# To test the NEW participant import endpoint (CSV/Excel), use:
+#   curl -X POST "http://127.0.0.1:8000/events/1/participants/import" -F "file=@your_file.csv"
+#
+# Or use any HTTP client (Postman, Insomnia) to POST a file to:
+#   POST /events/{event_id}/participants/import
+#
 from .DTOs.eventstate import EventState, EventImageCreate, ParticipantCreate
 from .ai.event_handler import (save_ai_generated_event, debug_read_all_events, save_event_image,
                                debug_read_single_event, debug_update_event, debug_delete_event,
@@ -11,15 +20,11 @@ import os
 
 def simulate_ai_event():
     fake_event = EventState(
-        eventname="REDBULL CLIFF DIVING",
-        evendescription="A cliff diving competition hosted by RedBull",
-        eventdate="2025-12-08",
-        eventtime="22:00",
-        eventlocation="Oslo Opera House",
-        eventjudgetype="Battle",
-        eventaudienceweight=33,
-        eventexpertweight=33,
-        eventathleteweight=34
+        eventname="Redbull cliff diving",
+        eventdate="2025-12-02",
+        eventtime="19:00",
+        eventlocation="Kragerø",
+        participants=["amund", "shefat", "hansim"]
     )
 
     print("Simulating AI event creation...")
@@ -44,9 +49,14 @@ def simulate_ai_event():
 
     print(f"\nUpdating event with ID = {id}")
     update_fake_event = EventState(
-        eventname="Moren din"
+        eventid=id,
+        eventname="Moren din",
+        eventdate=None,
+        eventtime=None,
+        eventlocation=None,
+        participants=None
     )
-    updated_event = debug_update_event(update_fake_event, id)
+    updated_event = debug_update_event(update_fake_event)
     print(updated_event.to_dict())
 
     print(f"\nDeleting event with ID = {id}")
@@ -102,9 +112,17 @@ def simulate_ai_event():
         print(image.to_dict())
 
     # Testing CRUD for Participants
-    print("\n" + "="*50)
-    print("Testing CRUD for Participants")
-    print("="*50)
+
+    fake_event_for_participants = EventState(
+        eventname="Test for participants",
+        eventdescription="all other fields should be empty"
+    )
+    fake_event_for_participants = save_ai_generated_event(fake_event_for_participants)
+    print("\nPrinting all events available:")
+
+    all_events = debug_read_all_events()
+    for event in all_events:
+        print(event.to_dict())
 
     # Create participants
     print("\nCreating participants...")

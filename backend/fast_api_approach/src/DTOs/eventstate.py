@@ -60,3 +60,20 @@ class ParticipantCreate(BaseModel):
     event_id: Optional[int] = Field(None, description="FK to events table")
     name: Optional[str] = Field(None, description="Name of the participant")
     email: Optional[str] = Field(None, description="Email of the participant")
+
+
+# DTO for returning event data to frontend (My Events page)
+class EventOut(BaseModel):
+    """Response model for returning event data to the frontend."""
+    id: int
+    name: Optional[str] = None
+    sport: Optional[str] = None
+    format: Optional[str] = None
+    status: str = "DRAFT"
+    start_date: Optional[str] = None
+    athletes: int = 0
+    event_code: Optional[str] = None
+    location: Optional[str] = None
+
+    class Config:
+        from_attributes = True  # Allows creating from SQLAlchemy models
