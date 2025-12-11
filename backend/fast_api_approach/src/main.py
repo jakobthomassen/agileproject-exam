@@ -39,10 +39,10 @@ import shutil
 from .ai.gemini import Gemini
 from .auth.dependencies import get_user_identifier
 from .auth.throttling import apply_rate_limit
-from src.DTOs.eventstate import ChatRequest, ChatResponse, ParticipantCreate
+from src.DTOs.eventstate import ChatRequest, ChatResponse, ParticipantCreate, EventOut
 from .db.database import Base, engine, SessionLocal
 from .ai.event_handler import get_event_ui_payload
-from .db.crud import get_single_event, create_participant
+from .db.crud import get_single_event, create_participant, get_all_events, get_participants_for_event, delete_event
 from .utils.import_participants import (
     parse_csv_participants,
     parse_excel_participants,
@@ -193,6 +193,68 @@ async def chat(request: ChatRequest, user_id: str = Depends(get_user_identifier)
 @app.get("/")
 async def root():
     return {"message": "API is running"}
+
+
+# ---------------------------------------------------------
+# LIST ALL EVENTS ENDPOINT (for My Events page)
+# ---------------------------------------------------------
+@app.get("/events", response_model=List[EventOut])
+def list_all_events():
+    """
+    Return all events from the database.
+    Used by the "My Events" page in the frontend.
+    """
+    db = SessionLocal()
+    try:
+        events = get_all_events(db)
+        
+        # Map each Event model to EventOut response
+        result = []
+        for event in events:
+            # Count participants for this event
+            participants = get_participants_for_event(db, event.id)
+            athletes_count = len(participants) if participants else 0
+            
+            # Get event name - handle both possible attribute names
+            event_name = getattr(event, 'event_name', None) or getattr(event, 'eventname', None)
+            
+            # Map the database fields to the response model
+            result.append(EventOut(
+                id=event.id,
+                name=event_name,
+                sport=None,  # Not in current model, placeholder
+                format=None,  # Not in current model, placeholder
+                status="DRAFT",  # Default status for now
+                start_date=event.date,
+                athletes=athletes_count,
+                event_code=None,  # Not in current model, placeholder
+                location=event.location
+            ))
+        
+        return result
+    finally:
+        db.close()
+
+
+@app.delete("/events/{event_id}")
+def delete_event_endpoint(event_id: int):
+    """
+    Delete an event by ID.
+    Used by the "My Events" page for the delete action.
+    """
+    db = SessionLocal()
+    try:
+        event = get_single_event(db, event_id)
+        if not event:
+            raise HTTPException(status_code=404, detail=f"Event with ID {event_id} not found")
+        
+        delete_event(db, event_id)
+        return {"message": f"Event {event_id} deleted successfully"}
+    except AttributeError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    finally:
+        db.close()
+
 
 router = APIRouter()
 
