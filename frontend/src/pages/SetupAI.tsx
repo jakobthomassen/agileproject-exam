@@ -153,6 +153,21 @@ export default function SetupAI() {
     }
   }
 
+    const handleChecklistChange = (index: number, newValue: any) => {
+    const updated = checklistData.map((item, i) =>
+      i === index ? { ...item, value: newValue } : item
+    );
+
+    setChecklistData(updated);
+
+    // Keep eventData in sync so other pages can read updated ui_payload
+    setEventData({
+      ...(eventData || {}),
+      ui_payload: updated
+    });
+  };
+
+
   return (
     <PageContainer kind='solid' maxWidth={1200}>
       <div className={styles.pageInner}>
@@ -253,19 +268,20 @@ export default function SetupAI() {
                   <div className='text-gray-500 italic text-sm py-4 text-center'>
                     Details will appear here...
                   </div>
-                ) : (
-                  checklistData.map((field, index) => (
-                    <DynamicCheckRow
-                      key={`${field.label}-${index}`}
-                      label={field.label}
-                      value={field.value}
-                      type={field.type}
-                    />
-                  ))
-                )}
-              </div>
+  ) : (
+    checklistData.map((item, idx) => (
+      <DynamicCheckRow
+        key={idx}
+        label={item.label}
+        value={item.value}
+        type={item.type}
+        onChange={(newVal) => handleChecklistChange(idx, newVal)}
+      />
+    ))
+  )}
+</div>
 
-              <Button
+<Button
                 fullWidth
                 onClick={() => navigate("/setup/summary")}
                 className={styles.checklistContinueButton}
@@ -285,12 +301,21 @@ function DynamicCheckRow({
   label,
   value,
   type,
+  onChange
 }: {
   label: string;
   value: any;
   type: string;
+  onChange?: (val: any) => void;
 }) {
   const Icon = ICON_MAP[type] || <HelpCircle size={16} />;
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState<string>("");
+
+  useEffect(() => {
+    setDraft(value ?? "");
+  }, [value]);
 
   let displayValue = value;
   if (type === "date" && value) {
@@ -299,21 +324,71 @@ function DynamicCheckRow({
     } catch (e) {}
   }
 
+  const canEdit = Boolean(onChange);
+
+  const handleSave = () => {
+    if (onChange) {
+      onChange(draft);
+    }
+    setIsEditing(false);
+  };
+
   return (
-    <div className='flex justify-between items-start py-3 border-b border-gray-800 last:border-0 group hover:bg-gray-800/50 transition-colors px-2 rounded-sm'>
-      <div className='flex items-center gap-3 text-gray-500 mt-0.5'>
-        <span className='text-gray-600 group-hover:text-green-400 transition-colors'>
+    <div className="flex justify-between items-start py-3 border-b border-gray-800 last:border-0 group hover:bg-gray-800/50 transition-colors px-2 rounded-sm">
+      <div className="flex items-center gap-3 text-gray-500 mt-0.5">
+        <span className="text-gray-600 group-hover:text-green-400 transition-colors">
           {Icon}
         </span>
-        <span className='text-xs font-bold uppercase tracking-wider opacity-80'>
+        <span className="text-xs font-bold uppercase tracking-wider opacity-80">
           {label}
         </span>
       </div>
-      <div className='text-white text-sm font-medium text-right max-w-[60%] leading-snug'>
-        {displayValue ? (
-          <span className='break-words'>{String(displayValue)}</span>
+
+      <div className="text-right max-w-[60%] leading-snug flex flex-col items-end gap-1">
+        {isEditing && canEdit ? (
+          <input
+            className="bg-slate-900/60 border border-slate-600 rounded px-2 py-1 text-xs text-white max-w-[180px]"
+            type={
+              type === "number"
+                ? "number"
+                : type === "date"
+                ? "date"
+                : "text"
+            }
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={handleSave}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSave();
+              }
+              if (e.key === "Escape") {
+                e.preventDefault();
+                setIsEditing(false);
+                setDraft(value ?? "");
+              }
+            }}
+          />
         ) : (
-          <span className='text-gray-700 text-xs italic'>--</span>
+          <>
+            <div className="text-white text-sm font-medium">
+              {displayValue ? (
+                <span className="break-words">{String(displayValue)}</span>
+              ) : (
+                <span className="text-gray-700 text-xs italic">--</span>
+              )}
+            </div>
+            {canEdit && (
+              <button
+                type="button"
+                className="mt-1 text-[11px] px-2 py-0.5 rounded-full border border-gray-500/60 text-gray-300 hover:border-green-400 hover:text-green-300 transition-colors"
+                onClick={() => setIsEditing(true)}
+              >
+                Edit
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>
