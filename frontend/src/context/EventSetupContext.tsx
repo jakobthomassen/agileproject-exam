@@ -29,11 +29,6 @@ export interface JudgingSettings {
   groups: Record<JudgeGroupType, JudgeGroupConfig>;
 }
 
-
-/*
-  Context owns the canonical DEFAULTS,
-  but not all flows must immediately commit them.
-*/
 export const defaultJudgingSettings: JudgingSettings = {
   scoreMin: 0,
   scoreMax: 10,
@@ -85,10 +80,6 @@ export type EventData = {
 
   image: string | null;
 
-  /*
-    Judging settings are context-owned but optional.
-    Early setup steps may leave this null or partially defined.
-  */
   judgingSettings: JudgingSettings | null;
   ui_payload?: { label: string; value: any; type: string }[];
 };
@@ -139,10 +130,6 @@ type EventSetupContextValue = {
   replaceEventData: (data: EventData) => void;
   resetEventData: () => void;
 
-  /*
-    Explicit helper for judging settings.
-    Allows future pages to partially update without full ownership.
-  */
   setJudgingSettings: (patch: Partial<JudgingSettings>) => void;
   resetJudgingSettings: () => void;
 
@@ -161,12 +148,12 @@ const EventSetupContext = createContext<EventSetupContextValue | undefined>(
 /* -------------------------------------------------------------------------- */
 
 export function EventSetupProvider({ children }: { children: ReactNode }) {
-  const [eventData, setEventDataState] =
-    useState<EventData>(defaultEventData);
+  const [eventData, setEventDataState] = useState<EventData>(defaultEventData);
 
+  // Load saved events from localStorage
   const [savedEvents, setSavedEvents] = useState<SavedEvent[]>(() => {
     try {
-      const raw = sessionStorage.getItem("savedEvents");
+      const raw = localStorage.getItem("savedEvents");
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
@@ -175,6 +162,13 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
       return [];
     }
   });
+
+  // Persist saved events
+  useEffect(() => {
+    try {
+      localStorage.setItem("savedEvents", JSON.stringify(savedEvents));
+    } catch {}
+  }, [savedEvents]);
 
   const setEventData = (patch: Partial<EventData>) => {
     setEventDataState(prev => ({
@@ -222,12 +216,6 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  useEffect(() => {
-    try {
-      sessionStorage.setItem("savedEvents", JSON.stringify(savedEvents));
-    } catch {}
-  }, [savedEvents]);
-
   const value = useMemo(
     () => ({
       eventData,
@@ -264,4 +252,3 @@ export function useEventSetup(): EventSetupContextValue {
   }
   return ctx;
 }
-
