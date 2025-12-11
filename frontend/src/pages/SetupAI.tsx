@@ -3,16 +3,10 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useEventSetup } from "../context/EventSetupContext";
 import ReactMarkdown from "react-markdown";
-import {
-  MapPin,
-  Calendar,
-  Clock,
-  Type,
-  Hash,
-  HelpCircle,
-  Loader2,
-  Paperclip,
-} from "lucide-react";
+import { 
+  MapPin, Calendar, Clock, Type, Hash, HelpCircle, 
+  Loader2, Paperclip, Pencil
+} from 'lucide-react';
 
 // Components
 import { PageContainer } from "../components/layout/PageContainer";
@@ -29,12 +23,281 @@ type ChatMessage = { sender: "user" | "assistant"; text: string };
 type ChecklistItem = { label: string; value: any; type: string };
 
 const ICON_MAP: Record<string, React.ReactNode> = {
-  text: <Type size={16} />,
-  number: <Hash size={16} />,
-  date: <Calendar size={16} />,
-  time: <Clock size={16} />,
-  location: <MapPin size={16} />,
+  text: <Type size={14} />,
+  number: <Hash size={14} />,
+  date: <Calendar size={14} />,
+  time: <Clock size={14} />,
+  location: <MapPin size={14} />,
 };
+
+// Friendly placeholder text for empty fields
+const PLACEHOLDER_MAP: Record<string, string> = {
+  event: "Click to add event name",
+  date: "Click to set date",
+  time: "Click to set time",
+  location: "Click to set location",
+  description: "Click to add description",
+  default: "Click to add value",
+};
+
+function getPlaceholder(label: string, type: string): string {
+  const key = label.toLowerCase();
+  if (PLACEHOLDER_MAP[key]) return PLACEHOLDER_MAP[key];
+  if (PLACEHOLDER_MAP[type]) return PLACEHOLDER_MAP[type];
+  return PLACEHOLDER_MAP.default;
+}
+
+/**
+ * EditableField - A clean, modern editable field component
+ * Displays a label and value, switches to input on click
+ */
+function EditableField({
+  label,
+  value,
+  type,
+  onChange
+}: {
+  label: string;
+  value: any;
+  type: string;
+  onChange?: (val: any) => void;
+}) {
+  const Icon = ICON_MAP[type] || <HelpCircle size={14} />;
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState<string>(value ?? "");
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Sync draft with value when value changes externally
+  useEffect(() => {
+    if (!isEditing) {
+      setDraft(value ?? "");
+    }
+  }, [value, isEditing]);
+
+  // Focus input when entering edit mode AND ensure draft has current value
+  useEffect(() => {
+    if (isEditing) {
+      // Always sync draft to current value when entering edit mode
+      setDraft(value ?? "");
+      
+      // Focus and select after a small delay to ensure value is set
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          if (type !== "date" && type !== "time") {
+            inputRef.current.select();
+          }
+        }
+      }, 10);
+    }
+  }, [isEditing, value, type]);
+
+  // Format display value nicely
+  const formatDisplayValue = (val: any): string => {
+    if (!val) return "";
+    if (type === "date") {
+      try {
+        return new Date(val).toLocaleDateString();
+      } catch {
+        return String(val);
+      }
+    }
+    return String(val);
+  };
+
+  const displayValue = formatDisplayValue(value);
+  const hasValue = value !== null && value !== undefined && value !== "";
+
+  // Determine input type
+  const getInputType = () => {
+    switch (type) {
+      case "date": return "date";
+      case "time": return "time";
+      case "number": return "number";
+      default: return "text";
+    }
+  };
+
+  const handleSave = () => {
+    if (onChange) {
+      onChange(draft);
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setDraft(value ?? "");
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && type !== "description") {
+      e.preventDefault();
+      handleSave();
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      handleCancel();
+    }
+  };
+
+  const isDescription = label.toLowerCase().includes("description");
+
+  return (
+    <div
+      className="group relative rounded-lg transition-all duration-150 cursor-pointer"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={() => {
+        if (!isEditing && onChange) {
+          setIsEditing(true);
+        }
+      }}
+      style={{
+        padding: "14px 16px",
+        marginBottom: "10px",
+        minHeight: "56px",
+        backgroundColor: isEditing 
+          ? "#252a3a" 
+          : isHovered 
+            ? "#353b4d" 
+            : "#2a2f3f",
+        border: isEditing 
+          ? "1px solid #10b981" 
+          : isHovered 
+            ? "1px solid #4b5563" 
+            : "1px solid transparent",
+        boxShadow: isHovered && !isEditing ? "0 2px 8px rgba(0,0,0,0.15)" : "none",
+      }}
+    >
+      {/* Label row */}
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-gray-400">{Icon}</span>
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          {label}
+        </span>
+        
+        {/* Pencil icon on hover (only in display mode) */}
+        {!isEditing && onChange && (
+          <Pencil 
+            size={14} 
+            className="ml-auto transition-all duration-150"
+            style={{
+              opacity: isHovered ? 0.8 : 0,
+              color: isHovered ? "#10b981" : "#6b7280",
+            }}
+          />
+        )}
+      </div>
+
+      {/* Value / Input */}
+      {!isEditing ? (
+        <div className="min-h-[28px] flex items-center">
+          {hasValue ? (
+            <span className="text-base font-medium text-gray-100">{displayValue}</span>
+          ) : (
+            <span className="text-gray-500 italic text-sm">
+              {getPlaceholder(label, type)}
+            </span>
+          )}
+        </div>
+      ) : (
+        <div onClick={(e) => e.stopPropagation()}>
+          {isDescription ? (
+            // Textarea for description fields - fixed height, non-resizable, full width
+            <textarea
+              ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+              className="
+                w-full rounded-md px-4 py-3 text-base
+                !text-white !opacity-100 caret-emerald-400
+                border border-gray-500
+                focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400
+                placeholder:text-gray-400
+              "
+              style={{ 
+                backgroundColor: '#2c3140',
+                height: '12rem',
+                resize: 'none',
+                overflow: 'auto',
+                color: '#ffffff',
+              }}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyDown}
+              placeholder={getPlaceholder(label, type)}
+            />
+          ) : type === "date" || type === "time" ? (
+            // Special styling for date/time inputs
+            <div className="flex items-center gap-2">
+              <div className="flex-1 relative">
+                <input
+                  ref={inputRef as React.RefObject<HTMLInputElement>}
+                  type={getInputType()}
+                  className="
+                    w-full rounded-md px-4 py-3 text-base
+                    !text-white !opacity-100 caret-emerald-400
+                    border border-gray-500
+                    focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400
+                    cursor-pointer
+                  "
+                  style={{ 
+                    backgroundColor: '#2c3140',
+                    minHeight: '48px',
+                    colorScheme: 'dark',
+                    color: '#ffffff',
+                  }}
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onBlur={handleSave}
+                  onKeyDown={handleKeyDown}
+                />
+              </div>
+            </div>
+          ) : (
+            // Regular text/number input
+            <input
+              ref={inputRef as React.RefObject<HTMLInputElement>}
+              type={getInputType()}
+              className="
+                w-full rounded-md px-3 py-2.5 text-base
+                !text-white !opacity-100 caret-emerald-400
+                border border-gray-500
+                focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400
+                placeholder:text-gray-400
+              "
+              style={{ 
+                backgroundColor: '#2c3140',
+                color: '#ffffff',
+              }}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyDown}
+              placeholder={getPlaceholder(label, type)}
+            />
+          )}
+          
+          {/* Helper text */}
+          <div className="flex justify-between items-center mt-2 text-xs">
+            {type === "time" ? (
+              <span className="text-gray-500">Click the input or type HH:MM</span>
+            ) : type === "date" ? (
+              <span className="text-gray-500">Click to open date picker</span>
+            ) : (
+              <span></span>
+            )}
+            <span className="text-gray-500">
+              Enter to save · Esc to cancel
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function SetupAI() {
   const navigate = useNavigate();
@@ -153,6 +416,21 @@ export default function SetupAI() {
     }
   }
 
+    const handleChecklistChange = (index: number, newValue: any) => {
+    const updated = checklistData.map((item, i) =>
+      i === index ? { ...item, value: newValue } : item
+    );
+
+    setChecklistData(updated);
+
+    // Keep eventData in sync so other pages can read updated ui_payload
+    setEventData({
+      ...(eventData || {}),
+      ui_payload: updated
+    });
+  };
+
+
   return (
     <PageContainer kind='solid' maxWidth={1200}>
       <div className={styles.pageInner}>
@@ -248,24 +526,25 @@ export default function SetupAI() {
             <div className={styles.checklistCardInner}>
               <h3 className={styles.checklistHeading}>Event Details</h3>
 
-              <div className='space-y-0 mb-4'>
+              <div className='space-y-1'>
                 {!checklistData || checklistData.length === 0 ? (
-                  <div className='text-gray-500 italic text-sm py-4 text-center'>
-                    Details will appear here...
+                  <div className='text-slate-500 italic text-sm py-8 text-center rounded-lg bg-slate-800/20'>
+                    Event details will appear here as you chat with the AI...
                   </div>
                 ) : (
-                  checklistData.map((field, index) => (
-                    <DynamicCheckRow
-                      key={`${field.label}-${index}`}
-                      label={field.label}
-                      value={field.value}
-                      type={field.type}
+                  checklistData.map((item, idx) => (
+                    <EditableField
+                      key={idx}
+                      label={item.label}
+                      value={item.value}
+                      type={item.type}
+                      onChange={(newVal) => handleChecklistChange(idx, newVal)}
                     />
                   ))
                 )}
               </div>
 
-              <Button
+<Button
                 fullWidth
                 onClick={() => navigate("/setup/summary")}
                 className={styles.checklistContinueButton}
@@ -280,42 +559,3 @@ export default function SetupAI() {
   );
 }
 
-// Helper Component: Timecard Style
-function DynamicCheckRow({
-  label,
-  value,
-  type,
-}: {
-  label: string;
-  value: any;
-  type: string;
-}) {
-  const Icon = ICON_MAP[type] || <HelpCircle size={16} />;
-
-  let displayValue = value;
-  if (type === "date" && value) {
-    try {
-      displayValue = new Date(value).toLocaleDateString();
-    } catch (e) {}
-  }
-
-  return (
-    <div className='flex justify-between items-start py-3 border-b border-gray-800 last:border-0 group hover:bg-gray-800/50 transition-colors px-2 rounded-sm'>
-      <div className='flex items-center gap-3 text-gray-500 mt-0.5'>
-        <span className='text-gray-600 group-hover:text-green-400 transition-colors'>
-          {Icon}
-        </span>
-        <span className='text-xs font-bold uppercase tracking-wider opacity-80'>
-          {label}
-        </span>
-      </div>
-      <div className='text-white text-sm font-medium text-right max-w-[60%] leading-snug'>
-        {displayValue ? (
-          <span className='break-words'>{String(displayValue)}</span>
-        ) : (
-          <span className='text-gray-700 text-xs italic'>--</span>
-        )}
-      </div>
-    </div>
-  );
-}
