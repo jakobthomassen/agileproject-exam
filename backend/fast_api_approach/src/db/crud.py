@@ -135,9 +135,14 @@ def create_participant(db: Session, participant_data: ParticipantCreate):
         name=participant_data.name,
         email=participant_data.email
     )
+
     db.add(db_participant)
-    db.commit()
-    db.refresh(db_participant)
+    try:
+        db.commit()
+        db.refresh(db_participant)
+    except IntegrityError:
+        db.rollback()
+        raise ValueError(f"Cannot create participant: event with ID: {db_participant.event_id} does not exist")
     return db_participant
 
 
@@ -156,7 +161,7 @@ def get_participants_for_event(db: Session, event_id: int):
 def update_participant(db: Session, id: int, participant_data: ParticipantCreate):
     db_participant = get_single_participant(db, id)
     if not db_participant:
-        return None
+        raise ValueError(f"Participant with ID: {id} does not exist")
 
     # Only update fields that were provided (not None)
     if participant_data.event_id is not None:
@@ -175,7 +180,6 @@ def delete_participant(db: Session, id: int):
     db_participant = get_single_participant(db, id)
     if not db_participant:
         raise AttributeError(f"Participant with ID: {id} does not exist")
-        return
 
     db.delete(db_participant)
     db.commit()

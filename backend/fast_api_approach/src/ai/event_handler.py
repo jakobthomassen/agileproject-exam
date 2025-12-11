@@ -28,6 +28,8 @@ def debug_read_all_events():
     try:
         all_events = get_all_events(db)
         return all_events
+    except Exception as e:
+        print(f"Error: {str(e)}")
     finally:
         db.close()
 
@@ -41,6 +43,8 @@ def save_event_image(image_data: EventImageCreate):
     try:
         saved_event = create_image(db, image_data)
         return saved_event
+    except Exception as e:
+        print(f"Error: {str(e)}")
     finally:
         db.close()
 
@@ -116,14 +120,16 @@ def debug_read_single_event(id: int):
     try:
         single_event = get_single_event(db, id)
         return single_event
+    except Exception as e:
+        print(f"Error: {str(e)}")
     finally:
         db.close()
 
 
-def debug_update_event(event_state: EventState, id: int):
+def debug_update_event(event_state: EventState):
     db = SessionLocal()
     try:
-        event_to_update = update_event(db, id, event_state)
+        event_to_update = update_event(db, event_state)
         return event_to_update
     except Exception as e:
         print(f"Error: {str(e)}")
@@ -158,6 +164,8 @@ def debug_read_event_image(id: int):
     db = SessionLocal()
     try:
         return get_single_image(db, id)
+    except Exception as e:
+        print(f"Error: {str(e)}")
     finally:
         db.close()
 
@@ -167,6 +175,8 @@ def debug_read_all_images():
     db = SessionLocal()
     try:
         return get_all_images(db)
+    except Exception as e:
+        print(f"Error: {str(e)}")
     finally:
         db.close()
 
@@ -201,6 +211,8 @@ def save_participant(participant_data: ParticipantCreate):
     try:
         saved_participant = create_participant(db, participant_data)
         return saved_participant
+    except Exception as e:
+        print(f"Error: {str(e)}")
     finally:
         db.close()
 
@@ -210,6 +222,8 @@ def debug_read_single_participant(id: int):
     db = SessionLocal()
     try:
         return get_single_participant(db, id)
+    except Exception as e:
+        print(f"Error: {str(e)}")
     finally:
         db.close()
 
@@ -219,6 +233,8 @@ def debug_read_all_participants():
     db = SessionLocal()
     try:
         return get_all_participants(db)
+    except Exception as e:
+        print(f"Error: {str(e)}")
     finally:
         db.close()
 
@@ -228,6 +244,8 @@ def debug_read_participants_for_event(event_id: int):
     db = SessionLocal()
     try:
         return get_participants_for_event(db, event_id)
+    except Exception as e:
+        print(f"Error: {str(e)}")
     finally:
         db.close()
 
@@ -237,6 +255,8 @@ def debug_update_participant(participant_data: ParticipantCreate, id: int):
     db = SessionLocal()
     try:
         return update_participant(db, id, participant_data)
+    except Exception as e:
+        print(f"Error: {str(e)}")
     finally:
         db.close()
 
