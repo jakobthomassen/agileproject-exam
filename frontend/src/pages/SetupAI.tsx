@@ -35,55 +35,110 @@ function DynamicCheckRow({
   label,
   value,
   type,
-  onChange,
+  onChange
 }: {
   label: string;
   value: any;
   type: string;
-  onChange: (newValue: any) => void;
+  onChange?: (val: any) => void;
 }) {
+  const Icon = ICON_MAP[type] || <HelpCircle size={16} />;
+
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
+  const [draft, setDraft] = useState<string>("");
+
+  useEffect(() => {
+    setDraft(value ?? "");
+  }, [value]);
+
+  // display value nicely
+  let displayValue: any = value;
+  if (type === "date" && value) {
+    try {
+      displayValue = new Date(value).toLocaleDateString();
+    } catch {
+      displayValue = value;
+    }
+  }
+
+  const inputType =
+    type === "number" ? "number" : type === "date" ? "date" : "text";
 
   const handleSave = () => {
-    onChange(editValue);
+    if (onChange) {
+      onChange(draft);
+    }
     setIsEditing(false);
   };
 
   const handleCancel = () => {
-    setEditValue(value);
+    setDraft(value ?? "");
     setIsEditing(false);
   };
 
-  const icon = ICON_MAP[type] || <HelpCircle size={16} />;
-
   return (
-    <div className={styles.checkRow}>
-      <div className={styles.checkRowLeft}>
-        {icon}
-        <span className={styles.checkRowLabel}>{label}</span>
+    <div className="flex justify-between items-baseline py-2 text-sm">
+      {/* left: icon + label */}
+      <div className="flex items-center gap-2 text-gray-500">
+        <span className="text-gray-500">{Icon}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-wide">
+          {label}
+        </span>
       </div>
-      <div className={styles.checkRowRight}>
-        {isEditing ? (
+
+      {/* right: value + tiny "(edit)" */}
+      <div className="flex items-baseline gap-2 max-w-[60%] justify-end">
+        {!isEditing ? (
           <>
-            <input
-              type={type === "number" ? "number" : type === "date" ? "date" : type === "time" ? "time" : "text"}
-              value={editValue || ""}
-              onChange={(e) => setEditValue(e.target.value)}
-              className={styles.checkRowInput}
-            />
-            <button onClick={handleSave} className={styles.iconButton}>
-              <Check size={16} />
-            </button>
-            <button onClick={handleCancel} className={styles.iconButton}>
-              <X size={16} />
-            </button>
+            <span className="text-white break-words">
+              {displayValue ? (
+                String(displayValue)
+              ) : (
+                <span className="text-gray-600 text-xs italic">(MISSING)</span>
+              )}
+            </span>
+            {onChange && (
+              <button
+                type="button"
+                className="text-[11px] text-gray-400 hover:text-green-400 underline"
+                onClick={() => setIsEditing(true)}
+              >
+                edit
+              </button>
+            )}
           </>
         ) : (
           <>
-            <span className={styles.checkRowValue}>{value || "—"}</span>
-            <button onClick={() => setIsEditing(true)} className={styles.iconButton}>
-              <Pencil size={16} />
+            <input
+              type={inputType}
+              className="bg-transparent border-b border-gray-500 text-xs text-white px-1 py-0.5 max-w-[140px]"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSave();
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  handleCancel();
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="text-[11px] text-green-300 hover:text-green-400"
+              onClick={handleSave}
+            >
+              save
+            </button>
+            <button
+              type="button"
+              className="text-[11px] text-gray-400 hover:text-gray-300"
+              onClick={handleCancel}
+            >
+              cancel
             </button>
           </>
         )}
