@@ -5,8 +5,7 @@ import { useEventSetup } from "../context/EventSetupContext";
 import ReactMarkdown from "react-markdown";
 import { 
   MapPin, Calendar, Clock, Type, Hash, HelpCircle, 
-  Loader2, Paperclip,
-  Pencil, Check, X          
+  Loader2, Paperclip, Pencil
 } from 'lucide-react';
 
 // Components
@@ -24,14 +23,35 @@ type ChatMessage = { sender: "user" | "assistant"; text: string };
 type ChecklistItem = { label: string; value: any; type: string };
 
 const ICON_MAP: Record<string, React.ReactNode> = {
-  text: <Type size={16} />,
-  number: <Hash size={16} />,
-  date: <Calendar size={16} />,
-  time: <Clock size={16} />,
-  location: <MapPin size={16} />,
+  text: <Type size={14} />,
+  number: <Hash size={14} />,
+  date: <Calendar size={14} />,
+  time: <Clock size={14} />,
+  location: <MapPin size={14} />,
 };
 
-function DynamicCheckRow({
+// Friendly placeholder text for empty fields
+const PLACEHOLDER_MAP: Record<string, string> = {
+  event: "Click to add event name",
+  date: "Click to set date",
+  time: "Click to set time",
+  location: "Click to set location",
+  description: "Click to add description",
+  default: "Click to add value",
+};
+
+function getPlaceholder(label: string, type: string): string {
+  const key = label.toLowerCase();
+  if (PLACEHOLDER_MAP[key]) return PLACEHOLDER_MAP[key];
+  if (PLACEHOLDER_MAP[type]) return PLACEHOLDER_MAP[type];
+  return PLACEHOLDER_MAP.default;
+}
+
+/**
+ * EditableField - A clean, modern editable field component
+ * Displays a label and value, switches to input on click
+ */
+function EditableField({
   label,
   value,
   type,
@@ -42,27 +62,63 @@ function DynamicCheckRow({
   type: string;
   onChange?: (val: any) => void;
 }) {
-  const Icon = ICON_MAP[type] || <HelpCircle size={16} />;
+  const Icon = ICON_MAP[type] || <HelpCircle size={14} />;
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState<string>("");
+  const [draft, setDraft] = useState<string>(value ?? "");
+  const [isHovered, setIsHovered] = useState(false);
 
+  // Sync draft with value when value changes externally
   useEffect(() => {
-    setDraft(value ?? "");
-  }, [value]);
-
-  // display value nicely
-  let displayValue: any = value;
-  if (type === "date" && value) {
-    try {
-      displayValue = new Date(value).toLocaleDateString();
-    } catch {
-      displayValue = value;
+    if (!isEditing) {
+      setDraft(value ?? "");
     }
-  }
+  }, [value, isEditing]);
 
-  const inputType =
-    type === "number" ? "number" : type === "date" ? "date" : "text";
+  // Focus input when entering edit mode AND ensure draft has current value
+  useEffect(() => {
+    if (isEditing) {
+      // Always sync draft to current value when entering edit mode
+      setDraft(value ?? "");
+      
+      // Focus and select after a small delay to ensure value is set
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          if (type !== "date" && type !== "time") {
+            inputRef.current.select();
+          }
+        }
+      }, 10);
+    }
+  }, [isEditing, value, type]);
+
+  // Format display value nicely
+  const formatDisplayValue = (val: any): string => {
+    if (!val) return "";
+    if (type === "date") {
+      try {
+        return new Date(val).toLocaleDateString();
+      } catch {
+        return String(val);
+      }
+    }
+    return String(val);
+  };
+
+  const displayValue = formatDisplayValue(value);
+  const hasValue = value !== null && value !== undefined && value !== "";
+
+  // Determine input type
+  const getInputType = () => {
+    switch (type) {
+      case "date": return "date";
+      case "time": return "time";
+      case "number": return "number";
+      default: return "text";
+    }
+  };
 
   const handleSave = () => {
     if (onChange) {
@@ -76,73 +132,169 @@ function DynamicCheckRow({
     setIsEditing(false);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && type !== "description") {
+      e.preventDefault();
+      handleSave();
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      handleCancel();
+    }
+  };
+
+  const isDescription = label.toLowerCase().includes("description");
+
   return (
-    <div className="flex justify-between items-baseline py-2 text-sm">
-      {/* left: icon + label */}
-      <div className="flex items-center gap-2 text-gray-500">
-        <span className="text-gray-500">{Icon}</span>
-        <span className="text-[11px] font-semibold uppercase tracking-wide">
+    <div
+      className="group relative rounded-lg transition-all duration-150 cursor-pointer"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={() => {
+        if (!isEditing && onChange) {
+          setIsEditing(true);
+        }
+      }}
+      style={{
+        padding: "14px 16px",
+        marginBottom: "10px",
+        minHeight: "56px",
+        backgroundColor: isEditing 
+          ? "#252a3a" 
+          : isHovered 
+            ? "#353b4d" 
+            : "#2a2f3f",
+        border: isEditing 
+          ? "1px solid #10b981" 
+          : isHovered 
+            ? "1px solid #4b5563" 
+            : "1px solid transparent",
+        boxShadow: isHovered && !isEditing ? "0 2px 8px rgba(0,0,0,0.15)" : "none",
+      }}
+    >
+      {/* Label row */}
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-gray-400">{Icon}</span>
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
           {label}
         </span>
-      </div>
-
-      {/* right: value + tiny "(edit)" */}
-      <div className="flex items-baseline gap-2 max-w-[60%] justify-end">
-        {!isEditing ? (
-          <>
-            <span className="text-white break-words">
-              {displayValue ? (
-                String(displayValue)
-              ) : (
-                <span className="text-gray-600 text-xs italic">(MISSING)</span>
-              )}
-            </span>
-            {onChange && (
-              <button
-                type="button"
-                className="text-[11px] text-gray-400 hover:text-green-400 underline"
-                onClick={() => setIsEditing(true)}
-              >
-                edit
-              </button>
-            )}
-          </>
-        ) : (
-          <>
-            <input
-              type={inputType}
-              className="bg-transparent border-b border-gray-500 text-xs text-white px-1 py-0.5 max-w-[140px]"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleSave();
-                }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  handleCancel();
-                }
-              }}
-            />
-            <button
-              type="button"
-              className="text-[11px] text-green-300 hover:text-green-400"
-              onClick={handleSave}
-            >
-              save
-            </button>
-            <button
-              type="button"
-              className="text-[11px] text-gray-400 hover:text-gray-300"
-              onClick={handleCancel}
-            >
-              cancel
-            </button>
-          </>
+        
+        {/* Pencil icon on hover (only in display mode) */}
+        {!isEditing && onChange && (
+          <Pencil 
+            size={14} 
+            className="ml-auto transition-all duration-150"
+            style={{
+              opacity: isHovered ? 0.8 : 0,
+              color: isHovered ? "#10b981" : "#6b7280",
+            }}
+          />
         )}
       </div>
+
+      {/* Value / Input */}
+      {!isEditing ? (
+        <div className="min-h-[28px] flex items-center">
+          {hasValue ? (
+            <span className="text-base font-medium text-gray-100">{displayValue}</span>
+          ) : (
+            <span className="text-gray-500 italic text-sm">
+              {getPlaceholder(label, type)}
+            </span>
+          )}
+        </div>
+      ) : (
+        <div onClick={(e) => e.stopPropagation()}>
+          {isDescription ? (
+            // Textarea for description fields - fixed height, non-resizable, full width
+            <textarea
+              ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+              className="
+                w-full rounded-md px-4 py-3 text-base
+                !text-white !opacity-100 caret-emerald-400
+                border border-gray-500
+                focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400
+                placeholder:text-gray-400
+              "
+              style={{ 
+                backgroundColor: '#2c3140',
+                height: '12rem',
+                resize: 'none',
+                overflow: 'auto',
+                color: '#ffffff',
+              }}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyDown}
+              placeholder={getPlaceholder(label, type)}
+            />
+          ) : type === "date" || type === "time" ? (
+            // Special styling for date/time inputs
+            <div className="flex items-center gap-2">
+              <div className="flex-1 relative">
+                <input
+                  ref={inputRef as React.RefObject<HTMLInputElement>}
+                  type={getInputType()}
+                  className="
+                    w-full rounded-md px-4 py-3 text-base
+                    !text-white !opacity-100 caret-emerald-400
+                    border border-gray-500
+                    focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400
+                    cursor-pointer
+                  "
+                  style={{ 
+                    backgroundColor: '#2c3140',
+                    minHeight: '48px',
+                    colorScheme: 'dark',
+                    color: '#ffffff',
+                  }}
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onBlur={handleSave}
+                  onKeyDown={handleKeyDown}
+                />
+              </div>
+            </div>
+          ) : (
+            // Regular text/number input
+            <input
+              ref={inputRef as React.RefObject<HTMLInputElement>}
+              type={getInputType()}
+              className="
+                w-full rounded-md px-3 py-2.5 text-base
+                !text-white !opacity-100 caret-emerald-400
+                border border-gray-500
+                focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400
+                placeholder:text-gray-400
+              "
+              style={{ 
+                backgroundColor: '#2c3140',
+                color: '#ffffff',
+              }}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyDown}
+              placeholder={getPlaceholder(label, type)}
+            />
+          )}
+          
+          {/* Helper text */}
+          <div className="flex justify-between items-center mt-2 text-xs">
+            {type === "time" ? (
+              <span className="text-gray-500">Click the input or type HH:MM</span>
+            ) : type === "date" ? (
+              <span className="text-gray-500">Click to open date picker</span>
+            ) : (
+              <span></span>
+            )}
+            <span className="text-gray-500">
+              Enter to save · Esc to cancel
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -374,23 +526,23 @@ export default function SetupAI() {
             <div className={styles.checklistCardInner}>
               <h3 className={styles.checklistHeading}>Event Details</h3>
 
-              <div className='space-y-0 mb-4'>
+              <div className='space-y-1'>
                 {!checklistData || checklistData.length === 0 ? (
-                  <div className='text-gray-500 italic text-sm py-4 text-center'>
-                    Details will appear here...
+                  <div className='text-slate-500 italic text-sm py-8 text-center rounded-lg bg-slate-800/20'>
+                    Event details will appear here as you chat with the AI...
                   </div>
-  ) : (
-    checklistData.map((item, idx) => (
-      <DynamicCheckRow
-        key={idx}
-        label={item.label}
-        value={item.value}
-        type={item.type}
-        onChange={(newVal) => handleChecklistChange(idx, newVal)}
-      />
-    ))
-  )}
-</div>
+                ) : (
+                  checklistData.map((item, idx) => (
+                    <EditableField
+                      key={idx}
+                      label={item.label}
+                      value={item.value}
+                      type={item.type}
+                      onChange={(newVal) => handleChecklistChange(idx, newVal)}
+                    />
+                  ))
+                )}
+              </div>
 
 <Button
                 fullWidth
