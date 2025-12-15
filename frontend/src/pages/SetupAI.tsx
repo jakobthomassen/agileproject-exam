@@ -318,6 +318,7 @@ const [checklistData, setChecklistData] = useState<ChecklistItem[]>(
   eventData?.ui_payload || []
 );
 const prevLengthRef = useRef<number>(checklistData.length);
+const [lastUpdatedIndex, setLastUpdatedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (eventData?.ui_payload) {
@@ -332,19 +333,29 @@ const prevLengthRef = useRef<number>(checklistData.length);
   }, [messages, thinking]);
 
   // Only auto-scroll to bottom when NEW items are added by the AI
-useEffect(() => {
-  const prevLen = prevLengthRef.current;
-  const newLen = checklistData.length;
-
-  if (newLen > prevLen) {
+  // Auto-scroll checklist to the "newest" field:
+  // - If a specific field was just edited, scroll to that field (up or down)
+  // - Otherwise, when new items are added by the AI, scroll to the bottom
+  useEffect(() => {
     const container = previewContainerRef.current;
-    if (container) {
+    if (!container) return;
+
+    const prevLen = prevLengthRef.current;
+    const newLen = checklistData.length;
+
+    if (lastUpdatedIndex !== null && itemRefs.current[lastUpdatedIndex]) {
+      // Scroll to the last edited field
+      itemRefs.current[lastUpdatedIndex]!.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    } else if (newLen > prevLen) {
+      // No specific field marked, but new items were added by AI -> scroll to bottom
       container.scrollTop = container.scrollHeight;
     }
-  }
 
-  prevLengthRef.current = newLen;
-}, [checklistData]);
+    prevLengthRef.current = newLen;
+  }, [checklistData, lastUpdatedIndex]);
 
 
   // --- 1. HANDLE FILE SELECT (Triggers Auto-Send) ---
@@ -402,9 +413,14 @@ useEffect(() => {
 
     setEventData({ ...(eventData || {}), ...data });
 
-    if (data.ui_payload && Array.isArray(data.ui_payload)) {
+        if (data.ui_payload && Array.isArray(data.ui_payload)) {
       setChecklistData(data.ui_payload);
+      
+      setLastUpdatedIndex(
+        data.ui_payload.length ? data.ui_payload.length - 1 : null
+      );
     }
+
 
     if (data.message) {
       setMessages(prev => [...prev, { sender: "assistant", text: data.message }]);
@@ -433,19 +449,9 @@ const handleChecklistChange = (index: number, newValue: any) => {
     ui_payload: updated
   });
 
-  // Scroll to the edited field (up or down)
-  setTimeout(() => {
-    const target = itemRefs.current[index];
-    if (!target) return;
-
-    target.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
-  }, 0);
+  // Mark this as the "newest" edited field so we scroll to it
+  setLastUpdatedIndex(index);
 };
-
-
 
   return (
     <PageContainer kind='solid' maxWidth={1200}>
