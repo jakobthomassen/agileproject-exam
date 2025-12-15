@@ -387,10 +387,15 @@ export default function SetupAI() {
       const target = itemRefs.current[targetIndex];
       if (!container || !target) return;
 
-      // Scroll so target element ends at the bottom of the visible container
-      const scrollTop = target.offsetTop + target.offsetHeight - container.clientHeight;
+      // Center the target field in the visible container (with small upward adjustment)
+      const verticalOffset = 15; // pixels to shift view upward for better visual centering
+      const targetTop = target.offsetTop - (container.clientHeight / 2) + (target.clientHeight / 2) - verticalOffset;
+      // Clamp to valid scroll range
+      const maxScroll = container.scrollHeight - container.clientHeight;
+      const clampedScrollTop = Math.max(0, Math.min(targetTop, maxScroll));
+      
       container.scrollTo({
-        top: Math.max(0, scrollTop),
+        top: clampedScrollTop,
         behavior: "smooth",
       });
     });
