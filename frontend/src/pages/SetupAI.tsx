@@ -45,6 +45,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   location: <MapPin size={14} />,
 };
 
+// Friendly placeholder text for empty fields
 const PLACEHOLDER_MAP: Record<string, string> = {
   event: "Click to add event name",
   date: "Click to set date",
@@ -83,7 +84,7 @@ function EditableField({
   const [draft, setDraft] = useState<string>(value ?? "");
   const [isHovered, setIsHovered] = useState(false);
 
-  // Sync local state when external value changes
+  // Sync draft with value when value changes externally
   useEffect(() => {
     if (!isEditing) {
       setDraft(value ?? "");
@@ -93,6 +94,7 @@ function EditableField({
   // Focus input when entering edit mode AND ensure draft has current value
   useEffect(() => {
     if (isEditing) {
+      // Always sync draft to current value when entering edit mode
       setDraft(value ?? "");
 
       // Focus and select after a small delay to ensure value is set
@@ -219,6 +221,7 @@ function EditableField({
       ) : (
         <div onClick={(e) => e.stopPropagation()}>
           {isDescription ? (
+            // Textarea for description fields - fixed height, non-resizable, full width
             <textarea
               ref={inputRef as React.RefObject<HTMLTextAreaElement>}
               className="
@@ -325,6 +328,14 @@ export default function SetupAI() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
+  const previewContainerRef = useRef<HTMLDivElement | null>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Refs for auto-scrolling sidebar to changed fields after AI updates
+  const prevChecklistDataRef = useRef<SidebarItem[] | null>(null);
+  const hasMountedRef = useRef(false);
+  const pendingAiScrollRef = useRef(false);
+
   // --- Restore History on Mount ---
   useEffect(() => {
     async function loadHistory() {
@@ -363,12 +374,71 @@ export default function SetupAI() {
     el.scrollTop = el.scrollHeight;
   }, [messages, thinking]);
 
+  // Auto-scroll sidebar to changed fields after AI updates
+  useEffect(() => {
+    // Skip on initial mount
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      prevChecklistDataRef.current = checklistData ? [...checklistData] : null;
+      return;
+    }
+
+    // Only auto-scroll if this update came from the AI (not manual user edits)
+    if (!pendingAiScrollRef.current) {
+      prevChecklistDataRef.current = checklistData ? [...checklistData] : null;
+      return;
+    }
+    pendingAiScrollRef.current = false;
+
+    // Skip if no current data
+    if (!checklistData || checklistData.length === 0) {
+      prevChecklistDataRef.current = null;
+      return;
+    }
+
+    const prevData = prevChecklistDataRef.current;
+
+    // Find indices of fields that changed
+    const changedIndices: number[] = [];
+    checklistData.forEach((item, idx) => {
+      const prevItem = prevData?.[idx];
+      // Check if this is a new field or value changed
+      if (!prevItem || item.value !== prevItem.value) {
+        changedIndices.push(idx);
+      }
+    });
+
+    // Update ref for next comparison
+    prevChecklistDataRef.current = [...checklistData];
+
+    // If no changes detected, don't scroll
+    if (changedIndices.length === 0) return;
+
+    // Get the field furthest down in the sidebar (highest index)
+    const targetIndex = Math.max(...changedIndices);
+
+    // Use requestAnimationFrame to ensure DOM has updated before scrolling
+    requestAnimationFrame(() => {
+      const container = previewContainerRef.current;
+      const target = itemRefs.current[targetIndex];
+      if (!container || !target) return;
+
+      // Center the target field in the visible container (with small upward adjustment)
+      const verticalOffset = 15; // pixels to shift view upward for better visual centering
+      const targetTop = target.offsetTop - (container.clientHeight / 2) + (target.clientHeight / 2) - verticalOffset;
+      // Clamp to valid scroll range
+      const maxScroll = container.scrollHeight - container.clientHeight;
+      const clampedScrollTop = Math.max(0, Math.min(targetTop, maxScroll));
+
+      container.scrollTo({
+        top: clampedScrollTop,
+        behavior: "smooth",
+      });
+    });
+  }, [checklistData]);
+
   // --- HANDLE FILE SELECT (Triggers Auto-Send) ---
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-     if (thinking) {
-    e.target.value = "";
-    return;
-  }
     const file = e.target.files?.[0];
     if (file) {
       if (!file.name.toLowerCase().endsWith(".csv")) {
@@ -382,15 +452,13 @@ export default function SetupAI() {
 
   // --- SEND MESSAGE (Accepts optional file) ---
   async function sendMessage(fileToUpload?: File) {
-    if (thinking) return;
+    const text = input.trim();
+    if (!text && !fileToUpload) return;
 
-  const text = input.trim();
-  if (!text && !fileToUpload) return;
-
-  let userMessageText = text;
-  if (fileToUpload) {
-    userMessageText = `📄 Uploaded file: **${fileToUpload.name}**`;
-  }
+    let userMessageText = text;
+    if (fileToUpload) {
+      userMessageText = `📄 Uploaded file: **${fileToUpload.name}**`;
+    }
 
     const newMessages: ChatMessage[] = [
       ...messages,
@@ -480,6 +548,7 @@ export default function SetupAI() {
 
       if (data.ui_payload && Array.isArray(data.ui_payload)) {
         console.log("Updating ui_payload:", data.ui_payload);
+        pendingAiScrollRef.current = true; // Flag to trigger auto-scroll
         setEventData({
           ...eventData,
           ui_payload: data.ui_payload
@@ -648,25 +717,34 @@ export default function SetupAI() {
             </div>
           </Card>
 
-{/* Checklist Panel */}
+          {/* Checklist Panel */}
           <Card padding={16}>
             <div className={styles.checklistPanel}>
               <h3 className={styles.checklistHeading}>Event Details</h3>
 
-              <div className='space-y-1'>
+              <div
+                ref={previewContainerRef}
+                className={`${styles.checklistScroll} space-y-1`}
+              >
                 {!checklistData || checklistData.length === 0 ? (
                   <div className='text-slate-500 italic text-sm py-8 text-center rounded-lg bg-slate-800/20'>
                     Event details will appear here as you chat with the AI...
                   </div>
                 ) : (
                   checklistData.map((item, idx) => (
-                    <EditableField
+                    <div
                       key={item.key || `${item.label}-${idx}`}
-                      label={item.label}
-                      value={item.value}
-                      type={getFieldType(item)}
-                      onChange={(newVal) => handleChecklistChange(idx, newVal)}
-                    />
+                      ref={(el) => {
+                        itemRefs.current[idx] = el;
+                      }}
+                    >
+                      <EditableField
+                        label={item.label}
+                        value={item.value}
+                        type={getFieldType(item)}
+                        onChange={(newVal) => handleChecklistChange(idx, newVal)}
+                      />
+                    </div>
                   ))
                 )}
               </div>
@@ -681,7 +759,7 @@ export default function SetupAI() {
             </div>
           </Card>
         </TwoColumn>
-  </div>
-</PageContainer>
+      </div>
+    </PageContainer>
   );
 }
