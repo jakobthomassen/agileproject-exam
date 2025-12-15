@@ -1,292 +1,257 @@
+/* Page Title */
 .title {
-  margin-bottom: 14px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #fff;
 }
 
+/* Tab Navigation */
 .tabs {
   display: flex;
-  gap: 10px;
-  border-bottom: 1px solid var(--color-border-strong);
-  margin-bottom: 20px;
+  gap: 2rem;
+  border-bottom: 1px solid #334155;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
 }
 
-.tab,
-.tabActive {
-  padding: 8px 16px;
-  font-size: 14px;
-  cursor: pointer;
+.tab {
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--color-text-primary);
-}
-
-.tabActive {
-  border-bottom: 2px solid #38bdf8;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  position: relative;
+  transition: color 0.2s;
 }
 
 .tab:hover {
-  opacity: 0.7;
+  color: #e2e8f0;
 }
 
+.tabActive {
+  /* Shared styles from .tab manually applied to fix 'composes' error */
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  position: relative;
+  transition: color 0.2s;
+
+  /* Active specific styles */
+  color: #4ade80; /* Green accent */
+  font-weight: 600;
+}
+
+.tabActive::after {
+  content: "";
+  position: absolute;
+  bottom: -0.55rem; /* Aligns with border-bottom */
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #4ade80;
+}
+
+/* Tab Content Area */
 .tabContent {
-  display: grid;
-  gap: 16px;
-  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-height: 300px; /* Prevents layout jump */
 }
 
+/* Form Fields */
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.5rem;
 }
 
 .field label {
-  font-size: 13px;
-  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.select {
-  width: 100%;
-  padding: 8px 10px;
+.select,
+.textarea {
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  color: #fff;
+  padding: 0.75rem;
   border-radius: 6px;
-  background: #020617;
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text-primary);
+  font-size: 0.95rem;
+  width: 100%;
 }
 
 .textarea {
-  width: 100%;
-  max-width: 360px;
   min-height: 120px;
-  padding: 10px;
-  border-radius: 6px;
-  background: #020617;
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text-primary);
   resize: vertical;
+  line-height: 1.5;
 }
 
-.actions {
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: #4ade80;
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2); /* Replaced 'ring' */
+}
+
+/* Athlete Import Section */
+.importRow {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 26px;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-/* ----------------------------------------------------- */
-/* ATHLETES TAB - matches SetupMethod style */
-/* ----------------------------------------------------- */
-
-.athleteModeButtons {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 10px;
-}
-
-.athleteUploadSection {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  background: var(--color-surface);
-  padding: 24px;
-  border-radius: 8px;
-  border: 1px solid var(--color-border-strong);
-  max-width: 360px;
-}
-
-.athleteHint {
-  font-size: 14px;
-  color: var(--color-text-muted);
-  margin-bottom: 20px;
-}
-
-.bigUploadButton {
-  background: none;
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text-primary);
-  padding: 10px 18px;
-  border-radius: 6px;
+.importButton {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  color: #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
   cursor: pointer;
-  font-size: 14px;
+  transition: all 0.2s;
 }
 
-.bigUploadButton:hover {
-  background: rgba(255, 255, 255, 0.05);
+.importButton:hover {
+  background-color: #334155;
+  border-color: #94a3b8;
 }
 
-.smallUploadButton {
-  background: none;
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text-primary);
-  padding: 6px 12px;
-  border-radius: 6px;
+.infoButtonSmall {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #334155;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
   cursor: pointer;
-  font-size: 13px;
-  margin-bottom: 14px;
-  width: fit-content;
 }
 
-.smallUploadButton:hover {
-  background: rgba(255, 255, 255, 0.05);
+.infoButtonSmall:hover {
+  background-color: #475569;
+  color: #fff;
 }
 
+/* Athlete Table */
 .athleteTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
-  margin-top: 10px;
+  margin-bottom: 1rem;
 }
 
-.athleteTable th,
-.athleteTable td {
-  padding: 10px;
-  border-bottom: 1px solid var(--color-border-strong);
+.athleteTable th {
   text-align: left;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #64748b;
+  border-bottom: 1px solid #334155;
+}
+
+.athleteTable td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #1e293b;
 }
 
 .athleteInput {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #fff;
   width: 100%;
-  padding: 6px 8px;
-  border-radius: 6px;
-  background: #020617;
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text-primary);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.athleteInput:focus {
+  background-color: #0f172a;
+  border-color: #4ade80;
+  outline: none;
 }
 
 .addAthleteButton {
   background: none;
-  border: 1px solid var(--color-border-strong);
-  padding: 8px 14px;
+  border: 1px dashed #334155;
+  color: #94a3b8;
+  width: 100%;
+  padding: 0.75rem;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
-  margin-top: 12px;
-  width: fit-content;
+  font-size: 0.9rem;
+  transition: all 0.2s;
 }
 
 .addAthleteButton:hover {
-  background: rgba(255, 255, 255, 0.05);
+  border-color: #4ade80;
+  color: #4ade80;
+  background-color: rgba(74, 222, 128, 0.05);
 }
 
-.importRow {
+/* Action Buttons (Bottom) */
+.actions {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #1e293b;
 }
 
-.importButton {
-  background: none;
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text-primary);
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s ease;
-}
-
-.importButton:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.infoButtonSmall {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  font-size: 12px;
-  color: var(--color-text-muted);
-  background: rgba(255, 255, 255, 0.05);
-  transition: all 0.2s ease;
-}
-
-.infoButtonSmall:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: scale(1.1);
-}
-
-.infoTooltip {
-  background: var(--color-surface);
-  padding: 14px;
-  border-radius: 8px;
-  border: 1px solid var(--color-border-subtle);
-  box-shadow: var(--shadow-soft);
-  max-width: 260px;
-  font-size: 13px;
-  color: var(--color-text-muted);
-  line-height: 1.45;
-  position: absolute;
-  z-index: 20;
-}
-
-/* Modal Overlay (copied from SetupTemplates) */
+/* Modal Overlay */
 .modalOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
 }
 
-/* Modal box */
 .modalContent {
-  background: var(--color-surface);
-  padding: 24px;
-  border-radius: var(--radius-md);
-  max-width: 440px;
-  width: 90%;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
   position: relative;
-  box-shadow: var(--shadow-soft);
-  border: 1px solid var(--color-border-subtle);
-  animation: modalFadeIn 0.2s ease-out;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
 }
 
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.modalTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #fff;
 }
 
 .closeButton {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 0.75rem;
+  right: 0.75rem;
   background: none;
   border: none;
-  color: var(--color-text-muted);
-  font-size: 20px;
-  cursor: pointer;
-  padding: 4px 10px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  color: #64748b;
+  font-size: 1.5rem;
   line-height: 1;
+  cursor: pointer;
 }
 
 .closeButton:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text-primary);
-}
-
-.modalTitle {
-  margin-top: 0;
-  margin-bottom: 12px;
-  color: var(--color-text-primary);
-  font-size: 1.2rem;
+  color: #fff;
 }

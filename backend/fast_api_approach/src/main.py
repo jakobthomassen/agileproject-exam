@@ -1,447 +1,394 @@
-"""
-FastAPI Backend for Event Management System.
-
-This backend runs on both macOS and Windows.
-
-How to run:
------------
-1. Create a virtual environment:
-   - Mac/Linux: python3 -m venv venv && source venv/bin/activate
-   - Windows:   python -m venv venv && venv\\Scripts\\activate
-
-2. Install dependencies:
-   pip install -r requirements.txt
-
-3. Set environment variable for Gemini API key:
-   - Mac/Linux: export GEMINI_API_KEY="your-key-here"
-   - Windows (PowerShell): $env:GEMINI_API_KEY="your-key-here"
-   - Windows (CMD): set GEMINI_API_KEY=your-key-here
-
-4. Start the server (from the backend/fast_api_approach directory):
-   uvicorn src.main:app --reload
-
-The server will run on http://127.0.0.1:8000
-"""
-from __future__ import annotations
-
-import os
-import json
-import uuid
-import shutil
-from typing import List, Dict, Any
-
-from fastapi import (
-    Depends,
-    FastAPI,
-    HTTPException,
-    APIRouter,
-    UploadFile,
-    File,
-    Form,
-)
-from fastapi.staticfiles import StaticFiles
+from typing import Optional, Dict, Any
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from google.genai import types
 
-# internal imports
-from .ai.gemini import Gemini
-from .auth.dependencies import get_user_identifier
-from .auth.throttling import apply_rate_limit
-from src.DTOs.eventstate import ChatRequest, ChatResponse, ParticipantCreate, EventOut
-from .db.database import Base, engine, SessionLocal
-from .ai.event_handler import get_event_ui_payload
-from .db.crud import get_single_event, create_participant, get_all_events, get_participants_for_event, delete_event
-from .utils.import_participants import (
-    parse_csv_participants,
-    parse_excel_participants,
-    validate_participant_row
+# --- LOCAL IMPORTS ---
+# 1. The agent
+from .ai.gemini import process_chat_request
+
+# 2. The Hands (Database & CRUD Helpers)
+from .ai.event_handler import (
+    list_all_events, 
+    delete_event, 
+    update_event_in_db,
+    create_event_from_frontend,
+    get_event_context_data,
+    get_event_chat_history,
+    update_event_field_from_sidebar
 )
+from .db.crud import create_participant, create_image, get_images_for_event
+from .db.database import SessionLocal
+from .db.models import Event
+from .DTOs.eventstate import ParticipantCreate, EventImageCreate
+from fastapi import UploadFile, File
+from fastapi.responses import Response
+import csv
+import io
+import os
+from pathlib import Path
+import base64
 
-# ---------------------------------------------------------
-# APP SETUP
-# ---------------------------------------------------------
-app = FastAPI()
+# =================================================================
+# APP CONFIGURATION
+# =================================================================
+app = FastAPI(title="Event Planner API")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
-PROMPT_PATH = os.path.join(BASE_DIR, "prompts", "system_prompt.md")
-
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-# ---------------------------------------------------------
-# CONFIGURATION
-# ---------------------------------------------------------
-origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"], # Relaxed for debugging
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-static_path = os.path.join(BASE_DIR, "static")
-if os.path.isdir(static_path):
-    app.mount("/static", StaticFiles(directory=static_path), name="static")
-
-# ---------------------------------------------------------
-# GLOBAL STATE
-# ---------------------------------------------------------
-ai_platform: Gemini | None = None
-chat_history: list = []
-
-GENERIC_FAILURE_MESSAGE = "The service is temporarily unavailable."
-MISSING_API_KEY_MESSAGE = "AI service is not configured. Missing API key."
-
-# ---------------------------------------------------------
-# UTILITIES
-# ---------------------------------------------------------
-def load_system_prompt():
-    """Load the system prompt file. Uses os.path.join for cross-platform compatibility."""
-    try:
-        # Use os.path.join for cross-platform path handling (Mac + Windows)
-        prompt_path = os.path.join(BASE_DIR, "prompts", "system_prompt.md")
-        with open(prompt_path, "r", encoding="utf-8") as f:
-            return f.read()
-    except FileNotFoundError:
-        print(f"Warning: System prompt not found at {prompt_path}")
-        return None
-
-# ---------------------------------------------------------
-# STARTUP
-# ---------------------------------------------------------
-@app.on_event("startup")
-def startup_event():
-    global ai_platform
-
-    Base.metadata.create_all(bind=engine)
-
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        ai_platform = None
-        return
-
-    system_prompt = load_system_prompt()
-    ai_platform = Gemini(
-        api_key=api_key,
-        system_prompt=system_prompt,
-    )
-
-# ---------------------------------------------------------
-# MODELS
-# ---------------------------------------------------------
-class ExtractionMessage(BaseModel):
-    role: str
-    content: str
-
-class ExtractionRequest(BaseModel):
-    messages: List[ExtractionMessage]
-    knownFields: Dict[str, Any]
-
-# ---------------------------------------------------------
-# ENDPOINTS
-# ---------------------------------------------------------
-@app.post("/ai/extract")
-async def extract_event_data(
-    messages_json: str = Form(...),
-    known_fields_json: str = Form(default="{}"),
-    file: UploadFile = File(None),
-):
-    if ai_platform is None:
-        raise HTTPException(status_code=503, detail=MISSING_API_KEY_MESSAGE)
-
-    try:
-        messages_data = json.loads(messages_json)
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid JSON in form data")
-
-    saved_file_path = None
-    unique_filename = None
-
-    if file:
-        try:
-            file_ext = file.filename.split(".")[-1]
-            unique_filename = f"{uuid.uuid4()}.{file_ext}"
-            saved_file_path = os.path.join(UPLOAD_DIR, unique_filename)
-
-            with open(saved_file_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
-        except Exception:
-            pass
-
-    gemini_history = []
-    for m in messages_data:
-        role = "model" if m.get("role") == "assistant" else "user"
-        gemini_history.append(
-            types.Content(
-                role=role,
-                parts=[types.Part(text=m.get("content"))],
-            )
-        )
-
-    if saved_file_path and gemini_history and gemini_history[-1].role == "user":
-        original_text = gemini_history[-1].parts[0].text
-        gemini_history[-1].parts[0].text = (
-            f"{original_text}\n\n"
-            f"[SYSTEM: User uploaded a file saved at {unique_filename}]"
-        )
-
-    try:
-        response_text, ui_payload = ai_platform.generate_text(contents=gemini_history)
-    except Exception:
-        raise HTTPException(status_code=500, detail=GENERIC_FAILURE_MESSAGE)
-
-    try:
-        current_state = ai_platform.event_state.model_dump()
-    except Exception:
-        current_state = vars(ai_platform.event_state)
-
-    return {
-        "message": response_text,
-        "ui_payload": ui_payload,
-        **current_state,
-    }
-
-@app.post("/chat", response_model=ChatResponse)
-async def chat(
-    request: ChatRequest,
-    user_id: str = Depends(get_user_identifier),
-):
-    apply_rate_limit(user_id)
-
-    if ai_platform is None:
-        return ChatResponse(response=MISSING_API_KEY_MESSAGE)
-
-    try:
-        chat_history.append(
-            types.Content(
-                role="user",
-                parts=[types.Part(text=request.prompt)],
-            )
-        )
-        response_text = ai_platform.generate_text(contents=chat_history)
-    except Exception:
-        return ChatResponse(response=GENERIC_FAILURE_MESSAGE)
-
-    if not response_text:
-        response_text = GENERIC_FAILURE_MESSAGE
-
-    chat_history.append(
-        types.Content(
-            role="model",
-            parts=[types.Part(text=response_text)],
-        )
-    )
-    return ChatResponse(response=response_text)
-
 @app.get("/")
-async def root():
-    return {"message": "API is running"}
+def health_check():
+    return {"status": "ok", "message": "Backend is running"}
 
+# =================================================================
+# DATA MODELS
+# =================================================================
+class ChatRequest(BaseModel):
+    message: str
+    event_id: Optional[int] = None
 
-# ---------------------------------------------------------
-# LIST ALL EVENTS ENDPOINT (for My Events page)
-# ---------------------------------------------------------
-@app.get("/events", response_model=List[EventOut])
-def list_all_events():
+# Using a flexible dict model for updates allows us to send 
+# partial updates (e.g. just changing the name) without strict schemas.
+class EventUpdatePayload(BaseModel):
+    eventName: Optional[str] = None
+    venue: Optional[str] = None
+    sport: Optional[str] = None
+    startDate: Optional[str] = None
+    endDateTime: Optional[str] = None
+    athletes: Optional[int] = None
+    status: Optional[str] = None
+    rules: Optional[str] = None
+    description: Optional[str] = None
+    scoringMode: Optional[str] = None
+    audienceWeight: Optional[int] = None
+    expertWeight: Optional[int] = None
+    athleteWeight: Optional[int] = None
+    
+    class Config:
+        extra = "allow" # Allows extra fields if the frontend sends them
+
+class EventCreatePayload(BaseModel):
+    eventName: Optional[str] = None #we'1 Event Name
+    venue: Optional[str] = None # Venue
+    startDateTime: Optional[str] = None # Start Date
+    endDateTime: Optional[str] = None # End Date
+    rules: Optional[str] = None # Rules
+    scoringMode: Optional[str] = None # Scoring Mode
+    eventCode: Optional[str] = None
+    
+    class Config:
+        extra = "allow" # Allows extra fields if the frontend sends them
+
+# =================================================================
+# 1. AI & CHAT ROUTES
+# =================================================================
+@app.post("/api/chat")
+async def chat_endpoint(request: ChatRequest):
     """
-    Return all events from the database.
-    Used by the "My Events" page in the frontend.
+    Main entry point for the AI Agent.
+    Accepts JSON (message + event_id).
     """
-    db = SessionLocal()
     try:
-        events = get_all_events(db)
-        
-        # Map each Event model to EventOut response
-        result = []
-        for event in events:
-            # Count participants for this event
-            participants = get_participants_for_event(db, event.id)
-            athletes_count = len(participants) if participants else 0
-            
-            # Get event name - handle both possible attribute names
-            event_name = getattr(event, 'event_name', None) or getattr(event, 'eventname', None)
-            
-            # Map the database fields to the response model
-            result.append(EventOut(
-                id=event.id,
-                name=event_name,
-                sport=None,  # Not in current model, placeholder
-                format=None,  # Not in current model, placeholder
-                status="DRAFT",  # Default status for now
-                start_date=event.date,
-                athletes=athletes_count,
-                event_code=None,  # Not in current model, placeholder
-                location=event.location
-            ))
-        
-        return result
-    finally:
-        db.close()
+        return process_chat_request(request.message, request.event_id)
+    except Exception as e:
+        print(f"Chat Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-@app.delete("/events/{event_id}")
-def delete_event_endpoint(event_id: int):
+@app.post("/api/events/{event_id}/upload-file")
+async def upload_file(event_id: int, file: UploadFile = File(...)):
     """
-    Delete an event by ID.
-    Used by the "My Events" page for the delete action.
+    Uploads a file and saves it to uploads/{event_id}/ directory.
+    Returns the filename for later processing.
     """
-    db = SessionLocal()
     try:
-        event = get_single_event(db, event_id)
-        if not event:
-            raise HTTPException(status_code=404, detail=f"Event with ID {event_id} not found")
+        # Create uploads directory structure
+        upload_dir = Path(f"uploads/{event_id}")
+        upload_dir.mkdir(parents=True, exist_ok=True)
         
-        delete_event(db, event_id)
-        return {"message": f"Event {event_id} deleted successfully"}
-    except AttributeError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    finally:
-        db.close()
+        # Save file
+        file_path = upload_dir / file.filename
+        contents = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(contents)
+        
+        return {
+            "status": "success",
+            "message": "File uploaded successfully",
+            "filename": file.filename,
+            "path": f"uploads/{event_id}/{file.filename}"
+        }
+    except Exception as e:
+        print(f"Upload Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
 
+class ProcessFileRequest(BaseModel):
+    filename: str
 
-router = APIRouter()
+@app.post("/api/events/{event_id}/process-file")
+async def process_uploaded_file(event_id: int, request: ProcessFileRequest):
+    """
+    Processes a CSV file that was previously uploaded to uploads/{event_id}/
+    Reads the file, extracts data, and sends it to AI for processing.
+    """
+    try:
+        file_path = Path(f"uploads/{event_id}/{request.filename}")
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File not found: {request.filename}")
+        
+        # Read file content
+        with open(file_path, "r", encoding="utf-8") as f:
+            file_content = f.read()
+        
+        # Create message with CSV content
+        message = f"Process this CSV file: {request.filename}\n\nCSV Content:\n{file_content}"
+        
+        # Process with AI
+        return process_chat_request(message, event_id)
+        
+    except Exception as e:
+        print(f"File Processing Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/api/events/{event_id}/details")
-def get_details_endpoint(event_id: int):
-    payload = get_event_ui_payload(event_id)
+@app.post("/api/events/{event_id}/image")
+async def upload_event_image(event_id: int, file: UploadFile = File(...)):
+    """
+    Uploads an image for an event and stores it in the database.
+    """
+    try:
+        # Validate file type
+        if not file.content_type or not file.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="File must be an image")
+        
+        # Read image bytes
+        image_bytes = await file.read()
+        
+        # Create image record
+        image_data = EventImageCreate(
+            event_id=event_id,
+            image_bytes=image_bytes
+        )
+        
+        with SessionLocal() as db:
+            db_image = create_image(db, image_data)
+        
+        return {
+            "status": "success",
+            "message": "Image uploaded successfully",
+            "image_id": db_image.id
+        }
+    except Exception as e:
+        print(f"Image Upload Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
+
+@app.get("/api/events/{event_id}/image")
+async def get_event_image(event_id: int):
+    """
+    Gets the most recent image for an event.
+    Returns image as base64 data URL or 404 if no image exists.
+    """
+    try:
+        with SessionLocal() as db:
+            images = get_images_for_event(db, event_id)
+            
+            if not images or len(images) == 0:
+                raise HTTPException(status_code=404, detail="No image found for this event")
+            
+            # Get the most recent image (last one)
+            latest_image = images[-1]
+            
+            # Convert binary to base64
+            image_base64 = base64.b64encode(latest_image.image).decode('utf-8')
+            
+            # Determine content type (default to jpeg)
+            content_type = "image/jpeg"  # Could be enhanced to detect actual type
+            
+            return {
+                "image": f"data:{content_type};base64,{image_base64}",
+                "image_id": latest_image.id
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Get Image Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get image: {str(e)}")
+
+# =================================================================
+# 2. READ ROUTES (Dashboard & Setup)
+# =================================================================
+@app.get("/api/events")
+def get_all_events():
+    """Returns the table list for the Dashboard."""
+    return list_all_events()
+
+@app.get("/api/events/{event_id}/context")
+def get_event_context(event_id: int):
+    """
+    Returns full event details for the Setup/Edit pages.
+    Used to populate the sidebar and form fields.
+    """
+    payload = get_event_context_data(event_id)
     if not payload:
         raise HTTPException(status_code=404, detail="Event not found")
     return payload
 
-
-# ---------------------------------------------------------
-# 4. PARTICIPANT IMPORT ENDPOINT (CSV / Excel)
-# ---------------------------------------------------------
-# This endpoint is INDEPENDENT of the chat UI.
-# Frontend can call it directly to import participants for an event.
-
-# Allowed file types for participant import
-ALLOWED_IMPORT_EXTENSIONS = [".csv", ".xlsx"]
-ALLOWED_IMPORT_MIME_TYPES = [
-    "text/csv",
-    "application/csv",
-    "application/vnd.ms-excel",
-    "text/plain",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-]
+# In src/main.py
 
 
-@app.post("/events/{event_id}/participants/import")
-async def import_participants(event_id: int, file: UploadFile = File(...)):
+@app.get("/api/events/{event_id}/history")
+def get_history_endpoint(event_id: int):
     """
-    Import participants from a CSV or Excel (XLSX) file for a specific event.
-    
-    This endpoint is separate from the chat UI and can be called directly.
-    
-    Expected file format:
-        - CSV or XLSX file
-        - Headers (case-insensitive): name, email, phone (optional)
-        
-    Returns:
-        JSON summary of the import operation with counts and any errors.
+    Fetches the chat history for a specific event.
     """
-    # 1. Validate event exists
-    db = SessionLocal()
-    try:
-        event = get_single_event(db, event_id)
-        if not event:
-            raise HTTPException(status_code=404, detail=f"Event with ID {event_id} not found")
-    finally:
-        db.close()
+    history = get_event_chat_history(event_id)
+    return history
+
+# =================================================================
+# 3. WRITE ROUTES (Create, Updates & Deletes)
+# =================================================================
+@app.post("/api/events")
+def create_event_endpoint(payload: EventCreatePayload):
+    """
+    Creates a new event from manual setup flow.
+    """
+    data_dict = payload.model_dump(exclude_unset=True)
     
-    # 2. Check file extension
-    filename = file.filename.lower() if file.filename else ""
-    file_ext = os.path.splitext(filename)[1]
+    event = create_event_from_frontend(data_dict)
     
-    if file_ext not in ALLOWED_IMPORT_EXTENSIONS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported file type '{file_ext}'. Only CSV and XLSX files are allowed."
-        )
+    if not event:
+        raise HTTPException(status_code=500, detail="Failed to create event")
     
-    # 3. Read file content
-    try:
-        file_content = await file.read()
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read file: {str(e)}")
-    
-    # 4. Parse the file based on extension
-    try:
-        if file_ext == ".csv":
-            participants_data = parse_csv_participants(file_content)
-        else:  # .xlsx
-            participants_data = parse_excel_participants(file_content)
-    except ImportError as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to parse file: {str(e)}")
-    
-    # 5. Process each row and create participants
-    total_rows = len(participants_data)
-    created_count = 0
-    skipped_count = 0
-    errors = []
-    
-    db = SessionLocal()
-    try:
-        for idx, row_data in enumerate(participants_data):
-            row_number = idx + 2  # +2 because: idx is 0-based, and row 1 is headers
-            
-            # Validate the row
-            error_msg = validate_participant_row(row_data, row_number)
-            if error_msg:
-                errors.append({"row": row_number, "reason": error_msg})
-                skipped_count += 1
-                continue
-            
-            # Create participant using existing CRUD function
-            try:
-                participant_dto = ParticipantCreate(
-                    event_id=event_id,
-                    name=row_data.get('name'),
-                    email=row_data.get('email')
-                )
-                create_participant(db, participant_dto)
-                created_count += 1
-            except Exception as e:
-                errors.append({"row": row_number, "reason": f"Database error: {str(e)[:50]}"})
-                skipped_count += 1
-    finally:
-        db.close()
-    
-    # 6. Return summary
     return {
-        "event_id": event_id,
-        "total_rows": total_rows,
-        "created": created_count,
-        "skipped": skipped_count,
-        "errors": errors
+        "status": "success",
+        "message": "Event created",
+        "event_id": event.id,
+        "eventCode": event.event_code
     }
-# Update valid MIME types for CSV
-# Note: Some browsers send 'application/vnd.ms-excel' or 'text/plain' for CSVs
-ALLOWED_CSV_TYPES = ["text/csv", "application/csv", "application/vnd.ms-excel", "text/plain"]
 
-async def validate_and_save_csv(file: UploadFile):
-    if not file.filename.lower().endswith(".csv"):
-        raise HTTPException(status_code=400, detail="Only .csv files are allowed")
-
-    if file.content_type not in ALLOWED_CSV_TYPES:
-        pass
-
-    safe_filename = f"{uuid.uuid4()}.csv"
+@app.put("/api/events/{event_id}")
+def update_event(event_id: int, payload: EventUpdatePayload):
+    """
+    Updates an event. Uses Pydantic to validate the input automatically.
+    """
+    # Convert Pydantic model to dict, excluding nulls
+    data_dict = payload.model_dump(exclude_unset=True)
     
-    # 4. Save to secure directory (Ensure 'uploads' folder exists)
-    # Use os.path.join for cross-platform compatibility
-    upload_path = os.path.join(UPLOAD_DIR, safe_filename)
+    success = update_event_in_db(event_id, data_dict)
     
-    with open(upload_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    if not success:
+        raise HTTPException(status_code=404, detail="Event not found")
+        
+    return {"status": "success", "message": "Event updated"}
 
-    return safe_filename
+@app.delete("/api/events/{event_id}")
+def delete_event_endpoint(event_id: int):
+    """Permanently deletes an event."""
+    success = delete_event(event_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return {"status": "success", "message": "Event deleted"}
 
+class SidebarFieldUpdate(BaseModel):
+    field_key: str
+    field_value: str
 
-# Include the router in the app
-app.include_router(router)
+@app.patch("/api/events/{event_id}/sidebar-field")
+def update_sidebar_field(event_id: int, payload: SidebarFieldUpdate):
+    """
+    Updates a single field from sidebar edit and notifies AI subtly.
+    """
+    success = update_event_field_from_sidebar(event_id, payload.field_key, payload.field_value)
+    
+    if not success:
+        raise HTTPException(status_code=400, detail="Failed to update field")
+    
+    return {"status": "success", "message": "Field updated"}
+
+class StatusUpdate(BaseModel):
+    status: str
+
+@app.patch("/api/events/{event_id}/status")
+def update_event_status(event_id: int, payload: StatusUpdate):
+    """
+    Updates event status. Only toggleable from dashboard.
+    """
+    with SessionLocal() as db:
+        event = db.query(Event).filter(Event.id == event_id).first()
+        
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        # Validate status
+        valid_statuses = ["DRAFT", "OPEN", "FINISHED"]
+        if payload.status not in valid_statuses:
+            raise HTTPException(status_code=400, detail=f"Status must be one of: {', '.join(valid_statuses)}")
+        
+        event.status = payload.status
+        
+        try:
+            db.commit()
+            return {"status": "success", "message": "Status updated", "newStatus": payload.status}
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"Failed to update status: {str(e)}")
+
+@app.post("/api/events/{event_id}/participants/upload")
+async def upload_participants_csv(event_id: int, file: UploadFile = File(...)):
+    """
+    Uploads a CSV file to add participants to an event.
+    CSV format: name,email (or just name)
+    """
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Only CSV files are allowed")
+    
+    try:
+        # Read CSV content
+        contents = await file.read()
+        csv_content = contents.decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(csv_content))
+        
+        created_count = 0
+        errors = []
+        
+        with SessionLocal() as db:
+            for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 (row 1 is header)
+                try:
+                    # Handle different CSV formats
+                    name = row.get('name') or row.get('Name') or row.get('NAME') or row.get('participant') or ''
+                    email = row.get('email') or row.get('Email') or row.get('EMAIL') or ''
+                    
+                    if not name.strip():
+                        errors.append(f"Row {row_num}: Missing name")
+                        continue
+                    
+                    # Create participant
+                    participant_data = ParticipantCreate(
+                        event_id=event_id,
+                        name=name.strip(),
+                        email=email.strip() if email else None
+                    )
+                    
+                    create_participant(db, participant_data)
+                    created_count += 1
+                    
+                except Exception as e:
+                    errors.append(f"Row {row_num}: {str(e)}")
+            
+            db.commit()
+        
+        return {
+            "status": "success",
+            "message": f"Uploaded {created_count} participants",
+            "created": created_count,
+            "errors": errors if errors else None
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process CSV: {str(e)}")

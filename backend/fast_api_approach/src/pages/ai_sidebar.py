@@ -1,6 +1,7 @@
 from enum import Enum
+from typing import List, Dict, Any
 
-# UI widget, how the component will be rendered
+# UI component types for sidebar fields
 class ComponentType(str, Enum):
     TEXT = "text"
     NUMBER = "number"
@@ -9,15 +10,18 @@ class ComponentType(str, Enum):
     LOCATION = "location"
 
 
-# Sidebar config
-# This is the blueprint for the sidebar form
-# it maps column keys to the UI component type and label
+# Sidebar configuration mapping database columns to UI components and labels
 
 SIDEBAR_CONFIG = [
     {
-        "key": "event_name", # has to match the db column name
-        "label": "Event", # The label to show in the UI
-        "component": ComponentType.TEXT # The type of UI component to render
+        "key": "id",  # Must match database column name
+        "label": "id",
+        "component": ComponentType.NUMBER
+    },
+    {
+        "key": "event_name",  # Must match database column name
+        "label": "Event",
+        "component": ComponentType.TEXT
     } ,
     {
         "key": "date",
@@ -60,4 +64,41 @@ SIDEBAR_CONFIG = [
         "component": ComponentType.NUMBER
     }
 ]
+
+def build_ui_payload_from_dict(data: dict) -> List[Dict[str, Any]]:
+    """
+    Converts event data dictionary into sidebar UI payload.
+    Filters out empty and placeholder values.
+    """
+    clean_payload = []
+    print(f"DEBUG: AI State Keys: {list(data.keys())}")
     
+    for field in SIDEBAR_CONFIG:
+        key = field["key"]
+        val = data.get(key)
+
+        # Filter out empty and placeholder values
+        if val is None or val == "":
+            continue
+        
+        # Skip placeholder strings like "Not set", "None", etc.
+        val_str = str(val).strip().lower()
+        placeholder_values = ["not set", "none", "null", "n/a", "na", "-", "--", "???"]
+        if val_str in placeholder_values or val_str == "":
+            continue
+
+        # Convert Enum component types to string values
+        comp_type = field["component"]
+        if hasattr(comp_type, "value"):
+            comp_type = comp_type.value 
+
+        # Build sidebar item dictionary for API response
+        item = {
+            "key": key,
+            "label": field["label"],
+            "value": val,
+            "component": comp_type
+        }
+        clean_payload.append(item)
+        
+    return clean_payload

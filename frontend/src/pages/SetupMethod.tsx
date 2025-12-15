@@ -11,7 +11,6 @@ import { SetupPageHeader } from "../components/ui/SetupPageHeader";
 /* UI primitives */
 import { ClickableCard } from "../components/ui/ClickableCard";
 import { Section } from "../components/ui/Section";
-// import { Card } from "../components/ui/Card"; // not in use on this page
 import { TwoColumn } from "../components/ui/Grid";
 import { FilePill } from "../components/ui/FilePill";
 import { muted } from "../components/ui/Text";

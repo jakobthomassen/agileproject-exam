@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useContext,
   useState,
@@ -6,6 +6,8 @@ import React, {
   useEffect
 } from "react";
 import type { ReactNode } from "react";
+import { useLocation } from "react-router-dom";
+import { API_URL } from "../config";
 
 /* -------------------------------------------------------------------------- */
 /* Judging domain model                                                        */
@@ -29,6 +31,11 @@ export interface JudgingSettings {
   groups: Record<JudgeGroupType, JudgeGroupConfig>;
 }
 
+
+/*
+  Context owns the canonical DEFAULTS,
+  but not all flows must immediately commit them.
+*/
 export const defaultJudgingSettings: JudgingSettings = {
   scoreMin: 0,
   scoreMax: 10,
@@ -59,42 +66,43 @@ export const defaultJudgingSettings: JudgingSettings = {
 /* Event model                                                                 */
 /* -------------------------------------------------------------------------- */
 
-export type ScoringMode = "judges" | "audience" | "mixed" | null;
-
 export type EventData = {
+  // Identity
+  id?: string | number;
+  eventCode?: string | null;
+
+  // Main Info (Mapped from DB)
   eventName: string | null;
-  eventType: string | null;
-  participants: number | null;
-
-  scoringMode: ScoringMode;
-  scoringAudience: number | null;
-  scoringJudge: number | null;
-
   venue: string | null;
-  startDateTime: string | null;
-  endDateTime: string | null;
-
-  sponsor: string | null;
+  scoringMode: string | null;
   rules: string | null;
-  audienceLimit: number | null;
+  startDateTime: string | null;
 
-  image: string | null;
+  // Nullable fields
+  participants: number | null;
+  eventType: string | null;
 
+  ui_payload?: {
+    key: string;
+    label: string;
+    value: any;
+    component: string;
+  }[];
+
+  /*
+    Judging settings are context-owned but optional.
+    Early setup steps may leave this null or partially defined.
+  */
   judgingSettings: JudgingSettings | null;
   ui_payload?: { label: string; value: any; type: string }[];
-  athleteList: { number: number; name: string }[];
 };
 
+// Default empty state
 export const defaultEventData: EventData = {
   eventName: null,
-  eventType: null,
-  participants: null,
-
-  scoringMode: null,
-  scoringAudience: null,
-  scoringJudge: null,
-
   venue: null,
+  scoringMode: null,
+  rules: null,
   startDateTime: null,
   endDateTime: null,
 
@@ -103,36 +111,40 @@ export const defaultEventData: EventData = {
   audienceLimit: null,
 
   image: null,
-  judgingSettings: null,
-
-  athleteList: []
+  judgingSettings: null
 };
 
 /* -------------------------------------------------------------------------- */
-/* Saved events                                                                */
+/* Saved Events (Dashboard)                                                    */
 /* -------------------------------------------------------------------------- */
 
-export type SavedEvent = EventData & {
+export type SavedEvent = {
   id: string;
-  sport: string | null;
-  format: string | null;
-  status: "DRAFT" | "OPEN" | "FINISHED";
-  startDate: string | null;
+  eventName: string;
+  sport: string;
+  format: string;
+  status: string;
+  venue: string;
+  startDate: string;
   athletes: number;
-  eventCode: string | null;
+  eventCode: string;
 };
 
 /* -------------------------------------------------------------------------- */
-/* Context API                                                                 */
+/* Context Definition                                                          */
 /* -------------------------------------------------------------------------- */
 
 type EventSetupContextValue = {
   eventData: EventData;
-
+  isLoading: boolean;
+  savedEvents: SavedEvent[]; // <--- NEW: List for Dashboard
   setEventData: (patch: Partial<EventData>) => void;
-  replaceEventData: (data: EventData) => void;
   resetEventData: () => void;
 
+  /*
+    Explicit helper for judging settings.
+    Allows future pages to partially update without full ownership.
+  */
   setJudgingSettings: (patch: Partial<JudgingSettings>) => void;
   resetJudgingSettings: () => void;
 
@@ -142,21 +154,19 @@ type EventSetupContextValue = {
   updateSavedEvent: (id: string, patch: Partial<SavedEvent>) => void;
 };
 
-const EventSetupContext = createContext<EventSetupContextValue | undefined>(
-  undefined
-);
+const EventSetupContext = createContext<EventSetupContextValue | undefined>(undefined);
 
 /* -------------------------------------------------------------------------- */
 /* Provider                                                                    */
 /* -------------------------------------------------------------------------- */
 
 export function EventSetupProvider({ children }: { children: ReactNode }) {
-  const [eventData, setEventDataState] = useState<EventData>(defaultEventData);
+  const [eventData, setEventDataState] =
+    useState<EventData>(defaultEventData);
 
-  // Load saved events from localStorage
   const [savedEvents, setSavedEvents] = useState<SavedEvent[]>(() => {
     try {
-      const raw = localStorage.getItem("savedEvents");
+      const raw = sessionStorage.getItem("savedEvents");
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
@@ -166,51 +176,19 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  // Persist saved events
-  useEffect(() => {
-    try {
-      localStorage.setItem("savedEvents", JSON.stringify(savedEvents));
-    } catch {}
-  }, [savedEvents]);
-
   const setEventData = (patch: Partial<EventData>) => {
-    setEventDataState(prev => ({
-      ...prev,
-      ...patch
-    }));
-  };
-
-  const replaceEventData = (data: EventData) => {
-    setEventDataState(data);
+    setEventDataState((prev) => ({ ...prev, ...patch }));
   };
 
   const resetEventData = () => {
     setEventDataState(defaultEventData);
   };
 
-  const setJudgingSettings = (patch: Partial<JudgingSettings>) => {
-    setEventDataState(prev => ({
-      ...prev,
-      judgingSettings: {
-        ...(prev.judgingSettings ?? defaultJudgingSettings),
-        ...patch
-      }
-    }));
-  };
-
-  const resetJudgingSettings = () => {
-    setEventDataState(prev => ({
-      ...prev,
-      judgingSettings: null
-    }));
-  };
-
-  const addSavedEvent = (ev: SavedEvent) => {
-    setSavedEvents(prev => [...prev, ev]);
-  };
-
-  const deleteSavedEvent = (id: string) => {
-    setSavedEvents(prev => prev.filter(e => e.id !== id));
+  const addSavedEvent = (ev: any) => {
+    console.log("Adding event locally and refreshing list...");
+    setSavedEvents((prev) => [...prev, ev]);
+    // Optionally trigger a refresh from DB
+    // fetchDashboardEvents(); 
   };
 
   const updateSavedEvent = (id: string, patch: Partial<SavedEvent>) => {
@@ -219,22 +197,23 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("savedEvents", JSON.stringify(savedEvents));
+    } catch {}
+  }, [savedEvents]);
+
   const value = useMemo(
     () => ({
       eventData,
+      isLoading,
+      savedEvents, // <--- Exposed to Dashboard
       setEventData,
-      replaceEventData,
       resetEventData,
-
-      setJudgingSettings,
-      resetJudgingSettings,
-
-      savedEvents,
       addSavedEvent,
-      deleteSavedEvent,
-      updateSavedEvent
+      deleteSavedEvent
     }),
-    [eventData, savedEvents]
+    [eventData, isLoading, savedEvents]
   );
 
   return (
@@ -248,10 +227,11 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
 /* Hook                                                                        */
 /* -------------------------------------------------------------------------- */
 
-export function useEventSetup(): EventSetupContextValue {
+export function useEventSetup() {
   const ctx = useContext(EventSetupContext);
   if (!ctx) {
     throw new Error("useEventSetup must be used inside EventSetupProvider");
   }
   return ctx;
 }
+

@@ -2,19 +2,33 @@ from sqlalchemy.orm import Session
 from ..DTOs.eventstate import EventState, EventImageCreate, ParticipantCreate
 from .models import Event, EventImage, Participant
 from sqlalchemy.exc import IntegrityError
+import secrets
+import string
+
+
+def generate_event_code() -> str:
+    """Generate a random 6-character uppercase event code."""
+    return ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6))
 
 
 def create_event(db: Session, event_data: EventState):
+    # Generate event code for new events
+    event_code = generate_event_code()
+    
     db_event = Event(
         event_name=event_data.eventname,
         date=event_data.eventdate,
         time=event_data.eventtime,
+        end_date=event_data.eventenddate,
+        end_time=event_data.eventendtime,
         location=event_data.eventlocation,
         description=event_data.eventdescription,
         judging_type=event_data.eventjudgetype,
         audience_weight=event_data.eventaudienceweight,
         expert_weight=event_data.eventexpertweight,
-        athlete_weight=event_data.eventathleteweight
+        athlete_weight=event_data.eventathleteweight,
+        event_code=event_code,
+        status="DRAFT"  # Default status for new events
     )
     db.add(db_event)
     db.commit()
@@ -42,6 +56,10 @@ def update_event(db: Session, event_data: EventState):
         db_event.date = event_data.eventdate
     if event_data.eventtime is not None:
         db_event.time = event_data.eventtime
+    if event_data.eventenddate is not None:
+        db_event.end_date = event_data.eventenddate
+    if event_data.eventendtime is not None:
+        db_event.end_time = event_data.eventendtime
     if event_data.eventlocation is not None:
         db_event.location = event_data.eventlocation
     if event_data.eventdescription is not None:
