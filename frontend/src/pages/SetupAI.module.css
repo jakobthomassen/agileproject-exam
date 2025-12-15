@@ -163,4 +163,17 @@
   padding-right: 4px; 
 }
 
+.checklistPanel {
+  height: 70vh;              
+  display: flex;
+  flex-direction: column;    
+}
+
+.checklistPanel {
+  height: 70vh;          
+  display: flex;
+  flex-direction: column;
+}
+
+
 

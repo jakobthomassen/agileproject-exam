@@ -332,6 +332,12 @@ export default function SetupAI() {
     el.scrollTop = el.scrollHeight;
   }, [messages, thinking]);
 
+  useEffect(() => {
+  const el = previewContainerRef.current;
+  if (!el) return;
+  el.scrollTop = el.scrollHeight;
+}, [checklistData]);
+
     useEffect(() => {
     const el = previewContainerRef.current;
     if (!el) return;
@@ -523,27 +529,42 @@ export default function SetupAI() {
             </div>
           </Card>
 
+{/* Checklist Panel */}
       {/* Checklist Panel */}
-                    <div
-                ref={previewContainerRef}
-                className={`${styles.checklistScroll} space-y-1`}
-              >
-                {!checklistData || checklistData.length === 0 ? (
-                  <div className='text-slate-500 italic text-sm py-8 text-center rounded-lg bg-slate-800/20'>
-                    Event details will appear here as you chat with the AI...
-                  </div>
-                ) : (
-                  checklistData.map((item, idx) => (
-                    <EditableField
-                      key={idx}
-                      label={item.label}
-                      value={item.value}
-                      type={item.type}
-                      onChange={(newVal) => handleChecklistChange(idx, newVal)}
-                    />
-                  ))
-                )}
-              </div>  
+      <Card padding={16}>
+        <div className={styles.checklistPanel}>
+          <h3 className={styles.checklistHeading}>Event Details</h3>
+
+          <div
+            ref={previewContainerRef}
+            className={`${styles.checklistScroll} space-y-1`}
+          >
+            {!checklistData || checklistData.length === 0 ? (
+              <div className='text-slate-500 italic text-sm py-8 text-center rounded-lg bg-slate-800/20'>
+                Event details will appear here as you chat with the AI...
+              </div>
+            ) : (
+              checklistData.map((item, idx) => (
+                <EditableField
+                  key={idx}
+                  label={item.label}
+                  value={item.value}
+                  type={item.type}
+                  onChange={(newVal) => handleChecklistChange(idx, newVal)}
+                />
+              ))
+            )}
+          </div>
+
+          <Button
+            fullWidth
+            onClick={() => navigate("/setup/summary")}
+            className={styles.checklistContinueButton}
+          >
+            Continue
+          </Button>
+        </div>
+      </Card>
 
 
     <Button
