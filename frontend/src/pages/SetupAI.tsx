@@ -311,14 +311,20 @@ export default function SetupAI() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-const chatContainerRef = useRef<HTMLDivElement | null>(null);
-const previewContainerRef = useRef<HTMLDivElement | null>(null);
-const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-const [checklistData, setChecklistData] = useState<ChecklistItem[]>(
-  eventData?.ui_payload || []
-);
-const prevLengthRef = useRef<number>(checklistData.length);
-const [lastUpdatedIndex, setLastUpdatedIndex] = useState<number | null>(null);
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
+  const previewContainerRef = useRef<HTMLDivElement | null>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  
+  // Refs for auto-scrolling sidebar to changed fields after AI updates
+  const prevChecklistDataRef = useRef<ChecklistItem[] | null>(null);
+  const hasMountedRef = useRef(false);
+  const pendingAiScrollRef = useRef(false);
+
+  // NOTE: If you haven't updated EventData interface yet, this might still show red.
+  // Update src/context/EventSetupContext.tsx to include 'ui_payload' to fix it completely.
+  const [checklistData, setChecklistData] = useState<ChecklistItem[]>(
+    eventData?.ui_payload || []
+  );
 
   useEffect(() => {
     if (eventData?.ui_payload) {
@@ -332,31 +338,68 @@ const [lastUpdatedIndex, setLastUpdatedIndex] = useState<number | null>(null);
     el.scrollTop = el.scrollHeight;
   }, [messages, thinking]);
 
-  // Only auto-scroll to bottom when NEW items are added by the AI
-  // Auto-scroll checklist to the "newest" field:
-  // - If a specific field was just edited, scroll to that field (up or down)
-  // - Otherwise, when new items are added by the AI, scroll to the bottom
+  // Auto-scroll sidebar to changed fields after AI updates
   useEffect(() => {
-    const container = previewContainerRef.current;
-    if (!container) return;
-
-    const prevLen = prevLengthRef.current;
-    const newLen = checklistData.length;
-
-    if (lastUpdatedIndex !== null && itemRefs.current[lastUpdatedIndex]) {
-      // Scroll to the last edited field
-      itemRefs.current[lastUpdatedIndex]!.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    } else if (newLen > prevLen) {
-      // No specific field marked, but new items were added by AI -> scroll to bottom
-      container.scrollTop = container.scrollHeight;
+    // Skip on initial mount
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      prevChecklistDataRef.current = checklistData ? [...checklistData] : null;
+      return;
     }
 
-    prevLengthRef.current = newLen;
-  }, [checklistData, lastUpdatedIndex]);
+    // Only auto-scroll if this update came from the AI (not manual user edits)
+    if (!pendingAiScrollRef.current) {
+      prevChecklistDataRef.current = checklistData ? [...checklistData] : null;
+      return;
+    }
+    pendingAiScrollRef.current = false;
 
+    // Skip if no current data
+    if (!checklistData || checklistData.length === 0) {
+      prevChecklistDataRef.current = null;
+      return;
+    }
+
+    const prevData = prevChecklistDataRef.current;
+
+    // Find indices of fields that changed
+    const changedIndices: number[] = [];
+    checklistData.forEach((item, idx) => {
+      const prevItem = prevData?.[idx];
+      // Check if this is a new field or value changed
+      if (!prevItem || item.value !== prevItem.value) {
+        changedIndices.push(idx);
+      }
+    });
+
+    // Update ref for next comparison
+    prevChecklistDataRef.current = [...checklistData];
+
+    // If no changes detected, don't scroll
+    if (changedIndices.length === 0) return;
+
+    // Get the field furthest down in the sidebar (highest index)
+    const targetIndex = Math.max(...changedIndices);
+
+    // Use requestAnimationFrame to ensure DOM has updated before scrolling
+    requestAnimationFrame(() => {
+      const container = previewContainerRef.current;
+      const target = itemRefs.current[targetIndex];
+      if (!container || !target) return;
+
+      // Center the target field in the visible container (with small upward adjustment)
+      const verticalOffset = 15; // pixels to shift view upward for better visual centering
+      const targetTop = target.offsetTop - (container.clientHeight / 2) + (target.clientHeight / 2) - verticalOffset;
+      // Clamp to valid scroll range
+      const maxScroll = container.scrollHeight - container.clientHeight;
+      const clampedScrollTop = Math.max(0, Math.min(targetTop, maxScroll));
+      
+      container.scrollTo({
+        top: clampedScrollTop,
+        behavior: "smooth",
+      });
+    });
+  }, [checklistData]);
 
   // --- 1. HANDLE FILE SELECT (Triggers Auto-Send) ---
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -413,7 +456,8 @@ const [lastUpdatedIndex, setLastUpdatedIndex] = useState<number | null>(null);
 
     setEventData({ ...(eventData || {}), ...data });
 
-        if (data.ui_payload && Array.isArray(data.ui_payload)) {
+    if (data.ui_payload && Array.isArray(data.ui_payload)) {
+      pendingAiScrollRef.current = true; // Flag to trigger auto-scroll
       setChecklistData(data.ui_payload);
       
       setLastUpdatedIndex(
