@@ -151,5 +151,16 @@
   white-space: pre-line;
 }
 
+.checklistCardInner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.checklistScroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px; 
+}
 
 
