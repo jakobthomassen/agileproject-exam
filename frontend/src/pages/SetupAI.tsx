@@ -311,15 +311,13 @@ export default function SetupAI() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const chatContainerRef = useRef<HTMLDivElement | null>(null);
-  const previewContainerRef = useRef<HTMLDivElement | null>(null);
-  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-  
-  // NOTE: If you haven't updated EventData interface yet, this might still show red.
-  // Update src/context/EventSetupContext.tsx to include 'ui_payload' to fix it completely.
-  const [checklistData, setChecklistData] = useState<ChecklistItem[]>(
-    eventData?.ui_payload || []
-  );
+const chatContainerRef = useRef<HTMLDivElement | null>(null);
+const previewContainerRef = useRef<HTMLDivElement | null>(null);
+const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+const [checklistData, setChecklistData] = useState<ChecklistItem[]>(
+  eventData?.ui_payload || []
+);
+const prevLengthRef = useRef<number>(checklistData.length);
 
   useEffect(() => {
     if (eventData?.ui_payload) {
@@ -332,6 +330,22 @@ export default function SetupAI() {
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [messages, thinking]);
+
+  // Only auto-scroll to bottom when NEW items are added by the AI
+useEffect(() => {
+  const prevLen = prevLengthRef.current;
+  const newLen = checklistData.length;
+
+  if (newLen > prevLen) {
+    const container = previewContainerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  }
+
+  prevLengthRef.current = newLen;
+}, [checklistData]);
+
 
   // --- 1. HANDLE FILE SELECT (Triggers Auto-Send) ---
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -413,29 +427,22 @@ const handleChecklistChange = (index: number, newValue: any) => {
 
   setChecklistData(updated);
 
+  // Keep eventData in sync so other pages can read updated ui_payload
   setEventData({
     ...(eventData || {}),
-    ui_payload: updated,
+    ui_payload: updated
   });
 
-  // Scroll the checklist to the edited item (up or down)
+  // Scroll to the edited field (up or down)
   setTimeout(() => {
-    const container = previewContainerRef.current;
     const target = itemRefs.current[index];
-    if (!container || !target) return;
+    if (!target) return;
 
-    const containerRect = container.getBoundingClientRect();
-    const targetRect = target.getBoundingClientRect();
-
-    const offset = targetRect.top - containerRect.top;
-    const targetScrollTop =
-      container.scrollTop + offset - container.clientHeight / 2 + target.clientHeight / 2;
-
-    container.scrollTo({
-      top: targetScrollTop,
+    target.scrollIntoView({
       behavior: "smooth",
+      block: "center",
     });
-  }, 50);
+  }, 0);
 };
 
 
@@ -538,52 +545,47 @@ const handleChecklistChange = (index: number, newValue: any) => {
           </Card>
 
 {/* Checklist Panel */}
-      {/* Checklist Panel */}
-      <Card padding={16}>
-        <div className={styles.checklistPanel}>
-          <h3 className={styles.checklistHeading}>Event Details</h3>
+          <Card padding={16}>
+            <div className={styles.checklistPanel}>
+              <h3 className={styles.checklistHeading}>Event Details</h3>
 
-          <div
-            ref={previewContainerRef}
-            className={`${styles.checklistScroll} space-y-1`}
-          >
-            {!checklistData || checklistData.length === 0 ? (
-              <div className='text-slate-500 italic text-sm py-8 text-center rounded-lg bg-slate-800/20'>
-                Event details will appear here as you chat with the AI...
+              <div
+                ref={previewContainerRef}
+                className={`${styles.checklistScroll} space-y-1`}
+              >
+                {!checklistData || checklistData.length === 0 ? (
+                  <div className='text-slate-500 italic text-sm py-8 text-center rounded-lg bg-slate-800/20'>
+                    Event details will appear here as you chat with the AI...
+                  </div>
+                ) : (
+                  checklistData.map((item, idx) => (
+                    <div
+                      key={idx}
+                      ref={(el) => {
+                        itemRefs.current[idx] = el;
+                      }}
+                    >
+                      <EditableField
+                        label={item.label}
+                        value={item.value}
+                        type={item.type}
+                        onChange={(newVal) => handleChecklistChange(idx, newVal)}
+                      />
+                    </div>
+                  ))
+                )}
               </div>
-            ) : (
-              checklistData.map((item, idx) => (
-                <div key={idx} ref={(el) => { itemRefs.current[idx] = el; }}>
-                  <EditableField
-                    label={item.label}
-                    value={item.value}
-                    type={item.type}
-                    onChange={(newVal) => handleChecklistChange(idx, newVal)}
-                  />
-                </div>
-              ))
-            )}
-          </div>
 
-          <Button
-            fullWidth
-            onClick={() => navigate("/setup/summary")}
-            className={styles.checklistContinueButton}
-          >
-            Continue
-          </Button>
-        </div>
-      </Card>
-
-
-    <Button
-      fullWidth
-      onClick={() => navigate("/setup/summary")}
-      className={styles.checklistContinueButton}
-    >
-      Continue
-    </Button>
-    </TwoColumn>
+              <Button
+                fullWidth
+                onClick={() => navigate("/setup/summary")}
+                className={styles.checklistContinueButton}
+              >
+                Continue
+              </Button>
+            </div>
+          </Card>
+        </TwoColumn>
   </div>
 </PageContainer>
   );
