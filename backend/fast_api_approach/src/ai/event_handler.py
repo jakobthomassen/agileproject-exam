@@ -339,7 +339,6 @@ def get_event_context_data(event_id: int):
         print(f"--- TRACE: CRITICAL CRASH: {e}")
         return None
 
-# In src/ai/event_handler.py
 
 def list_all_events():
     """

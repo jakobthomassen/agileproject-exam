@@ -19,8 +19,8 @@ export function Button({
     variant === "primary"
       ? styles.primary
       : variant === "secondary"
-      ? styles.secondary
-      : styles.ghost;
+        ? styles.secondary
+        : styles.ghost;
 
   const combined = [
     styles.base,
