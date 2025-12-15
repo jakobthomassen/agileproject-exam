@@ -4,10 +4,6 @@ import styles from "./Navbar.module.css";
 export function Navbar() {
   const navigate = useNavigate();
 
-  function notImplemented(label: string) {
-    window.alert(`${label} page is not implemented yet.`);
-  }
-
   return (
     <div className={styles.navbar}>
       <div
@@ -19,10 +15,10 @@ export function Navbar() {
 
 
       <div className={styles.navButtons}>
-        <button onClick={() => notImplemented("About us")}>
+        <button onClick={() => navigate("https://www.peers.live/about")}>
           About us
         </button>
-        <button onClick={() => notImplemented("Contact")}>
+        <button onClick={() => navigate("https://www.peers.live/contact")}>
           Contact
         </button>
         <button onClick={() => navigate("/setup")}>
