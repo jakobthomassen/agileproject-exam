@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEventSetup } from "../context/EventSetupContext";
 import { PageContainer } from "../components/layout/PageContainer";
 import { Button } from "../components/ui/Button";
@@ -13,12 +13,13 @@ import { API_URL } from "../config";
 
 export default function SetupSummary() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // 1. Get the Event ID from the URL (e.g. "24")
   const { eventId } = useParams();
 
   // 2. Get Data & Actions from Context
-  const { eventData, isLoading, addSavedEvent, resetEventData, setEventData } = useEventSetup();
+  const { eventData, isLoading, resetEventData, setEventData } = useEventSetup();
 
   // 3. Participant CSV Upload
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -64,9 +65,9 @@ export default function SetupSummary() {
   // 3. Determine Back Link
   // If editing an existing event (ID exists), go back to its specific AI page.
   // Otherwise, go to the generic AI setup.
-  const backLink = eventId
-    ? `/event/${eventId}/setup/ai`
-    : "/setup/ai";
+  const backLink = searchParams.get("from") === "manual"
+    ? "/setup/manual"
+    : (eventId ? `/event/${eventId}/setup/ai` : "/setup/ai");
 
   async function handleFinish() {
     try {
@@ -298,7 +299,7 @@ export default function SetupSummary() {
             <Button
               onClick={triggerImageDialog}
               disabled={uploadingImage}
-              variant="outline"
+              variant="secondary"
               style={{ width: "100%" }}
             >
               {uploadingImage ? (
@@ -336,7 +337,7 @@ export default function SetupSummary() {
             <Button
               onClick={triggerFileDialog}
               disabled={uploading}
-              variant="outline"
+              variant="secondary"
               style={{ width: "100%" }}
             >
               {uploading ? (
@@ -357,13 +358,13 @@ export default function SetupSummary() {
         {/* Bottom Buttons */}
         <div className={styles.buttonsRow}>
           <Button
-            variant="ghost"
+            variant="secondary"
             onClick={() => navigate(backLink)}
           >
             Back
           </Button>
 
-          <Button onClick={handleFinish}>
+          <Button variant="secondary" onClick={handleFinish} disabled={uploading}>
             Confirm & save
           </Button>
         </div>

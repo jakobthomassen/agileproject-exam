@@ -52,7 +52,7 @@ export default function SetupManual() {
   const { setEventData } = useEventSetup();
 
   /* Core event fields */
-  
+
   const [eventName, setEventName] = useState("");
   const [eventType, setEventType] = useState("");
   const [participants, setParticipants] = useState<number | "">("");
@@ -64,16 +64,16 @@ export default function SetupManual() {
   const [rules, setRules] = useState("");
   const [audienceLimit, setAudienceLimit] = useState<number | "">("");
   const isInvalidTimeRange =
-  startTime !== "" && endTime !== "" && endTime < startTime;
-const combinedStart =
-  eventDate && startTime ? `${eventDate}T${startTime}` : null;
-const combinedEnd =
-  eventDate &&
-  startTime &&
-  endTime &&
-  endTime >= startTime
-    ? `${eventDate}T${endTime}`
-    : null;
+    startTime !== "" && endTime !== "" && endTime < startTime;
+  const combinedStart =
+    eventDate && startTime ? `${eventDate}T${startTime}` : null;
+  const combinedEnd =
+    eventDate &&
+      startTime &&
+      endTime &&
+      endTime >= startTime
+      ? `${eventDate}T${endTime}`
+      : null;
 
 
   /* Template / scoring */
@@ -116,69 +116,69 @@ const combinedEnd =
   /* Template defaults                                                       */
   /* ---------------------------------------------------------------------- */
 
-function applyTemplateDefaults(tpl: TemplateType) {
-  switch (tpl) {
-    case "rating":
-      setScoringFormat("like-voting");
-      setScoreMin(0);
-      setScoreMax(10);
-      setJudgingDuration(60);
-      setSpectatorsMax(100);
-      setLiveLeaderboard(true);
+  function applyTemplateDefaults(tpl: TemplateType) {
+    switch (tpl) {
+      case "rating":
+        setScoringFormat("like-voting");
+        setScoreMin(0);
+        setScoreMax(10);
+        setJudgingDuration(60);
+        setSpectatorsMax(100);
+        setLiveLeaderboard(true);
 
-      setAudienceEnabled(true);
-      setExpertEnabled(true);
-      setAthleteEnabled(true);
+        setAudienceEnabled(true);
+        setExpertEnabled(true);
+        setAthleteEnabled(true);
 
-      setAudienceGroupWeight(33);
-      setExpertGroupWeight(34);
-      setAthleteGroupWeight(33);
+        setAudienceGroupWeight(33);
+        setExpertGroupWeight(34);
+        setAthleteGroupWeight(33);
 
-      // Ranking = Final
-      setStageBracket("Final");
-      break;
+        // Ranking = Final
+        setStageBracket("Final");
+        break;
 
-    case "judge_audience":
-      setScoringFormat("score-voting");
-      setScoreMin(0);
-      setScoreMax(10);
-      setJudgingDuration(45);
-      setSpectatorsMax(50);
+      case "judge_audience":
+        setScoringFormat("score-voting");
+        setScoreMin(0);
+        setScoreMax(10);
+        setJudgingDuration(45);
+        setSpectatorsMax(50);
 
-      setAudienceEnabled(true);
-      setExpertEnabled(true);
-      setAthleteEnabled(false);
+        setAudienceEnabled(true);
+        setExpertEnabled(true);
+        setAthleteEnabled(false);
 
-      setAudienceGroupWeight(50);
-      setExpertGroupWeight(50);
-      setAthleteGroupWeight(0);
+        setAudienceGroupWeight(50);
+        setExpertGroupWeight(50);
+        setAthleteGroupWeight(0);
 
-      
 
-      // Battle starts with None
-      setStageBracket("");
-      break;
 
-    case "blank":
-      setScoringFormat("score-voting");
-      setScoreMin(0);
-      setScoreMax(1);
-      setJudgingDuration(0);
-      setSpectatorsMax("");
+        // Battle starts with None
+        setStageBracket("");
+        break;
 
-      setAudienceEnabled(true);
-      setExpertEnabled(false);
-      setAthleteEnabled(false);
+      case "blank":
+        setScoringFormat("score-voting");
+        setScoreMin(0);
+        setScoreMax(1);
+        setJudgingDuration(0);
+        setSpectatorsMax("");
 
-      setAudienceGroupWeight(100);
-      setExpertGroupWeight(0);
-      setAthleteGroupWeight(0);
-      setLiveLeaderboard(false);
+        setAudienceEnabled(true);
+        setExpertEnabled(false);
+        setAthleteEnabled(false);
 
-      setStageBracket("");
-      break;
+        setAudienceGroupWeight(100);
+        setExpertGroupWeight(0);
+        setAthleteGroupWeight(0);
+        setLiveLeaderboard(false);
+
+        setStageBracket("");
+        break;
+    }
   }
-}
 
   useEffect(() => {
     const raw = sessionStorage.getItem("selectedTemplate");
@@ -192,7 +192,7 @@ function applyTemplateDefaults(tpl: TemplateType) {
   /* Derived preview                                                         */
   /* ---------------------------------------------------------------------- */
 
-    function getJudgingSummary() {
+  function getJudgingSummary() {
     if (selectedTemplate === "judge_audience") {
       const groups: string[] = [];
       if (audienceEnabled) groups.push("Audience");
@@ -256,7 +256,7 @@ function applyTemplateDefaults(tpl: TemplateType) {
       image: null
     });
 
-    navigate("/setup/summary");
+    navigate("/setup/summary?from=manual");
   }
 
   /* ---------------------------------------------------------------------- */
@@ -414,7 +414,7 @@ function applyTemplateDefaults(tpl: TemplateType) {
       <FAQWidget />
 
       {showJudgingSettings && (
-  <JudgingSettingsModal
+        <JudgingSettingsModal
           template={selectedTemplate}
           onClose={() => setShowJudgingSettings(false)}
           scoringFormat={scoringFormat}

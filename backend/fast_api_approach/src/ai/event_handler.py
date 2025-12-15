@@ -8,7 +8,7 @@ from ..db.crud import create_event, get_all_events, create_image, update_event
 from ..db.models import Event, ConversationModel, Participant
 from ..pages.ai_sidebar import SIDEBAR_CONFIG
 from ..db.crud import (create_event, get_all_events, create_image, get_single_event, update_event,
-                       delete_event, get_single_image, get_all_images, get_images_for_event, update_image,
+                       delete_event as crud_delete_event, get_single_image, get_all_images, get_images_for_event, update_image,
                        delete_images, create_participant, get_single_participant, get_all_participants,
                        get_participants_for_event, update_participant, delete_participant)
 
@@ -146,12 +146,19 @@ def debug_update_event(event_state: EventState, id: int):
         db.close()
 
 
-def debug_delete_event(id: int):
+
+def delete_event(id: int):
+    """
+    Deletes an event by ID. Handles DB session.
+    Returns True if successful, False otherwise.
+    """
     db = SessionLocal()
     try:
-        delete_event(db, id)
+        crud_delete_event(db, id)
+        return True
     except Exception as e:
         print(f"Error: {str(e)}")
+        return False
     finally:
         db.close()
 
@@ -339,6 +346,7 @@ def get_event_context_data(event_id: int):
         print(f"--- TRACE: CRITICAL CRASH: {e}")
         return None
 
+# In src/ai/event_handler.py
 
 def list_all_events():
     """

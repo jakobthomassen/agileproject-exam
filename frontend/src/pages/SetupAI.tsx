@@ -526,13 +526,13 @@ export default function SetupAI() {
   const handleContinue = () => {
     // 1. Priority: URL Param (Editing existing event)
     if (eventId) {
-      navigate(`/event/${eventId}/setup/summary`);
+      navigate(`/event/${eventId}/setup/summary?from=ai`);
       return;
     }
 
     // 2. Priority: Context ID
     if (eventData.id) {
-      navigate(`/event/${eventData.id}/setup/summary`);
+      navigate(`/event/${eventData.id}/setup/summary?from=ai`);
       return;
     }
 
@@ -541,13 +541,13 @@ export default function SetupAI() {
     const idItem = list.find(item => item.key === "id" || item.label.toLowerCase() === "id");
 
     if (idItem?.value) {
-      navigate(`/event/${idItem.value}/setup/summary`);
+      navigate(`/event/${idItem.value}/setup/summary?from=ai`);
       return;
     }
 
     // 4. Fallback
     console.warn("No ID found, redirecting to generic summary");
-    navigate("/setup/summary");
+    navigate("/setup/summary?from=ai");
   };
 
   const getFieldType = (item: SidebarItem): string => {
@@ -572,8 +572,8 @@ export default function SetupAI() {
                   <div
                     key={i}
                     className={`${styles.chatRow} ${m.sender === "user"
-                        ? styles.chatRowUser
-                        : styles.chatRowAssistant
+                      ? styles.chatRowUser
+                      : styles.chatRowAssistant
                       }`}
                   >
                     <span

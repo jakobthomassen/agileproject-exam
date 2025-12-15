@@ -1,10 +1,10 @@
-import { useNavigate } from "react-router-dom";
+
 import landscape1 from "../assets/landscape1.jpg";
 import FAQWidget from "../components/ui/FAQ";
 import styles from "./Home.module.css";
 
 export default function Home() {
-  const navigate = useNavigate();
+
 
   return (
     <>

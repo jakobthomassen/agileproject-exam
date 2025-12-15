@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # --- LOCAL IMPORTS ---
-# 1. The Brain (AI Logic)
+# 1. The agent
 from .ai.gemini import process_chat_request
 
 # 2. The Hands (Database & CRUD Helpers)
@@ -36,11 +36,15 @@ app = FastAPI(title="Event Planner API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:5173")], 
+    allow_origins=["*"], # Relaxed for debugging
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+def health_check():
+    return {"status": "ok", "message": "Backend is running"}
 
 # =================================================================
 # DATA MODELS
@@ -70,12 +74,12 @@ class EventUpdatePayload(BaseModel):
         extra = "allow" # Allows extra fields if the frontend sends them
 
 class EventCreatePayload(BaseModel):
-    eventName: Optional[str] = None
-    venue: Optional[str] = None
-    startDateTime: Optional[str] = None
-    endDateTime: Optional[str] = None
-    rules: Optional[str] = None
-    scoringMode: Optional[str] = None
+    eventName: Optional[str] = None #we'1 Event Name
+    venue: Optional[str] = None # Venue
+    startDateTime: Optional[str] = None # Start Date
+    endDateTime: Optional[str] = None # End Date
+    rules: Optional[str] = None # Rules
+    scoringMode: Optional[str] = None # Scoring Mode
     eventCode: Optional[str] = None
     
     class Config:

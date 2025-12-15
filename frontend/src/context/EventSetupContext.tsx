@@ -38,6 +38,15 @@ export type EventData = {
 
   // Settings
   judgingSettings?: any | null;
+
+  // Added to fix build errors
+  scoringAudience?: any | null;
+  scoringJudge?: any | null;
+  sponsor?: string | null;
+  audienceLimit?: number | null;
+  image?: string | null;
+  endDateTime?: string | null;
+  athletes?: number | null;
 };
 
 // Default empty state

@@ -1,4 +1,4 @@
-import { CSSProperties, HTMLAttributes } from "react";
+import { type CSSProperties, type HTMLAttributes } from "react";
 
 const base: CSSProperties = {
   background: "rgba(15,15,22,0.95)",

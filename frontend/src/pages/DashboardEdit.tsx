@@ -6,8 +6,7 @@ import { Card } from "../components/ui/Card";
 import { TextInput } from "../components/ui/TextInput";
 import { Button } from "../components/ui/Button";
 import { BackButton } from "../components/ui/BackButton";
-import { Loader2, Image as ImageIcon, Upload } from "lucide-react";
-import { muted } from "../components/ui/Text";
+import { Loader2, Image as ImageIcon } from "lucide-react";
 import styles from "./DashboardEdit.module.css";
 import { API_URL } from "../config";
 
@@ -288,9 +287,9 @@ export default function DashboardEdit() {
                   onChange={handleImageUpload}
                 />
                 <Button
+                  variant="secondary"
                   onClick={triggerImageDialog}
                   disabled={uploadingImage}
-                  variant="outline"
                   style={{ width: "100%", maxWidth: "400px" }}
                 >
                   {uploadingImage ? (
