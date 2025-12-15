@@ -313,6 +313,7 @@ export default function SetupAI() {
 
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
   const previewContainerRef = useRef<HTMLDivElement | null>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   
   // NOTE: If you haven't updated EventData interface yet, this might still show red.
   // Update src/context/EventSetupContext.tsx to include 'ui_payload' to fix it completely.
@@ -417,19 +418,27 @@ export default function SetupAI() {
   }
 }
 
-    const handleChecklistChange = (index: number, newValue: any) => {
-    const updated = checklistData.map((item, i) =>
-      i === index ? { ...item, value: newValue } : item
-    );
+const handleChecklistChange = (index: number, newValue: any) => {
+  const updated = checklistData.map((item, i) =>
+    i === index ? { ...item, value: newValue } : item
+  );
 
-    setChecklistData(updated);
+  setChecklistData(updated);
 
-    // Keep eventData in sync so other pages can read updated ui_payload
-    setEventData({
-      ...(eventData || {}),
-      ui_payload: updated
-    });
-  };
+  setEventData({
+    ...(eventData || {}),
+    ui_payload: updated
+  });
+
+  // Scroll to updated field
+  setTimeout(() => {
+    const el = itemRefs.current[index];
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, 50);
+};
+
 
 
   return (
@@ -545,13 +554,14 @@ export default function SetupAI() {
               </div>
             ) : (
               checklistData.map((item, idx) => (
-                <EditableField
-                  key={idx}
-                  label={item.label}
-                  value={item.value}
-                  type={item.type}
-                  onChange={(newVal) => handleChecklistChange(idx, newVal)}
-                />
+                <div key={idx} ref={(el) => { itemRefs.current[idx] = el; }}>
+                  <EditableField
+                    label={item.label}
+                    value={item.value}
+                    type={item.type}
+                    onChange={(newVal) => handleChecklistChange(idx, newVal)}
+                  />
+                </div>
               ))
             )}
           </div>
