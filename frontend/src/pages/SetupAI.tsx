@@ -333,18 +333,6 @@ export default function SetupAI() {
     el.scrollTop = el.scrollHeight;
   }, [messages, thinking]);
 
-  useEffect(() => {
-  const el = previewContainerRef.current;
-  if (!el) return;
-  el.scrollTop = el.scrollHeight;
-}, [checklistData]);
-
-    useEffect(() => {
-    const el = previewContainerRef.current;
-    if (!el) return;
-    el.scrollTop = el.scrollHeight;
-  }, [checklistData]);
-
   // --- 1. HANDLE FILE SELECT (Triggers Auto-Send) ---
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
      if (thinking) {
@@ -427,15 +415,26 @@ const handleChecklistChange = (index: number, newValue: any) => {
 
   setEventData({
     ...(eventData || {}),
-    ui_payload: updated
+    ui_payload: updated,
   });
 
-  // Scroll to updated field
+  // Scroll the checklist to the edited item (up or down)
   setTimeout(() => {
-    const el = itemRefs.current[index];
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+    const container = previewContainerRef.current;
+    const target = itemRefs.current[index];
+    if (!container || !target) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+
+    const offset = targetRect.top - containerRect.top;
+    const targetScrollTop =
+      container.scrollTop + offset - container.clientHeight / 2 + target.clientHeight / 2;
+
+    container.scrollTo({
+      top: targetScrollTop,
+      behavior: "smooth",
+    });
   }, 50);
 };
 
