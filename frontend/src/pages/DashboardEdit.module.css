@@ -1,0 +1,257 @@
+/* Page Title */
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #fff;
+}
+
+/* Tab Navigation */
+.tabs {
+  display: flex;
+  gap: 2rem;
+  border-bottom: 1px solid #334155;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.tab {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.tab:hover {
+  color: #e2e8f0;
+}
+
+.tabActive {
+  /* Shared styles from .tab manually applied to fix 'composes' error */
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  position: relative;
+  transition: color 0.2s;
+
+  /* Active specific styles */
+  color: #4ade80; /* Green accent */
+  font-weight: 600;
+}
+
+.tabActive::after {
+  content: "";
+  position: absolute;
+  bottom: -0.55rem; /* Aligns with border-bottom */
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #4ade80;
+}
+
+/* Tab Content Area */
+.tabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-height: 300px; /* Prevents layout jump */
+}
+
+/* Form Fields */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.select,
+.textarea {
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  color: #fff;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: #4ade80;
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2); /* Replaced 'ring' */
+}
+
+/* Athlete Import Section */
+.importRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.importButton {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  color: #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.importButton:hover {
+  background-color: #334155;
+  border-color: #94a3b8;
+}
+
+.infoButtonSmall {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #334155;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.infoButtonSmall:hover {
+  background-color: #475569;
+  color: #fff;
+}
+
+/* Athlete Table */
+.athleteTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.athleteTable th {
+  text-align: left;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #64748b;
+  border-bottom: 1px solid #334155;
+}
+
+.athleteTable td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #1e293b;
+}
+
+.athleteInput {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #fff;
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.athleteInput:focus {
+  background-color: #0f172a;
+  border-color: #4ade80;
+  outline: none;
+}
+
+.addAthleteButton {
+  background: none;
+  border: 1px dashed #334155;
+  color: #94a3b8;
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.addAthleteButton:hover {
+  border-color: #4ade80;
+  color: #4ade80;
+  background-color: rgba(74, 222, 128, 0.05);
+}
+
+/* Action Buttons (Bottom) */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #1e293b;
+}
+
+/* Modal Overlay */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modalContent {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.modalTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.closeButton {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  color: #fff;
+}

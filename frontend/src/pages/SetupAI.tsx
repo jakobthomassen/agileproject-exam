@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEventSetup } from "../context/EventSetupContext";
-import ReactMarkdown from 'react-markdown';
-import { 
-  MapPin, Calendar, Clock, Type, Hash, HelpCircle, 
-  Loader2, Paperclip
-} from 'lucide-react'; 
+import ReactMarkdown from "react-markdown";
+import {
+  MapPin, Calendar, Clock, Type, Hash, HelpCircle,
+  Loader2, Paperclip, Pencil
+} from 'lucide-react';
 
 // Components
 import { PageContainer } from "../components/layout/PageContainer";
@@ -20,29 +21,334 @@ import styles from "./SetupAI.module.css";
 
 // Types
 type ChatMessage = { sender: "user" | "assistant"; text: string };
-type ChecklistItem = { label: string; value: any; type: string };
+
+type SidebarItem = {
+  key: string;
+  label: string;
+  value: any;
+  component: string;
+  type?: string; // Support both component and type
+};
+
+type APIResponse = {
+  message: string;
+  ui_payload: SidebarItem[];
+  event_id?: number;
+  type?: string;
+};
 
 const ICON_MAP: Record<string, React.ReactNode> = {
-  text: <Type size={16} />,
-  number: <Hash size={16} />,
-  date: <Calendar size={16} />,
-  time: <Clock size={16} />,
-  location: <MapPin size={16} />
+  text: <Type size={14} />,
+  number: <Hash size={14} />,
+  date: <Calendar size={14} />,
+  time: <Clock size={14} />,
+  location: <MapPin size={14} />,
 };
+
+const PLACEHOLDER_MAP: Record<string, string> = {
+  event: "Click to add event name",
+  date: "Click to set date",
+  time: "Click to set time",
+  location: "Click to set location",
+  description: "Click to add description",
+  default: "Click to add value",
+};
+
+function getPlaceholder(label: string, type: string): string {
+  const key = label.toLowerCase();
+  if (PLACEHOLDER_MAP[key]) return PLACEHOLDER_MAP[key];
+  if (PLACEHOLDER_MAP[type]) return PLACEHOLDER_MAP[type];
+  return PLACEHOLDER_MAP.default;
+}
+
+/**
+ * EditableField - A clean, modern editable field component
+ * Displays a label and value, switches to input on click
+ */
+function EditableField({
+  label,
+  value,
+  type,
+  onChange
+}: {
+  label: string;
+  value: any;
+  type: string;
+  onChange?: (val: any) => void;
+}) {
+  const Icon = ICON_MAP[type] || <HelpCircle size={14} />;
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState<string>(value ?? "");
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Sync local state when external value changes
+  useEffect(() => {
+    if (!isEditing) {
+      setDraft(value ?? "");
+    }
+  }, [value, isEditing]);
+
+  // Focus input when entering edit mode AND ensure draft has current value
+  useEffect(() => {
+    if (isEditing) {
+      setDraft(value ?? "");
+
+      // Focus and select after a small delay to ensure value is set
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          if (type !== "date" && type !== "time") {
+            inputRef.current.select();
+          }
+        }
+      }, 10);
+    }
+  }, [isEditing, value, type]);
+
+  // Format display value nicely
+  const formatDisplayValue = (val: any): string => {
+    if (!val) return "";
+    if (type === "date") {
+      try {
+        return new Date(val).toLocaleDateString();
+      } catch {
+        return String(val);
+      }
+    }
+    return String(val);
+  };
+
+  const displayValue = formatDisplayValue(value);
+  const hasValue = value !== null && value !== undefined && value !== "";
+
+  // Determine input type
+  const getInputType = () => {
+    switch (type) {
+      case "date": return "date";
+      case "time": return "time";
+      case "number": return "number";
+      default: return "text";
+    }
+  };
+
+  const handleSave = () => {
+    if (onChange) {
+      onChange(draft);
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setDraft(value ?? "");
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && type !== "description") {
+      e.preventDefault();
+      handleSave();
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      handleCancel();
+    }
+  };
+
+  const isDescription = label.toLowerCase().includes("description");
+
+  return (
+    <div
+      className="group relative rounded-lg transition-all duration-150 cursor-pointer"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={() => {
+        if (!isEditing && onChange) {
+          setIsEditing(true);
+        }
+      }}
+      style={{
+        padding: "14px 16px",
+        marginBottom: "10px",
+        minHeight: "56px",
+        backgroundColor: isEditing
+          ? "#252a3a"
+          : isHovered
+            ? "#353b4d"
+            : "#2a2f3f",
+        border: isEditing
+          ? "1px solid #10b981"
+          : isHovered
+            ? "1px solid #4b5563"
+            : "1px solid transparent",
+        boxShadow: isHovered && !isEditing ? "0 2px 8px rgba(0,0,0,0.15)" : "none",
+      }}
+    >
+      {/* Label row */}
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-gray-400">{Icon}</span>
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          {label}
+        </span>
+
+        {/* Pencil icon on hover (only in display mode) */}
+        {!isEditing && onChange && (
+          <Pencil
+            size={14}
+            className="ml-auto transition-all duration-150"
+            style={{
+              opacity: isHovered ? 0.8 : 0,
+              color: isHovered ? "#10b981" : "#6b7280",
+            }}
+          />
+        )}
+      </div>
+
+      {/* Value / Input */}
+      {!isEditing ? (
+        <div className="min-h-[28px] flex items-center">
+          {hasValue ? (
+            <span className="text-base font-medium text-gray-100">{displayValue}</span>
+          ) : (
+            <span className="text-gray-500 italic text-sm">
+              {getPlaceholder(label, type)}
+            </span>
+          )}
+        </div>
+      ) : (
+        <div onClick={(e) => e.stopPropagation()}>
+          {isDescription ? (
+            <textarea
+              ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+              className="
+                w-full rounded-md px-4 py-3 text-base
+                !text-white !opacity-100 caret-emerald-400
+                border border-gray-500
+                focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400
+                placeholder:text-gray-400
+              "
+              style={{
+                backgroundColor: '#2c3140',
+                height: '12rem',
+                resize: 'none',
+                overflow: 'auto',
+                color: '#ffffff',
+              }}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyDown}
+              placeholder={getPlaceholder(label, type)}
+            />
+          ) : type === "date" || type === "time" ? (
+            // Special styling for date/time inputs
+            <div className="flex items-center gap-2">
+              <div className="flex-1 relative">
+                <input
+                  ref={inputRef as React.RefObject<HTMLInputElement>}
+                  type={getInputType()}
+                  className="
+                    w-full rounded-md px-4 py-3 text-base
+                    !text-white !opacity-100 caret-emerald-400
+                    border border-gray-500
+                    focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400
+                    cursor-pointer
+                  "
+                  style={{
+                    backgroundColor: '#2c3140',
+                    minHeight: '48px',
+                    colorScheme: 'dark',
+                    color: '#ffffff',
+                  }}
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onBlur={handleSave}
+                  onKeyDown={handleKeyDown}
+                />
+              </div>
+            </div>
+          ) : (
+            // Regular text/number input
+            <input
+              ref={inputRef as React.RefObject<HTMLInputElement>}
+              type={getInputType()}
+              className="
+                w-full rounded-md px-3 py-2.5 text-base
+                !text-white !opacity-100 caret-emerald-400
+                border border-gray-500
+                focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400
+                placeholder:text-gray-400
+              "
+              style={{
+                backgroundColor: '#2c3140',
+                color: '#ffffff',
+              }}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyDown}
+              placeholder={getPlaceholder(label, type)}
+            />
+          )}
+
+          {/* Helper text */}
+          <div className="flex justify-between items-center mt-2 text-xs">
+            {type === "time" ? (
+              <span className="text-gray-500">Click the input or type HH:MM</span>
+            ) : type === "date" ? (
+              <span className="text-gray-500">Click to open date picker</span>
+            ) : (
+              <span></span>
+            )}
+            <span className="text-gray-500">
+              Enter to save · Esc to cancel
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function SetupAI() {
   const navigate = useNavigate();
+  const { eventId } = useParams();
   const { eventData, setEventData } = useEventSetup();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([{ sender: "assistant", text: "Hi! Describe your event" }]);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { sender: "assistant", text: "Hi! Describe your event" },
+  ]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // NOTE: If you haven't updated EventData interface yet, this might still show red.
-  // Update src/context/EventSetupContext.tsx to include 'ui_payload' to fix it completely.
-  const [checklistData, setChecklistData] = useState<ChecklistItem[]>(eventData?.ui_payload || []);
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // --- Restore History on Mount ---
+  useEffect(() => {
+    async function loadHistory() {
+      if (!eventId) return; // No ID = New Event = No History
+
+      try {
+        console.log(`Restoring history for Event ${eventId}...`);
+        const res = await axios.get(`${API_URL}/api/events/${eventId}/history`);
+        const history = res.data;
+
+        if (Array.isArray(history) && history.length > 0) {
+          setMessages(history);
+        }
+      } catch (e) {
+        console.error("Failed to load history", e);
+      }
+    }
+
+    loadHistory();
+  }, [eventId]);
+
+  const [checklistData, setChecklistData] = useState<SidebarItem[]>(
+    eventData?.ui_payload || []
+  );
 
   useEffect(() => {
     if (eventData?.ui_payload) {
@@ -50,20 +356,27 @@ export default function SetupAI() {
     }
   }, [eventData]);
 
-  // --- 1. HANDLE FILE SELECT (Triggers Auto-Send) ---
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    const el = chatContainerRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages, thinking]);
+
+  // --- HANDLE FILE SELECT (Triggers Auto-Send) ---
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.name.toLowerCase().endsWith('.csv')) {
+      if (!file.name.toLowerCase().endsWith(".csv")) {
         alert("Only CSV files are allowed.");
         return;
       }
       sendMessage(file);
-      e.target.value = ""; 
+      e.target.value = "";
     }
   };
 
-  // --- 2. SEND MESSAGE (Accepts optional file) ---
+  // --- SEND MESSAGE (Accepts optional file) ---
   async function sendMessage(fileToUpload?: File) {
     const text = input.trim();
     if (!text && !fileToUpload) return;
@@ -73,33 +386,98 @@ export default function SetupAI() {
       userMessageText = `📄 Uploaded file: **${fileToUpload.name}**`;
     }
 
-    const newMessages: ChatMessage[] = [...messages, { sender: "user", text: userMessageText }];
+    const newMessages: ChatMessage[] = [
+      ...messages,
+      { sender: "user", text: userMessageText },
+    ];
     setMessages(newMessages);
-    
+
     setInput("");
     setThinking(true);
 
     try {
-      const formData = new FormData();
-      formData.append("messages_json", JSON.stringify(newMessages.map(m => ({ role: m.sender, content: m.text }))));
-      formData.append("known_fields_json", JSON.stringify(eventData || {}));
+      // Resolve ID (From URL or Context)
+      let currentId = eventId ? parseInt(eventId) : (eventData.id ? Number(eventData.id) : null);
+      if (Number.isNaN(currentId)) currentId = null;
 
+      // If file is provided, upload it first, then process
       if (fileToUpload) {
-        formData.append("file", fileToUpload);
+        if (!currentId) {
+          alert("Please create an event first before uploading files.");
+          return;
+        }
+
+        // Step 1: Upload file to server (saves to uploads/{event_id}/)
+        const formData = new FormData();
+        formData.append('file', fileToUpload);
+
+        const uploadRes = await axios.post(
+          `${API_URL}/api/events/${currentId}/upload-file`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+
+        // Step 2: Process the uploaded file
+        const processRes = await axios.post<APIResponse>(
+          `${API_URL}/api/events/${currentId}/process-file`,
+          { filename: uploadRes.data.filename },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        var data = processRes.data;
+      } else {
+        // Regular JSON payload (no file)
+        const payload = {
+          message: text || "Processed file",
+          event_id: currentId
+        };
+
+        // Call API
+        const res = await axios.post<APIResponse>(`${API_URL}/api/chat`, payload);
+        var data = res.data;
       }
 
-      const res = await axios.post("http://localhost:8000/ai/extract", formData);
-      const data = res.data;
+      console.log("API Response:", {
+        event_id: data.event_id,
+        ui_payload_length: data.ui_payload?.length || 0,
+        ui_payload: data.ui_payload
+      });
 
-      // --- FIX: Spread object directly instead of using a function ---
-      setEventData({ ...eventData, ...data });
-
-      if (data.ui_payload && Array.isArray(data.ui_payload)) {
-        setChecklistData(data.ui_payload);
-      }
-
+      // Handle Response
       if (data.message) {
         setMessages(prev => [...prev, { sender: "assistant", text: data.message }]);
+      }
+
+      if (data.event_id) {
+        console.log("Updating state with event_id:", data.event_id);
+        const updated = {
+          ...eventData,
+          id: data.event_id,
+          ui_payload: data.ui_payload ?? []
+        };
+        console.log("Updated eventData:", updated);
+        setEventData(updated);
+
+        // Update URL without navigation
+        if (!eventId) {
+          const newUrl = `/event/${data.event_id}/setup/ai`;
+          window.history.replaceState(null, "", newUrl);
+        }
+      }
+
+      if (data.ui_payload && Array.isArray(data.ui_payload)) {
+        console.log("Updating ui_payload:", data.ui_payload);
+        setEventData({
+          ...eventData,
+          ui_payload: data.ui_payload
+        });
       }
 
     } catch (error) {
@@ -110,70 +488,156 @@ export default function SetupAI() {
     }
   }
 
+  const handleChecklistChange = async (index: number, newValue: any) => {
+    const item = checklistData[index];
+    if (!item) return;
+
+    const updated = checklistData.map((item, i) =>
+      i === index ? { ...item, value: newValue } : item
+    );
+
+    setChecklistData(updated);
+
+    setEventData({
+      ...(eventData || {}),
+      ui_payload: updated
+    });
+
+    // Save to database if event exists
+    const currentId = eventId ? parseInt(eventId) : (eventData.id ? Number(eventData.id) : null);
+    if (currentId && !Number.isNaN(currentId)) {
+      try {
+        await axios.patch(
+          `${API_URL}/api/events/${currentId}/sidebar-field`,
+          {
+            field_key: item.key || item.label,
+            field_value: newValue
+          }
+        );
+        console.log(`Saved ${item.label} update to database`);
+      } catch (error) {
+        console.error("Failed to save sidebar edit:", error);
+        // Fail silently - local state already updated
+      }
+    }
+  };
+
+  // --- NAVIGATION LOGIC ---
+  const handleContinue = () => {
+    // 1. Priority: URL Param (Editing existing event)
+    if (eventId) {
+      navigate(`/event/${eventId}/setup/summary`);
+      return;
+    }
+
+    // 2. Priority: Context ID
+    if (eventData.id) {
+      navigate(`/event/${eventData.id}/setup/summary`);
+      return;
+    }
+
+    // 3. Priority: Search List
+    const list = eventData.ui_payload || [];
+    const idItem = list.find(item => item.key === "id" || item.label.toLowerCase() === "id");
+
+    if (idItem?.value) {
+      navigate(`/event/${idItem.value}/setup/summary`);
+      return;
+    }
+
+    // 4. Fallback
+    console.warn("No ID found, redirecting to generic summary");
+    navigate("/setup/summary");
+  };
+
+  const getFieldType = (item: SidebarItem): string => {
+    return item.type || item.component || "text";
+  };
+
   return (
     <PageContainer kind='solid' maxWidth={1200}>
       <div className={styles.pageInner}>
-        <BackButton to="/setup/method">Back</BackButton>
+        <BackButton to={eventId ? `/event/${eventId}/setup/method` : "/setup/method"}>
+          Back
+        </BackButton>
+
         <SetupPageHeader title="AI Assisted Setup" description="Chat with the agent to configure your event." />
 
         <TwoColumn>
           {/* Chat Panel */}
           <Card padding={16}>
             <div className={styles.chatPanel}>
-              <div className={styles.chatMessages}>
+              <div className={styles.chatMessages} ref={chatContainerRef}>
                 {messages.map((m, i) => (
-                  <div key={i} className={`${styles.chatRow} ${m.sender === "user" ? styles.chatRowUser : styles.chatRowAssistant}`}>
-                    <span className={m.sender === "user" ? styles.chatBubbleUser : styles.chatBubbleAssistant}>
+                  <div
+                    key={i}
+                    className={`${styles.chatRow} ${m.sender === "user"
+                        ? styles.chatRowUser
+                        : styles.chatRowAssistant
+                      }`}
+                  >
+                    <span
+                      className={
+                        m.sender === "user"
+                          ? styles.chatBubbleUser
+                          : styles.chatBubbleAssistant
+                      }
+                    >
                       <ReactMarkdown>{m.text}</ReactMarkdown>
                     </span>
                   </div>
                 ))}
                 {thinking && (
                   <div className={styles.thinkingRow}>
-                    <Loader2 className="animate-spin text-green-400" size={18} />
-                    <span className="ml-2 text-gray-400 text-sm">Thinking...</span>
+                    <Loader2
+                      className='animate-spin text-green-400'
+                      size={18}
+                    />
+                    <span className='ml-2 text-gray-400 text-sm'>
+                      Thinking...
+                    </span>
                   </div>
                 )}
               </div>
 
               {/* Input Row */}
               <div className={styles.chatInputRow}>
-                
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  accept=".csv,text/csv" 
-                  className="hidden" 
-                  style={{ display: 'none' }}
+                <input
+                  type='file'
+                  ref={fileInputRef}
+                  accept='.csv,text/csv'
+                  className='hidden'
+                  style={{ display: "none" }}
                   onChange={handleFileSelect}
                 />
 
-                {/* --- UPLOAD BUTTON: NOW USES <Button> --- */}
-                <Button 
+                {/* Upload Button */}
+                <Button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={thinking}
-                  title="Upload CSV"
-                  // Overriding styles to keep it square and icon-centered
+                  title='Upload CSV'
                   style={{
                     padding: 0,
-                    width: '42px',       
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
+                    width: "42px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
                   }}
                 >
-                  <Paperclip size={20} /> 
+                  <Paperclip size={20} />
                 </Button>
 
-                <TextInput 
-                  value={input} 
-                  onChange={(e) => setInput(e.target.value)} 
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage()} 
-                  placeholder='Type here...' 
+                <TextInput
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                  placeholder='Type here...'
                 />
-                
-                <Button onClick={() => sendMessage()} disabled={thinking}>Send</Button>
+
+                <Button onClick={() => sendMessage()} disabled={thinking}>
+                  Send
+                </Button>
               </div>
             </div>
           </Card>
@@ -182,25 +646,30 @@ export default function SetupAI() {
           <Card padding={16}>
             <div className={styles.checklistCardInner}>
               <h3 className={styles.checklistHeading}>Event Details</h3>
-              
-              <div className="space-y-0 mb-4">
-                {(!checklistData || checklistData.length === 0) ? (
-                   <div className="text-gray-500 italic text-sm py-4 text-center">
-                     Details will appear here...
-                   </div>
+
+              <div className='space-y-1'>
+                {!checklistData || checklistData.length === 0 ? (
+                  <div className='text-slate-500 italic text-sm py-8 text-center rounded-lg bg-slate-800/20'>
+                    Event details will appear here as you chat with the AI...
+                  </div>
                 ) : (
-                  checklistData.map((field, index) => (
-                    <DynamicCheckRow 
-                      key={`${field.label}-${index}`} 
-                      label={field.label} 
-                      value={field.value} 
-                      type={field.type} 
+                  checklistData.map((item, idx) => (
+                    <EditableField
+                      key={item.key || `${item.label}-${idx}`}
+                      label={item.label}
+                      value={item.value}
+                      type={getFieldType(item)}
+                      onChange={(newVal) => handleChecklistChange(idx, newVal)}
                     />
                   ))
                 )}
               </div>
-              
-              <Button fullWidth onClick={() => navigate("/setup/summary")} className={styles.checklistContinueButton}>
+
+              <Button
+                fullWidth
+                onClick={handleContinue}
+                className={styles.checklistContinueButton}
+              >
                 Continue
               </Button>
             </div>
@@ -208,27 +677,5 @@ export default function SetupAI() {
         </TwoColumn>
       </div>
     </PageContainer>
-  );
-}
-
-// Helper Component: Timecard Style
-function DynamicCheckRow({ label, value, type }: { label: string; value: any; type: string }) {
-  const Icon = ICON_MAP[type] || <HelpCircle size={16} />;
-
-  let displayValue = value;
-  if (type === 'date' && value) {
-    try { displayValue = new Date(value).toLocaleDateString(); } catch (e) {}
-  }
-
-  return (
-    <div className="flex justify-between items-start py-3 border-b border-gray-800 last:border-0 group hover:bg-gray-800/50 transition-colors px-2 rounded-sm">
-      <div className="flex items-center gap-3 text-gray-500 mt-0.5">
-        <span className="text-gray-600 group-hover:text-green-400 transition-colors">{Icon}</span>
-        <span className="text-xs font-bold uppercase tracking-wider opacity-80">{label}</span>
-      </div>
-      <div className="text-white text-sm font-medium text-right max-w-[60%] leading-snug">
-        {displayValue ? <span className="break-words">{String(displayValue)}</span> : <span className="text-gray-700 text-xs italic">--</span>}
-      </div>
-    </div>
   );
 }

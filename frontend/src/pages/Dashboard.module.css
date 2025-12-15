@@ -23,65 +23,140 @@
 
 .tableWrapper {
   width: 100%;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-strong);
+  border-radius: 8px; /* replaced var(--radius-md) for safety */
+  border: 1px solid #334155; /* replaced var(--color-border-strong) */
   overflow: hidden;
 }
 
 .emptyState {
   padding: 20px;
   text-align: center;
+  color: #64748b;
 }
 
+/* --------------------------------------------------------- */
+/* GRID LAYOUT                                               */
+/* --------------------------------------------------------- */
 .tableHeader,
 .tableRow {
   display: grid;
-  grid-template-columns: 180px 140px 120px 120px 130px 100px 120px 100px;
+  /* We have 8 columns: 
+     Event (flexible) | Format | Status | Location | Date | Participants | Code | Actions 
+  */
+  grid-template-columns: minmax(180px, 1fr) 100px 120px 150px 140px 110px 120px 80px;
   padding: 12px 16px;
   align-items: center;
   font-size: 14px;
+  gap: 12px;
+  align-content: center;
 }
 
 .tableHeader {
-  background: var(--color-surface);
+  background: #0f172a; /* replaced var(--color-surface) */
   font-weight: 600;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #334155;
+}
+
+.tableHeader > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tableHeader > span:first-child {
+  justify-content: flex-start; /* Event name stays left-aligned */
+}
+
+/* Center all columns except Event (first column) */
+.tableHeader > span:not(:first-child) {
+  text-align: center;
 }
 
 .tableRow {
   border-top: 1px solid #1e293b;
+  color: #e2e8f0;
+}
+
+/* Center all columns except Event (first column) */
+.tableRow > span:not(:first-child) {
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tableRow > span:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Event name stays left-aligned */
+}
+
+.tableRow:hover {
+  background-color: #1e293b;
 }
 
 .eventNameLink {
   color: #7dd3fc;
   cursor: pointer;
+  font-weight: 500;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-width: 0; /* Allows text to wrap/truncate properly in grid */
 }
 
+.eventNameLink:hover {
+  text-decoration: underline;
+}
+
+/* --------------------------------------------------------- */
+/* ACTIONS                                                   */
+/* --------------------------------------------------------- */
 .actionsRow {
   display: flex;
+  justify-content: center; /* Center the action buttons */
   gap: 10px;
 }
 
 .actionEdit {
   color: #38bdf8;
   cursor: pointer;
+  font-weight: 500;
+}
+
+.actionEdit:hover {
+  text-decoration: underline;
 }
 
 .actionDelete {
   color: #f87171;
   cursor: pointer;
+  opacity: 0.8;
 }
 
+.actionDelete:hover {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------- */
+/* STATUS BUBBLE                                             */
+/* --------------------------------------------------------- */
 .statusBubble {
   color: #0f172a;
   padding: 2px 10px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   width: fit-content;
+  text-transform: uppercase;
+  margin: 0 auto; /* Center the bubble within its column */
 }
 
-/* MODAL SHELL ONLY */
-
+/* --------------------------------------------------------- */
+/* MODAL                                                     */
+/* --------------------------------------------------------- */
 .modalBackdrop {
   position: fixed;
   inset: 0;
@@ -90,15 +165,20 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(2px);
 }
 
 .modalCard {
   width: 560px;
   max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modalActions {
   display: flex;
   justify-content: flex-end;
   margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #334155;
 }

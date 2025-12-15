@@ -1,8 +1,11 @@
 from ..DTOs.eventstate import EventState
- # All functions must have an input and output, even if empty failure to do so will cause errors in Gemini tool calling
 
+# All tool functions must have input and output parameters for Gemini tool calling compatibility
 
-def participant_notifier(state: EventState, reason: str="event creation") -> str: # A mock function to simulate notifying participants
+def participant_notifier(state: EventState, reason: str="event creation") -> str:
+    """
+    Mock function for participant notifications.
+    """
     """
     Notifies all participants about important updates or events.
     Returns a success message.
@@ -11,8 +14,6 @@ def participant_notifier(state: EventState, reason: str="event creation") -> str
         reason (str): The reason for notification. Defaults to "event creation".
     """
     return "Participants notified successfully"
-
-# src/agent/tools.py
 
 def update_event_details(state: EventState, 
                          event_name: str = None, 
@@ -56,7 +57,7 @@ def event_state_resetter(state: EventState) -> str:
     Resets the event state to its initial empty state.
 
     Args:
-        event_state (EventState): The current event state to be reset. meaning new event
+        event_state (EventState): The current event state to be reset (creates new event)
 
     Returns:
         str: A message indicating the reset status.

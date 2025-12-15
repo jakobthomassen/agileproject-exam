@@ -19,6 +19,9 @@ pip-wheel-metadata/
 *.db
 *.db-journal
 
+# Uploads
+uploads/
+
 # Virtual environment names
 **/.env
 */.env
