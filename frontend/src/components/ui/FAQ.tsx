@@ -12,6 +12,19 @@ const FAQS: FAQItem[] = [
       "Peers can support structured events like hackathons, pitch competitions, case competitions, talent shows and similar formats.",
   },
   {
+    question: "How long does it take to set up an event?",
+    answer: "Most organizers can create a basic event in 5–10 minutes. If you have many athletes or heats, expect a bit more time for importing and double-checking details.",
+  },
+  {
+    question: "Do I need to finish everything before the event starts?",
+    answer: "You should complete the core setup (athletes, rounds, and scoring format) before the event. You can still tweak labels, weights, and some settings while the event is live.",
+  },
+  {
+    question: "Which voting format should I choose?",
+    answer:
+      "Use Poll for quick single-choice votes, Battle for head-to-head matchups where the crowd picks the winner, and Ranking when you want a full ordered list of athletes from best to worst.",
+  },
+  {
     question: "How does judge vs audience scoring work?",
     answer:
       "You can combine judge and audience votes by giving each group a weight. Judges might count for 70 percent and the audience for 30 percent.",
@@ -151,10 +164,6 @@ export default function FAQWidget() {
                 );
               })}
             </div>
-
-            <p style={{ color: "#888", marginTop: "8px" }}>
-              To create an event, click <b>Get started</b>.
-            </p>
           </div>
         </div>
       )}
