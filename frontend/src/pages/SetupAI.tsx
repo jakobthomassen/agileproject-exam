@@ -312,6 +312,7 @@ export default function SetupAI() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
+  const previewContainerRef = useRef<HTMLDivElement | null>(null);
   
   // NOTE: If you haven't updated EventData interface yet, this might still show red.
   // Update src/context/EventSetupContext.tsx to include 'ui_payload' to fix it completely.
@@ -330,6 +331,12 @@ export default function SetupAI() {
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [messages, thinking]);
+
+    useEffect(() => {
+    const el = previewContainerRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [checklistData]);
 
   // --- 1. HANDLE FILE SELECT (Triggers Auto-Send) ---
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -521,12 +528,11 @@ export default function SetupAI() {
             </div>
           </Card>
 
-          {/* Checklist Panel */}
-          <Card padding={16}>
-            <div className={styles.checklistCardInner}>
-              <h3 className={styles.checklistHeading}>Event Details</h3>
-
-              <div className='space-y-1'>
+      {/* Checklist Panel */}
+                    <div
+                ref={previewContainerRef}
+                className={`${styles.checklistScroll} space-y-1`}
+              >
                 {!checklistData || checklistData.length === 0 ? (
                   <div className='text-slate-500 italic text-sm py-8 text-center rounded-lg bg-slate-800/20'>
                     Event details will appear here as you chat with the AI...
@@ -542,20 +548,19 @@ export default function SetupAI() {
                     />
                   ))
                 )}
-              </div>
+              </div>  
 
-<Button
-                fullWidth
-                onClick={() => navigate("/setup/summary")}
-                className={styles.checklistContinueButton}
-              >
-                Continue
-              </Button>
-            </div>
-          </Card>
-        </TwoColumn>
-      </div>
-    </PageContainer>
+
+    <Button
+      fullWidth
+      onClick={() => navigate("/setup/summary")}
+      className={styles.checklistContinueButton}
+    >
+      Continue
+    </Button>
+    </TwoColumn>
+  </div>
+</PageContainer>
   );
 }
 
