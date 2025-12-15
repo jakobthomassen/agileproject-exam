@@ -459,7 +459,12 @@ export default function SetupAI() {
     if (data.ui_payload && Array.isArray(data.ui_payload)) {
       pendingAiScrollRef.current = true; // Flag to trigger auto-scroll
       setChecklistData(data.ui_payload);
+      
+      setLastUpdatedIndex(
+        data.ui_payload.length ? data.ui_payload.length - 1 : null
+      );
     }
+
 
     if (data.message) {
       setMessages(prev => [...prev, { sender: "assistant", text: data.message }]);
@@ -482,32 +487,15 @@ const handleChecklistChange = (index: number, newValue: any) => {
 
   setChecklistData(updated);
 
+  // Keep eventData in sync so other pages can read updated ui_payload
   setEventData({
     ...(eventData || {}),
-    ui_payload: updated,
+    ui_payload: updated
   });
 
-  // Scroll the checklist to the edited item (up or down)
-  setTimeout(() => {
-    const container = previewContainerRef.current;
-    const target = itemRefs.current[index];
-    if (!container || !target) return;
-
-    const containerRect = container.getBoundingClientRect();
-    const targetRect = target.getBoundingClientRect();
-
-    const offset = targetRect.top - containerRect.top;
-    const targetScrollTop =
-      container.scrollTop + offset - container.clientHeight / 2 + target.clientHeight / 2;
-
-    container.scrollTo({
-      top: targetScrollTop,
-      behavior: "smooth",
-    });
-  }, 50);
+  // Mark this as the "newest" edited field so we scroll to it
+  setLastUpdatedIndex(index);
 };
-
-
 
   return (
     <PageContainer kind='solid' maxWidth={1200}>
@@ -607,52 +595,47 @@ const handleChecklistChange = (index: number, newValue: any) => {
           </Card>
 
 {/* Checklist Panel */}
-      {/* Checklist Panel */}
-      <Card padding={16}>
-        <div className={styles.checklistPanel}>
-          <h3 className={styles.checklistHeading}>Event Details</h3>
+          <Card padding={16}>
+            <div className={styles.checklistPanel}>
+              <h3 className={styles.checklistHeading}>Event Details</h3>
 
-          <div
-            ref={previewContainerRef}
-            className={`${styles.checklistScroll} space-y-1`}
-          >
-            {!checklistData || checklistData.length === 0 ? (
-              <div className='text-slate-500 italic text-sm py-8 text-center rounded-lg bg-slate-800/20'>
-                Event details will appear here as you chat with the AI...
+              <div
+                ref={previewContainerRef}
+                className={`${styles.checklistScroll} space-y-1`}
+              >
+                {!checklistData || checklistData.length === 0 ? (
+                  <div className='text-slate-500 italic text-sm py-8 text-center rounded-lg bg-slate-800/20'>
+                    Event details will appear here as you chat with the AI...
+                  </div>
+                ) : (
+                  checklistData.map((item, idx) => (
+                    <div
+                      key={idx}
+                      ref={(el) => {
+                        itemRefs.current[idx] = el;
+                      }}
+                    >
+                      <EditableField
+                        label={item.label}
+                        value={item.value}
+                        type={item.type}
+                        onChange={(newVal) => handleChecklistChange(idx, newVal)}
+                      />
+                    </div>
+                  ))
+                )}
               </div>
-            ) : (
-              checklistData.map((item, idx) => (
-                <div key={idx} ref={(el) => { itemRefs.current[idx] = el; }}>
-                  <EditableField
-                    label={item.label}
-                    value={item.value}
-                    type={item.type}
-                    onChange={(newVal) => handleChecklistChange(idx, newVal)}
-                  />
-                </div>
-              ))
-            )}
-          </div>
 
-          <Button
-            fullWidth
-            onClick={() => navigate("/setup/summary")}
-            className={styles.checklistContinueButton}
-          >
-            Continue
-          </Button>
-        </div>
-      </Card>
-
-
-    <Button
-      fullWidth
-      onClick={() => navigate("/setup/summary")}
-      className={styles.checklistContinueButton}
-    >
-      Continue
-    </Button>
-    </TwoColumn>
+              <Button
+                fullWidth
+                onClick={() => navigate("/setup/summary")}
+                className={styles.checklistContinueButton}
+              >
+                Continue
+              </Button>
+            </div>
+          </Card>
+        </TwoColumn>
   </div>
 </PageContainer>
   );
