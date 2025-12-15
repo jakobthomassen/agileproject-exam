@@ -188,3 +188,29 @@ html, body, #root {
   font-weight: 600;
 }
 
+/* Global scrollbar styling: applies to every scrollable element */
+
+* {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(20, 40, 120, 0.65) transparent;
+}
+
+/* WebKit (Chrome, Edge, etc.) */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px; /* for horizontal scrollbars */
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(20, 40, 120, 0.55);
+  border-radius: 999px;
+  border: 1px solid rgba(10, 15, 30, 0.85);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(35, 70, 160, 0.75);
+}
