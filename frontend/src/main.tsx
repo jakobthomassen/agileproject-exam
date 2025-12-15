@@ -5,6 +5,7 @@ import App from "./App.tsx";
 import "./index.css";
 import "./styles/theme.css"
 import { EventSetupProvider } from "./context/EventSetupContext";
+import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
