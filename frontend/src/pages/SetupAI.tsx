@@ -333,6 +333,10 @@ export default function SetupAI() {
 
   // --- 1. HANDLE FILE SELECT (Triggers Auto-Send) ---
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+     if (thinking) {
+    e.target.value = "";
+    return;
+  }
     const file = e.target.files?.[0];
     if (file) {
       if (!file.name.toLowerCase().endsWith(".csv")) {
@@ -346,75 +350,59 @@ export default function SetupAI() {
 
   // --- 2. SEND MESSAGE (Accepts optional file) ---
   async function sendMessage(fileToUpload?: File) {
-    const text = input.trim();
-    if (!text && !fileToUpload) return;
+    if (thinking) return;
 
-    let userMessageText = text;
-    if (fileToUpload) {
-      userMessageText = `📄 Uploaded file: **${fileToUpload.name}**`;
-    }
+  const text = input.trim();
+  if (!text && !fileToUpload) return;
 
-    const newMessages: ChatMessage[] = [
-      ...messages,
-      { sender: "user", text: userMessageText },
-    ];
-    setMessages(newMessages);
-
-    setInput("");
-    setThinking(true);
-
-    try {
-      const formData = new FormData();
-      formData.append(
-        "messages_json",
-        JSON.stringify(
-          newMessages.map((m) => ({ role: m.sender, content: m.text }))
-        )
-      );
-      formData.append("known_fields_json", JSON.stringify(eventData || {}));
-
-      if (fileToUpload) {
-        formData.append("file", fileToUpload);
-      }
-
-      const res = await axios.post(
-        "http://localhost:8000/ai/extract",
-        formData
-      );
-      const data = res.data;
-
-      // --- FIX: Spread object directly instead of using a function ---
-      setEventData({ ...eventData, ...data });
-
-      if (data.ui_payload && Array.isArray(data.ui_payload)) {
-        setChecklistData(data.ui_payload);
-      }
-
-      if (data.message) {
-        setMessages((prev) => [
-          ...prev,
-          { sender: "assistant", text: data.message },
-        ]);
-      }
-    } catch (error: any) {
-      console.error("AI Request Failed:", error);
-
-      let message = "Error: Could not process request.";
-
-      if (axios.isAxiosError(error) && error.response) {
-        const status = error.response.status;
-        const detail = error.response.data?.detail;
-
-        if (status === 503 && typeof detail === "string") {
-          message = detail;
-        }
-      }
-
-      setMessages((prev) => [...prev, { sender: "assistant", text: message }]);
-    } finally {
-      setThinking(false);
-    }
+  let userMessageText = text;
+  if (fileToUpload) {
+    userMessageText = `📄 Uploaded file: **${fileToUpload.name}**`;
   }
+
+  const newMessages: ChatMessage[] = [
+    ...messages,
+    { sender: "user", text: userMessageText }
+  ];
+
+  setMessages(newMessages);
+  setInput("");
+  setThinking(true);
+
+  try {
+    const formData = new FormData();
+    formData.append(
+      "messages_json",
+      JSON.stringify(newMessages.map(m => ({ role: m.sender, content: m.text })))
+    );
+    formData.append("known_fields_json", JSON.stringify(eventData || {}));
+
+    if (fileToUpload) {
+      formData.append("file", fileToUpload);
+    }
+
+    const res = await axios.post("http://localhost:8000/ai/extract", formData);
+    const data = res.data;
+
+    setEventData({ ...(eventData || {}), ...data });
+
+    if (data.ui_payload && Array.isArray(data.ui_payload)) {
+      setChecklistData(data.ui_payload);
+    }
+
+    if (data.message) {
+      setMessages(prev => [...prev, { sender: "assistant", text: data.message }]);
+    }
+  } catch (error) {
+    console.error("AI Request Failed:", error);
+    setMessages(prev => [
+      ...prev,
+      { sender: "assistant", text: "Error: Could not process request." }
+    ]);
+  } finally {
+    setThinking(false);
+  }
+}
 
     const handleChecklistChange = (index: number, newValue: any) => {
     const updated = checklistData.map((item, i) =>
@@ -510,7 +498,14 @@ export default function SetupAI() {
                 <TextInput
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (!thinking) {
+                        sendMessage();
+                      }
+                    }
+                  }}
                   placeholder='Type here...'
                 />
 
