@@ -315,6 +315,11 @@ export default function SetupAI() {
   const previewContainerRef = useRef<HTMLDivElement | null>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   
+  // Refs for auto-scrolling sidebar to changed fields after AI updates
+  const prevChecklistDataRef = useRef<ChecklistItem[] | null>(null);
+  const hasMountedRef = useRef(false);
+  const pendingAiScrollRef = useRef(false);
+
   // NOTE: If you haven't updated EventData interface yet, this might still show red.
   // Update src/context/EventSetupContext.tsx to include 'ui_payload' to fix it completely.
   const [checklistData, setChecklistData] = useState<ChecklistItem[]>(
@@ -332,6 +337,64 @@ export default function SetupAI() {
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [messages, thinking]);
+
+  // Auto-scroll sidebar to changed fields after AI updates
+  useEffect(() => {
+    // Skip on initial mount
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      prevChecklistDataRef.current = checklistData ? [...checklistData] : null;
+      return;
+    }
+
+    // Only auto-scroll if this update came from the AI (not manual user edits)
+    if (!pendingAiScrollRef.current) {
+      prevChecklistDataRef.current = checklistData ? [...checklistData] : null;
+      return;
+    }
+    pendingAiScrollRef.current = false;
+
+    // Skip if no current data
+    if (!checklistData || checklistData.length === 0) {
+      prevChecklistDataRef.current = null;
+      return;
+    }
+
+    const prevData = prevChecklistDataRef.current;
+
+    // Find indices of fields that changed
+    const changedIndices: number[] = [];
+    checklistData.forEach((item, idx) => {
+      const prevItem = prevData?.[idx];
+      // Check if this is a new field or value changed
+      if (!prevItem || item.value !== prevItem.value) {
+        changedIndices.push(idx);
+      }
+    });
+
+    // Update ref for next comparison
+    prevChecklistDataRef.current = [...checklistData];
+
+    // If no changes detected, don't scroll
+    if (changedIndices.length === 0) return;
+
+    // Get the field furthest down in the sidebar (highest index)
+    const targetIndex = Math.max(...changedIndices);
+
+    // Use requestAnimationFrame to ensure DOM has updated before scrolling
+    requestAnimationFrame(() => {
+      const container = previewContainerRef.current;
+      const target = itemRefs.current[targetIndex];
+      if (!container || !target) return;
+
+      // Scroll so target element ends at the bottom of the visible container
+      const scrollTop = target.offsetTop + target.offsetHeight - container.clientHeight;
+      container.scrollTo({
+        top: Math.max(0, scrollTop),
+        behavior: "smooth",
+      });
+    });
+  }, [checklistData]);
 
   // --- 1. HANDLE FILE SELECT (Triggers Auto-Send) ---
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -389,6 +452,7 @@ export default function SetupAI() {
     setEventData({ ...(eventData || {}), ...data });
 
     if (data.ui_payload && Array.isArray(data.ui_payload)) {
+      pendingAiScrollRef.current = true; // Flag to trigger auto-scroll
       setChecklistData(data.ui_payload);
     }
 
