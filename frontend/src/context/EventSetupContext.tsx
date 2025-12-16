@@ -116,7 +116,20 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
       const id = match ? match[1] : null;
 
       if (!id) {
-        if (isMounted) setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+          // SAFETY: If we are on a setup page but NOT editing usage, ensure fresh state.
+          // This covers cases where user navigates back to /setup/ai from an event.
+          // We only do this if we are explicitly in a creation flow (no ID).
+          if (location.pathname.includes('/setup/')) {
+            // Optional: Careful not to wipe state if you rely on it persisting across steps 
+            // (e.g. Method -> AI). But usually Method -> AI should be fresh.
+            // For now, relying on the page components to call resetEventData() is safter,
+            // but we can add valid checks here if needed.
+            // Currently staying safe and NOT auto-wiping here to avoid fighting with SetupAI's own logic.
+            // Instead, I'll rely on SetupAI calling resetEventData().
+          }
+        }
         return;
       }
 

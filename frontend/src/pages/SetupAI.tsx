@@ -317,7 +317,7 @@ function EditableField({
 export default function SetupAI() {
   const navigate = useNavigate();
   const { eventId } = useParams();
-  const { eventData, setEventData } = useEventSetup();
+  const { eventData, setEventData, resetEventData } = useEventSetup();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -334,6 +334,7 @@ export default function SetupAI() {
   const hasMountedRef = useRef(false);
   const pendingAiScrollRef = useRef(false);
 
+  // --- Restore History OR Fetch Greeting on Mount ---
   // --- Restore History OR Fetch Greeting on Mount ---
   // --- Restore History OR Fetch Greeting on Mount ---
   useEffect(() => {
@@ -354,15 +355,15 @@ export default function SetupAI() {
       } else {
         // New Event: START FRESH
         // Critical: Clear any lingering context from previous sessions
-        setEventData({} as any);
+        resetEventData();
+        setMessages([]); // Ensure messages are cleared locally too
 
         // Setup initial greeting
         try {
-          if (messages.length === 0) {
-            setThinking(true);
-            const res = await axios.get(`${API_URL}/api/chat/greeting`);
-            setMessages([{ sender: "assistant", text: res.data.message }]);
-          }
+          // Only fetch greeting if we don't have messages (which we just cleared, but good for safety)
+          setThinking(true);
+          const res = await axios.get(`${API_URL}/api/chat/greeting`);
+          setMessages([{ sender: "assistant", text: res.data.message }]);
         } catch (e) {
           console.error("Failed to fetch greeting", e);
           setMessages([{ sender: "assistant", text: "Hi! Describe your event to get started." }]);

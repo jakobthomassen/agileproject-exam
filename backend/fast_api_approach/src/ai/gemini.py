@@ -36,8 +36,8 @@ class Gemini(AIPlatform):
             system_prompt: str = system_prompt,
             sdk_tools = TOOLS_4_SDK, 
             tools: dict = tool_registry,
-            dashboard: Dashboard = Dashboard(), 
-            event_state: EventState = EventState(),
+            dashboard: Dashboard = None, 
+            event_state: EventState = None,
             event_id: int = None
             ):
         self.client = genai.Client(api_key=api_key)
@@ -45,8 +45,10 @@ class Gemini(AIPlatform):
         self.system_prompt = system_prompt
         self.tools = sdk_tools
         self.tool_registry = tools
-        self.event_state = event_state
-        self.dashboard = dashboard
+        
+        # FIX: Handle mutable default arguments
+        self.event_state = event_state if event_state is not None else EventState()
+        self.dashboard = dashboard if dashboard is not None else Dashboard()
         self.conversation_history = []
         self.event_id = event_id
 
