@@ -85,6 +85,7 @@ To open the Vite development server in the browser, press `o` and then Enter in 
 
 **Note:** If an error appears in the browser, check the terminal running the backend server. Missing **Python** libraries are the most common cause.
 
+Try deleting and reinstalling the venv. Make sure to use Python 3.10+.
 -----
 -----
 
@@ -96,22 +97,4 @@ Press `Ctrl + C` in both terminals to stop the frontend and backend servers.
 
 
 
------
-
-## API Endpoints
-
-### Participant Import (CSV/Excel)
-
-Import participants from a CSV or Excel file:
-
-```
-POST /events/{event_id}/participants/import
-```
-
-**Example using curl:**
-
-```bash
-curl -X POST "http://127.0.0.1:8000/events/1/participants/import" \
-     -F "file=@participants.csv"
-```
 
