@@ -70,7 +70,7 @@ set GEMINI_API_KEY=your-api-key-here
 
 ## Starting the Server
 
-### Easy setup
+### Easy setup for macOS
 
 In the `agileproject-exam` folder:
 ```bash
