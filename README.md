@@ -27,15 +27,16 @@ Navigate to the `backend/fast_api_approach` folder:
 
 ```bash
 # Mac/Linux
-python3 -m venv venv
+python3.11 -m venv venv
 source venv/bin/activate
+
 
 # Windows (PowerShell)
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 
 # Windows (CMD)
-python -m venv venv
+py -3.11 -m venv venv
 venv\Scripts\activate.bat
 ```
 
@@ -114,24 +115,3 @@ curl -X POST "http://127.0.0.1:8000/events/1/participants/import" \
      -F "file=@participants.csv"
 ```
 
-**Expected CSV/Excel format:**
-- Headers (case-insensitive): `name`, `email`, `phone` (optional)
-- Example:
-  ```
-  name,email,phone
-  John Doe,john@example.com,+1234567890
-  Jane Smith,jane@example.com,
-  ```
-
-**Response:**
-```json
-{
-  "event_id": 1,
-  "total_rows": 2,
-  "created": 2,
-  "skipped": 0,
-  "errors": []
-}
-```
-
-#
