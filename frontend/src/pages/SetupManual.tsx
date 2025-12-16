@@ -153,8 +153,6 @@ export default function SetupManual() {
         setExpertGroupWeight(50);
         setAthleteGroupWeight(0);
 
-
-
         // Battle starts with None
         setStageBracket("");
         break;

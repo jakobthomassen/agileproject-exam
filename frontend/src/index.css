@@ -21,8 +21,6 @@ a:hover {
 
 body {
   margin: 0;
-  /*display: flex;*/
-  /*place-items: center;*/
   min-width: 320px;
   min-height: 100vh;
 }
@@ -57,17 +55,6 @@ html, body, #root {
     padding: 0;
     /* Background and text colors come from theme.css */
 }
-
-/*
-.full-page-center {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding-top: 60px;
-    background: radial-gradient(circle at top, #0b1120, #020617);
-}
-*/
 
 .faq-bot {
   max-width: 720px;

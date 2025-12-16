@@ -32,7 +32,7 @@
 }
 
 .tabActive {
-  /* Shared styles from .tab manually applied to fix 'composes' error */
+  /* Shared styles from .tab */
   background: none;
   border: none;
   font-size: 0.9rem;
@@ -41,8 +41,7 @@
   position: relative;
   transition: color 0.2s;
 
-  /* Active specific styles */
-  color: #4ade80; /* Green accent */
+  color: #4ade80;
   font-weight: 600;
 }
 
@@ -100,7 +99,7 @@
 .textarea:focus {
   outline: none;
   border-color: #4ade80;
-  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2); /* Replaced 'ring' */
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
 }
 
 /* Athlete Import Section */

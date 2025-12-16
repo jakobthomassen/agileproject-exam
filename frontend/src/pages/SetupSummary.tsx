@@ -30,7 +30,7 @@ export default function SetupSummary() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [eventImage, setEventImage] = useState<string | null>(null);
 
-  // 5. Fetch event data from DB if eventId exists (to get accurate participant count)
+  // 5. Fetch event data from DB if eventId exists
   const [dbEventData, setDbEventData] = useState<any>(null);
 
   useEffect(() => {
@@ -107,8 +107,6 @@ export default function SetupSummary() {
       alert("Failed to create event. Please try again.");
     }
   }
-
-
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

@@ -59,7 +59,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* SYSTEM OVERVIEW IMAGE LIKE ON PEERS.LIVE */}
+        {/* SYSTEM OVERVIEW IMAGE */}
         <section className={styles.systemSection}>
           <div className={styles.systemImageWrapper}>
             <img

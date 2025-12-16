@@ -4,7 +4,7 @@ import styles from "./PageContainer.module.css";
 type PageContainerProps = {
   children: React.ReactNode;
   kind?: "default" | "solid";
-  maxWidth?: number | string; // <— added
+  maxWidth?: number | string;
 };
 
 export function PageContainer({
@@ -19,7 +19,7 @@ export function PageContainer({
     <div className={pageClass}>
       <div
         className={styles.inner}
-        style={maxWidth ? { maxWidth } : undefined} // <— override here
+        style={maxWidth ? { maxWidth } : undefined}
       >
         {children}
       </div>

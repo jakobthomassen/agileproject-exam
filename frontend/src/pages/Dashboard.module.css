@@ -23,8 +23,8 @@
 
 .tableWrapper {
   width: 100%;
-  border-radius: 8px; /* replaced var(--radius-md) for safety */
-  border: 1px solid #334155; /* replaced var(--color-border-strong) */
+  border-radius: 8px;
+  border: 1px solid #334155;
   overflow: hidden;
 }
 
@@ -52,7 +52,7 @@
 }
 
 .tableHeader {
-  background: #0f172a; /* replaced var(--color-surface) */
+  background: #0f172a;
   font-weight: 600;
   text-transform: uppercase;
   color: #94a3b8;
@@ -184,7 +184,7 @@
 }
 /* Delete Confirmation Modal Styles */
 .deleteConfirmButton {
-  background-color: #10b981 !important; /* Green */
+  background-color: #10b981 !important;
   color: #ffffff !important;
   margin-left: 12px;
 }
@@ -194,7 +194,7 @@
 }
 
 .deleteCancelButton {
-  background-color: #ef4444 !important; /* Red */
+  background-color: #ef4444 !important;
   color: #ffffff !important;
 }
 

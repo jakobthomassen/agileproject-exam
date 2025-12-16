@@ -76,7 +76,7 @@ export default function DashboardEdit() {
     async function fetchData() {
       if (!id) return;
       try {
-        // Reuse the context endpoint because it formats data nicely
+        // Reuse the context endpoint which formats data nicely
         const res = await axios.get(`${API_BASE_URL}/api/events/${id}/context`);
         const data = res.data;
 
@@ -174,8 +174,6 @@ export default function DashboardEdit() {
     }
   }
 
-  // --------------------------------------------------------
-  // --------------------------------------------------------
   function triggerFileDialog() {
     fileInputRef.current?.click();
   }

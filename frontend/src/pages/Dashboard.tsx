@@ -103,7 +103,7 @@ export default function Dashboard() {
     eventName: ev.eventName || "Untitled Event",
 
     eventType: null,
-    participants: ev.participants, // Now correctly maps participants count
+    participants: ev.participants,
     scoringMode: null,
     scoringAudience: null,
     scoringJudge: null,
@@ -123,7 +123,7 @@ export default function Dashboard() {
     format: ev.format || "Standard",
     status: (ev.status as "DRAFT" | "OPEN" | "FINISHED") || "DRAFT",
     startDate: ev.startDate || "",
-    athletes: ev.athletes, // Now explicitly athletes count (likely 0)
+    athletes: ev.athletes,
     eventCode: ev.eventCode || "---",
   }));
 
@@ -264,14 +264,12 @@ export default function Dashboard() {
 function formatTableDate(value: string | null | undefined): string {
   if (!value) return "—";
 
-  // Handle date-only format (YYYY-MM-DD) or datetime format (YYYY-MM-DDTHH:MM)
+  // Handle date-only format (YYYY-MM-DD) or datetime format (YYYY-MM-DD HH:MM)
   let dateStr = value;
   if (value.includes("T")) {
     // Already has time component
     dateStr = value;
   } else if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    // Date only - don't parse as datetime (avoids timezone issues)
-    // Just return the date part formatted nicely
     const [year, month, day] = value.split("-");
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     return `${monthNames[parseInt(month) - 1]} ${parseInt(day)}, ${year}`;

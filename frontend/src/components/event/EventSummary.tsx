@@ -3,7 +3,7 @@ import styles from "./EventSummary.module.css";
 
 type EventSummaryProps = {
   event: {
-    id?: string | number; // Added ID as optional
+    id?: string | number;
     eventName?: string | null;
     eventType?: string | null;
     participants?: number | null;
@@ -38,9 +38,6 @@ export function EventSummary({
   const heroImage =
     event.image ||
     "https://img.redbull.com/images/c_crop,w_4105,h_2053,x_0,y_262/c_auto,w_1200,h_600/f_auto,q_auto/redbullcom/2020/9/14/o0lvketc4ibxdhngilos/fo-1m549fcrh2111-featuremedia";
-
-  // If using detailed view (dashboard modal), show tabs. If compact, just show overview.
-  // const showTabs = !compact && event.id; // Tabs removed per user request
 
   return (
     <div className={`${styles.mainPanel} ${compact ? styles.compact : ""}`}>

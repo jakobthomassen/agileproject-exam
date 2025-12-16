@@ -27,7 +27,7 @@ type SidebarItem = {
   label: string;
   value: any;
   component: string;
-  type?: string; // Support both component and type
+  type?: string;
 };
 
 type APIResponse = {
@@ -62,10 +62,6 @@ function getPlaceholder(label: string, type: string): string {
   return PLACEHOLDER_MAP.default;
 }
 
-/**
- * EditableField - A clean, modern editable field component
- * Displays a label and value, switches to input on click
- */
 function EditableField({
   label,
   value,
@@ -109,7 +105,7 @@ function EditableField({
     }
   }, [isEditing, value, type]);
 
-  // Format display value nicely
+  // Format display value
   const formatDisplayValue = (val: any): string => {
     if (!val) return "";
     if (type === "date") {
@@ -221,7 +217,7 @@ function EditableField({
       ) : (
         <div onClick={(e) => e.stopPropagation()}>
           {isDescription ? (
-            // Textarea for description fields - fixed height, non-resizable, full width
+            // Text area for description fields - fixed height, non-resizable, full width
             <textarea
               ref={inputRef as React.RefObject<HTMLTextAreaElement>}
               className="
@@ -335,8 +331,6 @@ export default function SetupAI() {
   const pendingAiScrollRef = useRef(false);
 
   // --- Restore History OR Fetch Greeting on Mount ---
-  // --- Restore History OR Fetch Greeting on Mount ---
-  // --- Restore History OR Fetch Greeting on Mount ---
   useEffect(() => {
     async function initChat() {
       if (eventId) {
@@ -354,13 +348,12 @@ export default function SetupAI() {
         }
       } else {
         // New Event: START FRESH
-        // Critical: Clear any lingering context from previous sessions
         resetEventData();
         setMessages([]); // Ensure messages are cleared locally too
 
         // Setup initial greeting
         try {
-          // Only fetch greeting if we don't have messages (which we just cleared, but good for safety)
+          // Only fetch greeting if we don't have messages
           setThinking(true);
           const res = await axios.get(`${API_URL}/api/chat/greeting`);
           setMessages([{ sender: "assistant", text: res.data.message }]);
@@ -433,7 +426,7 @@ export default function SetupAI() {
     // If no changes detected, don't scroll
     if (changedIndices.length === 0) return;
 
-    // Get the field furthest down in the sidebar (highest index)
+    // Get the field furthest down in the sidebar
     const targetIndex = Math.max(...changedIndices);
 
     // Use requestAnimationFrame to ensure DOM has updated before scrolling
@@ -442,8 +435,8 @@ export default function SetupAI() {
       const target = itemRefs.current[targetIndex];
       if (!container || !target) return;
 
-      // Center the target field in the visible container (with small upward adjustment)
-      const verticalOffset = 15; // pixels to shift view upward for better visual centering
+      // Center the target field in the visible container
+      const verticalOffset = 15;
       const targetTop = target.offsetTop - (container.clientHeight / 2) + (target.clientHeight / 2) - verticalOffset;
       // Clamp to valid scroll range
       const maxScroll = container.scrollHeight - container.clientHeight;

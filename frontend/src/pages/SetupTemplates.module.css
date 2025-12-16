@@ -54,8 +54,6 @@
   box-shadow: var(--shadow-accent) !important;
 }
 
-/* Remove the cardHovered class as we're using :hover instead */
-
 .infoButton {
   position: absolute;
   top: 10px;
