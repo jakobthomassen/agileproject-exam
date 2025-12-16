@@ -7,6 +7,13 @@ This project runs on both **macOS** and **Windows**.
 - Install **Node.js**: https://nodejs.org/en/download
 - Install **Python 3.10+**: https://www.python.org/downloads/
 
+To verify run: 
+``` bash
+node -v
+npm -v
+python3 --version
+```
+
 -----
 
 ## Setup
@@ -63,6 +70,16 @@ set GEMINI_API_KEY=your-api-key-here
 
 ## Starting the Server
 
+### Easy setup
+
+In the `agileproject-exam` folder:
+```bash
+./start.sh
+```
+Click the provided link in the terminal to open 
+
+If this does not work proceed to the manual steps below
+
 ### Frontend
 
 In the `frontend` folder:
@@ -81,17 +98,20 @@ uvicorn src.main:app --reload
 
 The backend will run on http://127.0.0.1:8000
 
-To open the Vite development server in the browser, press `o` and then Enter in the terminal running `npm run dev`.
+To open the Vite development server in the browser, press `o` and then `Enter` in the terminal running `npm run dev`.
 
-**Note:** If an error appears in the browser, check the terminal running the backend server. Missing **Python** libraries are the most common cause.
+**Note:** If an error appears in the browser, check the terminal running the backend server.
+Missing **Python** libraries are the most common cause.
 
-Try deleting and reinstalling the venv. Make sure to use Python 3.10+.
------
 -----
 
 ## Stopping the Server
 
-Press `Ctrl + C` in both terminals to stop the frontend and backend servers.
+### Started from `./start.sh`
+Press `Ctrl + C` once to shut down application and server, and again to quit `start.sh` program
+
+### Started manually
+Press `Ctrl + C` in both terminals to stop the frontend and backend servers separately.
 
 -----
 
