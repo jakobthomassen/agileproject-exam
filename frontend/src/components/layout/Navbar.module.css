@@ -11,7 +11,7 @@
   padding: 12px 24px;
   z-index: 1000;
 
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 /* Enable interaction only on controls */
@@ -29,7 +29,6 @@
 
   padding: 6px 4px;
   user-select: none;
-  pointer-events: auto;
 }
 
 

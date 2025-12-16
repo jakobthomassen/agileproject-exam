@@ -9,6 +9,7 @@ import { BackButton } from "../components/ui/BackButton";
 import { Loader2, Image as ImageIcon } from "lucide-react";
 import styles from "./DashboardEdit.module.css";
 import { API_URL } from "../config";
+import { ParticipantList } from "../components/event/ParticipantList";
 
 // Backend URL
 const API_BASE_URL = API_URL;
@@ -56,7 +57,7 @@ export default function DashboardEdit() {
     expertNotes: ""
   });
 
-  const [activeTab, setActiveTab] = useState<"general" | "scoring" | "athletes" | "experts">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "scoring" | "athletes" | "participants" | "experts">("general");
 
   // Athlete List State
   const [athleteList, setAthleteList] = useState<{ number: number; name: string }[]>([]);
@@ -95,7 +96,7 @@ export default function DashboardEdit() {
           sport: data.eventName || "", // Fallback if no specific sport column
           startDate: startDate,
           endDate: endDate,
-          athletes: data.participants || 0,
+          athletes: data.athletes || 0,
           rules: data.rules || "",
           description: data.description || data.rules || "", // Use description or fallback to rules
           scoringMode: data.scoringMode || "",
@@ -106,8 +107,9 @@ export default function DashboardEdit() {
         });
 
         // Initialize placeholder athlete list
-        if (data.participants > 0) {
-          const placeholders = Array.from({ length: data.participants }, (_, i) => ({
+        // Only if ATHLETES count is > 0 (not participants)
+        if (data.athletes > 0) {
+          const placeholders = Array.from({ length: data.athletes }, (_, i) => ({
             number: i + 1,
             name: `Athlete ${i + 1}`
           }));
@@ -539,6 +541,15 @@ export default function DashboardEdit() {
           </div>
         );
 
+      case "participants":
+        return (
+          <div className={styles.tabContent}>
+            {/* We reuse the container but ParticipantList handles its own layout */}
+            <div style={{ minHeight: "400px" }}>
+              <ParticipantList eventId={Number(id)} />
+            </div>
+          </div>
+        );
       case "experts":
         return (
           <div className={styles.tabContent}>
@@ -567,6 +578,7 @@ export default function DashboardEdit() {
           <button className={activeTab === "general" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("general")}>General</button>
           <button className={activeTab === "scoring" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("scoring")}>Scoring</button>
           <button className={activeTab === "athletes" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("athletes")}>Athletes</button>
+          <button className={activeTab === "participants" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("participants")}>Participants</button>
           <button className={activeTab === "experts" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("experts")}>Experts</button>
         </div>
 

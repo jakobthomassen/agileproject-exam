@@ -6,7 +6,7 @@ import { useEventSetup } from "../context/EventSetupContext";
 import ReactMarkdown from "react-markdown";
 import {
   MapPin, Calendar, Clock, Type, Hash, HelpCircle,
-  Loader2, Paperclip, Pencil
+  Loader2, Pencil
 } from 'lucide-react';
 
 // Components
@@ -319,13 +319,11 @@ export default function SetupAI() {
   const { eventId } = useParams();
   const { eventData, setEventData } = useEventSetup();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { sender: "assistant", text: "Hi! Describe your event" },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
   const previewContainerRef = useRef<HTMLDivElement | null>(null);
@@ -336,25 +334,45 @@ export default function SetupAI() {
   const hasMountedRef = useRef(false);
   const pendingAiScrollRef = useRef(false);
 
-  // --- Restore History on Mount ---
+  // --- Restore History OR Fetch Greeting on Mount ---
+  // --- Restore History OR Fetch Greeting on Mount ---
   useEffect(() => {
-    async function loadHistory() {
-      if (!eventId) return; // No ID = New Event = No History
+    async function initChat() {
+      if (eventId) {
+        // Existing Event: Load History
+        try {
+          console.log(`Restoring history for Event ${eventId}...`);
+          const res = await axios.get(`${API_URL}/api/events/${eventId}/history`);
+          const history = res.data;
 
-      try {
-        console.log(`Restoring history for Event ${eventId}...`);
-        const res = await axios.get(`${API_URL}/api/events/${eventId}/history`);
-        const history = res.data;
-
-        if (Array.isArray(history) && history.length > 0) {
-          setMessages(history);
+          if (Array.isArray(history) && history.length > 0) {
+            setMessages(history);
+          }
+        } catch (e) {
+          console.error("Failed to load history", e);
         }
-      } catch (e) {
-        console.error("Failed to load history", e);
+      } else {
+        // New Event: START FRESH
+        // Critical: Clear any lingering context from previous sessions
+        setEventData({} as any);
+
+        // Setup initial greeting
+        try {
+          if (messages.length === 0) {
+            setThinking(true);
+            const res = await axios.get(`${API_URL}/api/chat/greeting`);
+            setMessages([{ sender: "assistant", text: res.data.message }]);
+          }
+        } catch (e) {
+          console.error("Failed to fetch greeting", e);
+          setMessages([{ sender: "assistant", text: "Hi! Describe your event to get started." }]);
+        } finally {
+          setThinking(false);
+        }
       }
     }
 
-    loadHistory();
+    initChat();
   }, [eventId]);
 
   const [checklistData, setChecklistData] = useState<SidebarItem[]>(
@@ -437,32 +455,14 @@ export default function SetupAI() {
     });
   }, [checklistData]);
 
-  // --- HANDLE FILE SELECT (Triggers Auto-Send) ---
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.name.toLowerCase().endsWith(".csv")) {
-        alert("Only CSV files are allowed.");
-        return;
-      }
-      sendMessage(file);
-      e.target.value = "";
-    }
-  };
-
-  // --- SEND MESSAGE (Accepts optional file) ---
-  async function sendMessage(fileToUpload?: File) {
+  // --- SEND MESSAGE ---
+  async function sendMessage() {
     const text = input.trim();
-    if (!text && !fileToUpload) return;
-
-    let userMessageText = text;
-    if (fileToUpload) {
-      userMessageText = `📄 Uploaded file: **${fileToUpload.name}**`;
-    }
+    if (!text) return;
 
     const newMessages: ChatMessage[] = [
       ...messages,
-      { sender: "user", text: userMessageText },
+      { sender: "user", text: text },
     ];
     setMessages(newMessages);
 
@@ -474,49 +474,15 @@ export default function SetupAI() {
       let currentId = eventId ? parseInt(eventId) : (eventData.id ? Number(eventData.id) : null);
       if (Number.isNaN(currentId)) currentId = null;
 
-      // If file is provided, upload it first, then process
-      if (fileToUpload) {
-        if (!currentId) {
-          alert("Please create an event first before uploading files.");
-          return;
-        }
+      // Regular JSON payload (no file)
+      const payload = {
+        message: text,
+        event_id: currentId
+      };
 
-        // Step 1: Upload file to server (saves to uploads/{event_id}/)
-        const formData = new FormData();
-        formData.append('file', fileToUpload);
-
-        const uploadRes = await axios.post(
-          `${API_URL}/api/events/${currentId}/upload-file`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
-
-        // Step 2: Process the uploaded file
-        const processRes = await axios.post<APIResponse>(
-          `${API_URL}/api/events/${currentId}/process-file`,
-          { filename: uploadRes.data.filename },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-        var data = processRes.data;
-      } else {
-        // Regular JSON payload (no file)
-        const payload = {
-          message: text || "Processed file",
-          event_id: currentId
-        };
-
-        // Call API
-        const res = await axios.post<APIResponse>(`${API_URL}/api/chat`, payload);
-        var data = res.data;
-      }
+      // Call API
+      const res = await axios.post<APIResponse>(`${API_URL}/api/chat`, payload);
+      var data = res.data;
 
       console.log("API Response:", {
         event_id: data.event_id,
@@ -665,7 +631,7 @@ export default function SetupAI() {
                 {thinking && (
                   <div className={styles.thinkingRow}>
                     <Loader2
-                      className='animate-spin text-green-400'
+                      className={`${styles.spin} text-green-400`}
                       size={18}
                     />
                     <span className='ml-2 text-gray-400 text-sm'>
@@ -677,32 +643,6 @@ export default function SetupAI() {
 
               {/* Input Row */}
               <div className={styles.chatInputRow}>
-                <input
-                  type='file'
-                  ref={fileInputRef}
-                  accept='.csv,text/csv'
-                  className='hidden'
-                  style={{ display: "none" }}
-                  onChange={handleFileSelect}
-                />
-
-                {/* Upload Button */}
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={thinking}
-                  title='Upload CSV'
-                  style={{
-                    padding: 0,
-                    width: "42px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Paperclip size={20} />
-                </Button>
-
                 <TextInput
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -760,6 +700,6 @@ export default function SetupAI() {
           </Card>
         </TwoColumn>
       </div>
-    </PageContainer>
+    </PageContainer >
   );
 }

@@ -10,60 +10,7 @@ import { useLocation } from "react-router-dom";
 import { API_URL } from "../config";
 
 /* -------------------------------------------------------------------------- */
-/* Judging domain model                                                        */
-/* -------------------------------------------------------------------------- */
-
-export type JudgeGroupType = "audience" | "expert" | "athlete";
-
-export interface JudgeGroupConfig {
-  enabled: boolean;
-  weight: number;
-  criteria: string[];
-}
-
-export interface JudgingSettings {
-  scoreMin: number;
-  scoreMax: number;
-  judgingDurationSec: number;
-  spectatorLimit: number | null;
-  allowAnonymousSpectators: boolean;
-  liveLeaderboard: boolean;
-  groups: Record<JudgeGroupType, JudgeGroupConfig>;
-}
-
-
-/*
-  Context owns the canonical DEFAULTS,
-  but not all flows must immediately commit them.
-*/
-export const defaultJudgingSettings: JudgingSettings = {
-  scoreMin: 0,
-  scoreMax: 10,
-  judgingDurationSec: 60,
-  spectatorLimit: 100,
-  allowAnonymousSpectators: false,
-  liveLeaderboard: true,
-  groups: {
-    audience: {
-      enabled: true,
-      weight: 33,
-      criteria: ["Overall"]
-    },
-    expert: {
-      enabled: true,
-      weight: 34,
-      criteria: ["Creativity", "Difficulty", "Execution"]
-    },
-    athlete: {
-      enabled: true,
-      weight: 33,
-      criteria: ["Creativity", "Difficulty", "Execution"]
-    }
-  }
-};
-
-/* -------------------------------------------------------------------------- */
-/* Event model                                                                 */
+/* Event Model                                                                 */
 /* -------------------------------------------------------------------------- */
 
 export type EventData = {
@@ -89,12 +36,17 @@ export type EventData = {
     component: string;
   }[];
 
-  /*
-    Judging settings are context-owned but optional.
-    Early setup steps may leave this null or partially defined.
-  */
-  judgingSettings: JudgingSettings | null;
-  ui_payload?: { label: string; value: any; type: string }[];
+  // Settings
+  judgingSettings?: any | null;
+
+  // Added to fix build errors
+  scoringAudience?: any | null;
+  scoringJudge?: any | null;
+  sponsor?: string | null;
+  audienceLimit?: number | null;
+  image?: string | null;
+  endDateTime?: string | null;
+  athletes?: number | null;
 };
 
 // Default empty state
@@ -104,14 +56,10 @@ export const defaultEventData: EventData = {
   scoringMode: null,
   rules: null,
   startDateTime: null,
-  endDateTime: null,
-
-  sponsor: null,
-  rules: null,
-  audienceLimit: null,
-
-  image: null,
-  judgingSettings: null
+  participants: null,
+  eventType: null,
+  eventCode: null,
+  ui_payload: []
 };
 
 /* -------------------------------------------------------------------------- */
@@ -126,6 +74,7 @@ export type SavedEvent = {
   status: string;
   venue: string;
   startDate: string;
+  participants: number;
   athletes: number;
   eventCode: string;
 };
@@ -140,18 +89,8 @@ type EventSetupContextValue = {
   savedEvents: SavedEvent[]; // <--- NEW: List for Dashboard
   setEventData: (patch: Partial<EventData>) => void;
   resetEventData: () => void;
-
-  /*
-    Explicit helper for judging settings.
-    Allows future pages to partially update without full ownership.
-  */
-  setJudgingSettings: (patch: Partial<JudgingSettings>) => void;
-  resetJudgingSettings: () => void;
-
-  savedEvents: SavedEvent[];
-  addSavedEvent: (ev: SavedEvent) => void;
-  deleteSavedEvent: (id: string) => void;
-  updateSavedEvent: (id: string, patch: Partial<SavedEvent>) => void;
+  addSavedEvent: (ev: any) => void;
+  deleteSavedEvent: (id: string | number) => void;
 };
 
 const EventSetupContext = createContext<EventSetupContextValue | undefined>(undefined);
@@ -161,20 +100,71 @@ const EventSetupContext = createContext<EventSetupContextValue | undefined>(unde
 /* -------------------------------------------------------------------------- */
 
 export function EventSetupProvider({ children }: { children: ReactNode }) {
-  const [eventData, setEventDataState] =
-    useState<EventData>(defaultEventData);
+  const [eventData, setEventDataState] = useState<EventData>(defaultEventData);
+  const [savedEvents, setSavedEvents] = useState<SavedEvent[]>([]); // Default to [] (No Crash)
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [savedEvents, setSavedEvents] = useState<SavedEvent[]>(() => {
-    try {
-      const raw = sessionStorage.getItem("savedEvents");
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return [];
-      return parsed as SavedEvent[];
-    } catch {
-      return [];
+  const location = useLocation();
+
+  // Fetch event context when event ID changes
+  useEffect(() => {
+    let isMounted = true;
+
+    async function init() {
+      // Check for /event/123/setup
+      const match = location.pathname.match(/\/event\/(\d+)\/setup/);
+      const id = match ? match[1] : null;
+
+      if (!id) {
+        if (isMounted) setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const res = await fetch(`${API_URL}/api/events/${id}/context`);
+
+        if (res.ok) {
+          const dbData = await res.json();
+          if (isMounted) {
+            setEventDataState((prev) => ({ ...prev, ...dbData }));
+          }
+        }
+      } catch (e) {
+        console.error("Context fetch failed", e);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
     }
-  });
+
+    init();
+    return () => { isMounted = false; };
+  }, [location.pathname]);
+
+
+  // 2. FETCH DASHBOARD LIST (All Events) on Mount
+  const fetchDashboardEvents = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/events`);
+      if (res.ok) {
+        const list = await res.json();
+        setSavedEvents(list);
+      } else {
+        console.warn("Dashboard fetch failed:", res.status);
+      }
+    } catch (e) {
+      console.error("Failed to load dashboard events", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardEvents();
+  }, []); // Runs once when app starts
+
+
+  /* ------------------------------------------------------------------------ */
+  /* Actions                                                                  */
+  /* ------------------------------------------------------------------------ */
 
   const setEventData = (patch: Partial<EventData>) => {
     setEventDataState((prev) => ({ ...prev, ...patch }));
@@ -191,17 +181,9 @@ export function EventSetupProvider({ children }: { children: ReactNode }) {
     // fetchDashboardEvents(); 
   };
 
-  const updateSavedEvent = (id: string, patch: Partial<SavedEvent>) => {
-    setSavedEvents(prev =>
-      prev.map(ev => (ev.id === id ? { ...ev, ...patch } : ev))
-    );
+  const deleteSavedEvent = (id: string | number) => {
+    setSavedEvents((prev) => prev.filter(e => e.id !== String(id)));
   };
-
-  useEffect(() => {
-    try {
-      sessionStorage.setItem("savedEvents", JSON.stringify(savedEvents));
-    } catch {}
-  }, [savedEvents]);
 
   const value = useMemo(
     () => ({
@@ -234,4 +216,3 @@ export function useEventSetup() {
   }
   return ctx;
 }
-

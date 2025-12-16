@@ -1,7 +1,6 @@
 from typing import Optional, Dict, Any
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 # --- LOCAL IMPORTS ---
@@ -20,7 +19,7 @@ from .ai.event_handler import (
 )
 from .db.crud import create_participant, create_image, get_images_for_event
 from .db.database import SessionLocal
-from .db.models import Event
+from .db.models import Event, Participant
 from .DTOs.eventstate import ParticipantCreate, EventImageCreate
 from fastapi import UploadFile, File
 from fastapi.responses import Response
@@ -101,61 +100,30 @@ async def chat_endpoint(request: ChatRequest):
         print(f"Chat Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/events/{event_id}/upload-file")
-async def upload_file(event_id: int, file: UploadFile = File(...)):
+@app.get("/api/chat/greeting")
+async def chat_greeting_endpoint():
     """
-    Uploads a file and saves it to uploads/{event_id}/ directory.
-    Returns the filename for later processing.
-    """
-    try:
-        # Create uploads directory structure
-        upload_dir = Path(f"uploads/{event_id}")
-        upload_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Save file
-        file_path = upload_dir / file.filename
-        contents = await file.read()
-        with open(file_path, "wb") as f:
-            f.write(contents)
-        
-        return {
-            "status": "success",
-            "message": "File uploaded successfully",
-            "filename": file.filename,
-            "path": f"uploads/{event_id}/{file.filename}"
-        }
-    except Exception as e:
-        print(f"Upload Error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
-
-class ProcessFileRequest(BaseModel):
-    filename: str
-
-@app.post("/api/events/{event_id}/process-file")
-async def process_uploaded_file(event_id: int, request: ProcessFileRequest):
-    """
-    Processes a CSV file that was previously uploaded to uploads/{event_id}/
-    Reads the file, extracts data, and sends it to AI for processing.
+    Generates an initial greeting from the AI Agent.
     """
     try:
-        file_path = Path(f"uploads/{event_id}/{request.filename}")
+        # We send a prompt to the agent to generate a greeting.
+        # We don't verify event_id here as this is for a new session.
+        # The prompt is phrased to get a welcoming response.
+        response = process_chat_request(
+            "You are the AI Event Planner. The user has just started the session. "
+            "Give them a short, professional, enthusiastic welcome and ask what event they are planning. "
+            "Address the user directly. Do not say 'Here is a message'.", 
+            event_id=None
+        )
         
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail=f"File not found: {request.filename}")
-        
-        # Read file content
-        with open(file_path, "r", encoding="utf-8") as f:
-            file_content = f.read()
-        
-        # Create message with CSV content
-        message = f"Process this CSV file: {request.filename}\n\nCSV Content:\n{file_content}"
-        
-        # Process with AI
-        return process_chat_request(message, event_id)
-        
+        # We only want the text, not the full payload with event_id=None
+        return {"message": response["message"]}
     except Exception as e:
-        print(f"File Processing Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Greeting Error: {e}")
+        # Fallback if AI fails
+        return {"message": "Hello! I'm your AI Event Planner. improving."}
+
+
 
 @app.post("/api/events/{event_id}/image")
 async def upload_event_image(event_id: int, file: UploadFile = File(...)):
@@ -358,30 +326,41 @@ async def upload_participants_csv(event_id: int, file: UploadFile = File(...)):
         errors = []
         
         with SessionLocal() as db:
+            bulk_data = []
             for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 (row 1 is header)
                 try:
-                    # Handle different CSV formats
-                    name = row.get('name') or row.get('Name') or row.get('NAME') or row.get('participant') or ''
+                    # Handle different CSV formats (Case insensitive matching)
+                    name = row.get('name') or row.get('Name') or row.get('NAME') or row.get('participant')
                     email = row.get('email') or row.get('Email') or row.get('EMAIL') or ''
                     
-                    if not name.strip():
+                    # Fallback: If 'name' key lookup failed, try the first column if it looks like a name
+                    if not name and len(list(row.values())) > 0:
+                        # Heuristic: If there is no 'name' key found in dict, but row has values
+                        # Just take the first value as the name.
+                        # This handles cases where header might be "Full Name" or "Studant" etc.
+                        first_val = list(row.values())[0]
+                        if first_val and len(first_val) > 1:
+                           name = first_val
+
+                    if not name or not name.strip():
+                        # Still empty?
                         errors.append(f"Row {row_num}: Missing name")
                         continue
                     
-                    # Create participant
-                    participant_data = ParticipantCreate(
-                        event_id=event_id,
-                        name=name.strip(),
-                        email=email.strip() if email else None
-                    )
-                    
-                    create_participant(db, participant_data)
+                    # Add to bulk list
+                    bulk_data.append({
+                        "event_id": event_id,
+                        "name": name.strip(),
+                        "email": email.strip() if email else None
+                    })
                     created_count += 1
                     
                 except Exception as e:
                     errors.append(f"Row {row_num}: {str(e)}")
             
-            db.commit()
+            if bulk_data:
+                db.bulk_insert_mappings(Participant, bulk_data)
+                db.commit()
         
         return {
             "status": "success",
@@ -392,3 +371,60 @@ async def upload_participants_csv(event_id: int, file: UploadFile = File(...)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process CSV: {str(e)}")
+
+# =================================================================
+# 4. PARTICIPANT CRUD ROUTES
+# =================================================================
+
+class ParticipantResponse(BaseModel):
+    id: int
+    event_id: int
+    name: str
+    email: Optional[str] = None
+
+@app.get("/api/events/{event_id}/participants")
+def get_event_participants(event_id: int, skip: int = 0, limit: int = 100):
+    """
+    Get all participants for an event.
+    """
+    with SessionLocal() as db:
+        participants = get_participants_for_event(db, event_id, skip=skip, limit=limit)
+        # Convert to dictionary explicitly if needed, or rely on ORM -> Object conversion
+        return [
+            {"id": p.id, "event_id": p.event_id, "name": p.name, "email": p.email}
+            for p in participants
+        ]
+
+@app.post("/api/events/{event_id}/participants")
+def add_participant_endpoint(event_id: int, payload: ParticipantCreate):
+    """
+    Add a single participant manually.
+    """
+    # Ensure URL event_id matches payload
+    payload.event_id = event_id
+    
+    with SessionLocal() as db:
+        new_p = create_participant(db, payload)
+        return {
+            "status": "success",
+            "participant": {
+                "id": new_p.id,
+                "event_id": new_p.event_id,
+                "name": new_p.name,
+                "email": new_p.email
+            }
+        }
+
+@app.delete("/api/events/{event_id}/participants/{participant_id}")
+def delete_participant_endpoint(event_id: int, participant_id: int):
+    """
+    Delete a participant.
+    """
+    with SessionLocal() as db:
+        try:
+            delete_participant(db, participant_id)
+            return {"status": "success", "message": "Participant deleted"}
+        except AttributeError:
+             raise HTTPException(status_code=404, detail="Participant not found")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))

@@ -23,6 +23,7 @@ interface BackendEvent {
   status: string;
   location: string | null;
   startDate: string | null;
+  participants: number;
   athletes: number;
   eventCode: string | null;
   image?: string | null;
@@ -58,14 +59,20 @@ export default function Dashboard() {
     fetchEvents();
   }, []);
 
-  const deleteBackendEvent = async (eventId: string) => {
-    if (!window.confirm("Are you sure you want to delete this event?")) {
-      return;
-    }
+  const [eventIdToDelete, setEventIdToDelete] = useState<string | null>(null);
+
+  const deleteBackendEvent = (eventId: string) => {
+    setEventIdToDelete(eventId);
+  };
+
+  const confirmDeleteEvent = async () => {
+    if (!eventIdToDelete) return;
+
     try {
-      await axios.delete(`${API_BASE_URL}/api/events/${eventId}`);
+      await axios.delete(`${API_BASE_URL}/api/events/${eventIdToDelete}`);
       // Refresh the list after deletion
       fetchEvents();
+      setEventIdToDelete(null);
     } catch (err) {
       console.error("Failed to delete event:", err);
       alert("Failed to delete event. Please try again.");
@@ -96,7 +103,7 @@ export default function Dashboard() {
     eventName: ev.eventName || "Untitled Event",
 
     eventType: null,
-    participants: ev.athletes,
+    participants: ev.participants, // Now correctly maps participants count
     scoringMode: null,
     scoringAudience: null,
     scoringJudge: null,
@@ -116,7 +123,7 @@ export default function Dashboard() {
     format: ev.format || "Standard",
     status: (ev.status as "DRAFT" | "OPEN" | "FINISHED") || "DRAFT",
     startDate: ev.startDate || "",
-    athletes: ev.athletes,
+    athletes: ev.athletes, // Now explicitly athletes count (likely 0)
     eventCode: ev.eventCode || "---",
   }));
 
@@ -219,6 +226,36 @@ export default function Dashboard() {
             </Card>
           </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        {eventIdToDelete && (
+          <div className={styles.modalBackdrop}>
+            <Card className={styles.modalCard} style={{ width: '400px' }}>
+              <div className={styles.title} style={{ marginBottom: '10px' }}>Delete Event</div>
+
+              <div className={styles.deleteModalContent}>
+                Are you sure you want to delete this event?
+                <br />
+                <span style={{ fontSize: '0.9em', color: '#94a3b8' }}>This action cannot be undone.</span>
+              </div>
+
+              <div className={styles.modalActions} style={{ justifyContent: 'center', borderTop: 'none', gap: '8px' }}>
+                <Button
+                  className={styles.deleteCancelButton}
+                  onClick={() => setEventIdToDelete(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className={styles.deleteConfirmButton}
+                  onClick={confirmDeleteEvent}
+                >
+                  Confirm Delete
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </PageContainer>
   );
@@ -272,7 +309,7 @@ function TableRow({ ev, onDelete, onEdit, onOpen, onToggleStatus }: { ev: SavedE
       <StatusBubble status={ev.status} onClick={onToggleStatus} />
       <span>{ev.venue || "—"}</span>
       <span>{formatTableDate(ev.startDate)}</span>
-      <span>{ev.athletes}</span>
+      <span>{ev.participants}</span>
       <span>{ev.eventCode}</span>
       <div className={styles.actionsRow}>
         <span className={styles.actionEdit} onClick={onEdit}>Edit</span>

@@ -78,14 +78,20 @@ def update_event(db: Session, event_data: EventState):
     return db_event
 
 
-def delete_event(db: Session, id: int):
-    db_event = get_single_event(db, id)
+def delete_event(db: Session, event_id: int):
+    # Retrieve the event first to ensure it exists (and return False if not)
+    db_event = get_single_event(db, event_id)
     if not db_event:
-        raise AttributeError(f"Event with ID: {id} does not exist")
-        return
+        return False
 
+    # 1. Bulk delete participants (Performance Optimization)
+    # This avoids loading 100k objects into memory for ORM cascade
+    db.query(Participant).filter(Participant.event_id == event_id).delete(synchronize_session=False)
+
+    # 2. Delete the event
     db.delete(db_event)
     db.commit()
+    return True
 
 
 # CRUD For images
@@ -153,14 +159,9 @@ def create_participant(db: Session, participant_data: ParticipantCreate):
         name=participant_data.name,
         email=participant_data.email
     )
-
     db.add(db_participant)
-    try:
-        db.commit()
-        db.refresh(db_participant)
-    except IntegrityError:
-        db.rollback()
-        raise ValueError(f"Cannot create participant: event with ID: {db_participant.event_id} does not exist")
+    db.commit()
+    db.refresh(db_participant)
     return db_participant
 
 
@@ -172,14 +173,14 @@ def get_all_participants(db: Session):
     return db.query(Participant).all()
 
 
-def get_participants_for_event(db: Session, event_id: int):
-    return db.query(Participant).filter(Participant.event_id == event_id).all()
+def get_participants_for_event(db: Session, event_id: int, skip: int = 0, limit: int = 100):
+    return db.query(Participant).filter(Participant.event_id == event_id).offset(skip).limit(limit).all()
 
 
 def update_participant(db: Session, id: int, participant_data: ParticipantCreate):
     db_participant = get_single_participant(db, id)
     if not db_participant:
-        raise ValueError(f"Participant with ID: {id} does not exist")
+        return None
 
     # Only update fields that were provided (not None)
     if participant_data.event_id is not None:
@@ -198,6 +199,7 @@ def delete_participant(db: Session, id: int):
     db_participant = get_single_participant(db, id)
     if not db_participant:
         raise AttributeError(f"Participant with ID: {id} does not exist")
+        return
 
     db.delete(db_participant)
     db.commit()

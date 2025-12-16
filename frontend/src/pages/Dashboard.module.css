@@ -182,3 +182,29 @@
   padding-top: 12px;
   border-top: 1px solid #334155;
 }
+/* Delete Confirmation Modal Styles */
+.deleteConfirmButton {
+  background-color: #10b981 !important; /* Green */
+  color: #ffffff !important;
+  margin-left: 12px;
+}
+
+.deleteConfirmButton:hover {
+  background-color: #059669 !important;
+}
+
+.deleteCancelButton {
+  background-color: #ef4444 !important; /* Red */
+  color: #ffffff !important;
+}
+
+.deleteCancelButton:hover {
+  background-color: #dc2626 !important;
+}
+
+.deleteModalContent {
+  padding: 24px 0;
+  text-align: center;
+  font-size: 16px;
+  color: #e2e8f0;
+}

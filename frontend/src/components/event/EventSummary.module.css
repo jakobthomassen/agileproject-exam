@@ -75,3 +75,52 @@
 .summaryText {
   font-size: 14px;
 }
+
+/* Tab Navigation */
+.tabHeader {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid #334155;
+  margin-bottom: 16px;
+  padding-bottom: 0;
+}
+
+.tabBtn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 0;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s ease;
+}
+
+.tabBtn:hover {
+  color: #cbd5e1;
+}
+
+.activeTab {
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.activeTab::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #38bdf8;
+}
+
+.tabContent {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

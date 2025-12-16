@@ -44,7 +44,7 @@ export default function SetupSummary() {
             setEventData({
               ...eventData,
               participants: res.data.participants || 0,
-              athletes: res.data.participants || 0,
+              athletes: res.data.athletes || 0,
               image: res.data.image || null
             });
 
@@ -108,6 +108,8 @@ export default function SetupSummary() {
     }
   }
 
+
+
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -150,7 +152,7 @@ export default function SetupSummary() {
             setEventData({
               ...eventData,
               participants: res.data.participants || 0,
-              athletes: res.data.participants || 0
+              // Correctly mapped to participants, NOT athletes
             });
           }
         } catch (error) {
@@ -271,7 +273,7 @@ export default function SetupSummary() {
             ...eventData,
             // Use DB participant count if available, otherwise fall back to context
             participants: dbEventData?.participants ?? eventData.participants,
-            athletes: dbEventData?.participants ?? eventData.athletes,
+            athletes: dbEventData?.athletes ?? eventData.athletes,
             // Use uploaded image if available
             image: eventImage || eventData.image
           }}
@@ -316,6 +318,8 @@ export default function SetupSummary() {
             </Button>
           </div>
         )}
+
+
 
         {/* Participant Upload Section */}
         {(eventId || eventData.id) && (

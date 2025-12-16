@@ -94,10 +94,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
     opacity: 0.7;
   }
+
   50% {
     transform: translateY(-2px);
     opacity: 1;
@@ -162,4 +165,16 @@
   overflow-y: auto;
   margin-bottom: 12px;
   padding-right: 4px;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
 }
