@@ -19,11 +19,9 @@ def load_system_prompt():
     except FileNotFoundError:
         return None
 
+
 system_prompt = load_system_prompt()
 gemini_api_key = os.getenv("GEMINI_API_KEY")
-
-
-    
 
 
 if not gemini_api_key:
@@ -63,8 +61,6 @@ class Gemini(AIPlatform):
             else:
                 raise ValueError(f"Event with ID {event_id} not found in the database.")
 
-
-
     def generate_text(self, contents: list) -> str:
         """
         Generates AI response and handles tool calling.
@@ -72,7 +68,7 @@ class Gemini(AIPlatform):
         """
         missing = self.event_state.missing_fields()
         state = self.event_state.is_complete
-        dashboard_view = self.dashboard.render(self.event_state) # render the dashboard view
+        dashboard_view = self.dashboard.render(self.event_state)  # render the dashboard view
 
         response = self.client.models.generate_content(
             model=self.model,
@@ -161,7 +157,6 @@ class Gemini(AIPlatform):
             
             # Save AI response to conversation history
             save_chat_message(self.event_id, "model", response.text)
-  
 
         response_data = {
             "type": "message",
@@ -175,7 +170,8 @@ class Gemini(AIPlatform):
 
     def chat(self, prompt: str) -> str:
         return self.generate_text(prompt)
-    
+
+
 def process_chat_request(message: str, event_id: int = None):
     """
     Stateless entry point. 

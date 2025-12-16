@@ -7,6 +7,7 @@ Dashboard renderer for AI system prompt.
 Converts EventState to markdown-formatted dashboard view.
 """
 
+
 class Dashboard:
     @staticmethod
     def render(EventState: EventState) -> str:
@@ -16,7 +17,7 @@ class Dashboard:
         """
        data = EventState.model_dump()
        missing = EventState.missing_fields()
-       
+
        # Check for recommended fields that are missing
        recommended_fields = []
        if not data.get('eventdate'):

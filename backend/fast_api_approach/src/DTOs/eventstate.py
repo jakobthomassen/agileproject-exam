@@ -42,6 +42,7 @@ class EventState(BaseModel):
         """Returns True if all required fields are present."""
         return len(self.missing_fields()) == 0
 
+
 # Data transfer object for event image creation
 class EventImageCreate(BaseModel):
     event_id: int = Field(None, description="FK to events table")

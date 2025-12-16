@@ -84,8 +84,7 @@ def delete_event(db: Session, event_id: int):
     if not db_event:
         return False
 
-    # 1. Bulk delete participants (Performance Optimization)
-    # This avoids loading 100k objects into memory for ORM cascade
+    # 1. Bulk delete participants
     db.query(Participant).filter(Participant.event_id == event_id).delete(synchronize_session=False)
 
     # 2. Delete the event

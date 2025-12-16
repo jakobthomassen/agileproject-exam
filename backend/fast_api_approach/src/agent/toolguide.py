@@ -30,18 +30,19 @@ def update_event_details(event_name: str = None,
     """
     pass # The SDK never actually runs this! It just reads the signature.
 
+
 def participant_notifier(reason: str = "update"):
     """
     Notifies participants about the event.
     """
     pass
 
+
 def event_state_resetter():
     """
     Resets the event state to start a new event planning session.
     """
     pass
-
 
 
 # A. The List to send to Gemini Config (What the AI sees)

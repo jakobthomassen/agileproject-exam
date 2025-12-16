@@ -55,7 +55,6 @@ class EventImage(Base):
         return {
             "id": self.id,
             "event_id": self.event_id
-            # "image": self.image
         }
 
 
@@ -79,6 +78,8 @@ class Participant(Base):
             "name": self.name,
             "email": self.email
         }
+
+
 class ConversationModel(Base):
     __tablename__ = "conversation_history"
 

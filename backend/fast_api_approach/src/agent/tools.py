@@ -2,6 +2,7 @@ from ..DTOs.eventstate import EventState
 
 # All tool functions must have input and output parameters for Gemini tool calling compatibility
 
+
 def participant_notifier(state: EventState, reason: str="event creation") -> str:
     """
     Mock function for participant notifications.
@@ -14,6 +15,7 @@ def participant_notifier(state: EventState, reason: str="event creation") -> str
         reason (str): The reason for notification. Defaults to "event creation".
     """
     return "Participants notified successfully"
+
 
 def update_event_details(state: EventState, 
                          event_name: str = None, 
@@ -52,6 +54,7 @@ def update_event_details(state: EventState,
     if athlete_weight: state.eventathleteweight = athlete_weight
     return f"updated sucessfully status: success", f"updated: {state.model_dump()}"
 
+
 def event_state_resetter(state: EventState) -> str:
     """
     Resets the event state to its initial empty state.
@@ -75,13 +78,10 @@ def event_state_resetter(state: EventState) -> str:
     return "new event started."
 
 
-
-
-
 tool_registry = {
             "update_event_details": update_event_details,
             "event_state_resetter": event_state_resetter,
-            #"participant_notifier": participant_notifier
+            # "participant_notifier": participant_notifier
         }
 
 

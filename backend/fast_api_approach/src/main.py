@@ -36,7 +36,7 @@ app = FastAPI(title="Event Planner API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Relaxed for debugging
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,8 +53,7 @@ class ChatRequest(BaseModel):
     message: str
     event_id: Optional[int] = None
 
-# Using a flexible dict model for updates allows us to send 
-# partial updates (e.g. just changing the name) without strict schemas.
+
 class EventUpdatePayload(BaseModel):
     eventName: Optional[str] = None
     venue: Optional[str] = None
@@ -71,19 +70,19 @@ class EventUpdatePayload(BaseModel):
     athleteWeight: Optional[int] = None
     
     class Config:
-        extra = "allow" # Allows extra fields if the frontend sends them
+        extra = "allow"  # Allows extra fields if the frontend sends them
 
 class EventCreatePayload(BaseModel):
-    eventName: Optional[str] = None #we'1 Event Name
-    venue: Optional[str] = None # Venue
-    startDateTime: Optional[str] = None # Start Date
-    endDateTime: Optional[str] = None # End Date
-    rules: Optional[str] = None # Rules
-    scoringMode: Optional[str] = None # Scoring Mode
+    eventName: Optional[str] = None
+    venue: Optional[str] = None
+    startDateTime: Optional[str] = None
+    endDateTime: Optional[str] = None
+    rules: Optional[str] = None
+    scoringMode: Optional[str] = None
     eventCode: Optional[str] = None
     
     class Config:
-        extra = "allow" # Allows extra fields if the frontend sends them
+        extra = "allow"  # Allows extra fields if the frontend sends them
 
 # =================================================================
 # 1. AI & CHAT ROUTES
@@ -124,7 +123,6 @@ async def chat_greeting_endpoint():
         return {"message": "Hello! I'm your AI Event Planner. improving."}
 
 
-
 @app.post("/api/events/{event_id}/image")
 async def upload_event_image(event_id: int, file: UploadFile = File(...)):
     """
@@ -156,6 +154,7 @@ async def upload_event_image(event_id: int, file: UploadFile = File(...)):
         print(f"Image Upload Error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
 
+
 @app.get("/api/events/{event_id}/image")
 async def get_event_image(event_id: int):
     """
@@ -176,7 +175,7 @@ async def get_event_image(event_id: int):
             image_base64 = base64.b64encode(latest_image.image).decode('utf-8')
             
             # Determine content type (default to jpeg)
-            content_type = "image/jpeg"  # Could be enhanced to detect actual type
+            content_type = "image/jpeg"
             
             return {
                 "image": f"data:{content_type};base64,{image_base64}",
@@ -337,7 +336,7 @@ async def upload_participants_csv(event_id: int, file: UploadFile = File(...)):
                     if not name and len(list(row.values())) > 0:
                         # Heuristic: If there is no 'name' key found in dict, but row has values
                         # Just take the first value as the name.
-                        # This handles cases where header might be "Full Name" or "Studant" etc.
+                        # This handles cases where header might be "Full Name" or "Student" etc.
                         first_val = list(row.values())[0]
                         if first_val and len(first_val) > 1:
                            name = first_val

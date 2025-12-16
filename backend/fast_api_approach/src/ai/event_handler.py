@@ -13,7 +13,6 @@ from ..db.crud import (create_event, get_all_events, create_image, get_single_ev
                        get_participants_for_event, update_participant, delete_participant)
 
 
-
 # Saves output EventState object from AI to database
 
 def b_save_ai_generated_event(event_state: EventState):
@@ -34,9 +33,6 @@ def debug_read_all_events():
         return all_events
     finally:
         db.close()
-
-
-
 
 
 # Save image DTO in DB
@@ -65,7 +61,6 @@ def save_ai_generated_event(event_state: EventState):
         db.close()
 
 
-# In src/ai/event_handler.py
 # 1. The Wrapper (Contract)
 class SidebarItem(BaseModel):
     key: str
@@ -73,9 +68,11 @@ class SidebarItem(BaseModel):
     value: str | int | float  # Allowed value types for sidebar items
     component: str
 
+
 # 2. The Endpoint Response Model
 class SidebarResponse(BaseModel):
     items: List[SidebarItem]
+
 
 # 3. The Function
 def get_event_ui_payload(event_id: int) -> List[SidebarItem]:
@@ -124,8 +121,6 @@ def get_event_ui_payload(event_id: int) -> List[SidebarItem]:
         return clean_payload
 
 
-
-
 def debug_read_single_event(id: int):
     db = SessionLocal()
     try:
@@ -144,7 +139,6 @@ def debug_update_event(event_state: EventState, id: int):
         print(f"Error: {str(e)}")
     finally:
         db.close()
-
 
 
 def delete_event(id: int):
@@ -274,9 +268,6 @@ def debug_delete_participant(id: int):
         db.close()
 
 
-
-
-
 def get_event_context_data(event_id: int):
     print(f"--- TRACE: Starting Context Fetch for ID {event_id} ---")
     
@@ -331,7 +322,7 @@ def get_event_context_data(event_id: int):
             "startDateTime": start_dt,
             "endDateTime": end_dt,
             "participants": participant_count,
-            "athletes": 0, # Explicitly decoupled
+            "athletes": 0,  # Explicitly decoupled
             "image": image_data,
             "audienceWeight": event.audience_weight,
             "expertWeight": event.expert_weight,
@@ -347,7 +338,6 @@ def get_event_context_data(event_id: int):
         print(f"--- TRACE: CRITICAL CRASH: {e}")
         return None
 
-# In src/ai/event_handler.py
 
 def list_all_events():
     """
@@ -379,11 +369,11 @@ def list_all_events():
                 "eventName": e.event_name,
                 "sport": e.event_name,  # Using event_name as sport placeholder
                 "format": e.judging_type or "Standard",
-                "status": e.status or "DRAFT",   # Get from database
+                "status": e.status or "DRAFT",
                 "location": e.location or "",
                 "startDate": start_dt,  # Combined date and time for proper parsing
-                "participants": participant_count, # Correctly map to participants
-                "athletes": 0, # Decoupled from participants count
+                "participants": participant_count,
+                "athletes": 0,  # Decoupled from participants count
                 "eventCode": e.event_code or "???",
                 "image": image_data
             })
@@ -558,24 +548,19 @@ def load_state_from_db(event_id: int) -> EventState:
     finally:
         db.close()
 
-# In src/ai/event_handler.py
-# Make sure to import ConversationModel
 
 def get_event_chat_history(event_id: int):
     with SessionLocal() as db:
         # Fetch history ordered by time
         rows = db.query(ConversationModel).filter(ConversationModel.event_id == event_id).order_by(ConversationModel.timestamp).all()
         
-        # Convert to the format React expects
-        # React expects: { sender: "user" | "assistant", text: "..." }
+        # Convert to the format React expects: { sender: "user" | "assistant", text: "..." }
         history = []
         for r in rows:
             # Map 'model' role to 'assistant' for frontend compatibility
             role = "assistant" if r.role == "model" else r.role
             history.append({"sender": role, "text": r.content})
 
-    
-            
         return history
 
 
@@ -587,6 +572,7 @@ def save_chat_message(event_id: int, role: str, content: str):
         msg = ConversationModel(event_id=event_id, role=role, content=content)
         db.add(msg)
         db.commit()
+
 
 def update_event_field_from_sidebar(event_id: int, field_key: str, field_value: any):
     """
@@ -663,7 +649,7 @@ def update_event_field_from_sidebar(event_id: int, field_key: str, field_value: 
     
     return success
 
-#
+
 def load_conversation_from_db(event_id: int):
     """
     Loads chat history and converts it to Gemini SDK format.

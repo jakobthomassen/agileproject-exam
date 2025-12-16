@@ -11,15 +11,14 @@ class ComponentType(str, Enum):
 
 
 # Sidebar configuration mapping database columns to UI components and labels
-
 SIDEBAR_CONFIG = [
     {
-        "key": "id",  # Must match database column name
+        "key": "id",
         "label": "id",
         "component": ComponentType.NUMBER
     },
     {
-        "key": "event_name",  # Must match database column name
+        "key": "event_name",
         "label": "Event",
         "component": ComponentType.TEXT
     } ,
