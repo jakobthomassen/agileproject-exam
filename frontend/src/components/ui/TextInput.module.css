@@ -8,8 +8,21 @@
   color: var(--color-text-primary);
   font-size: 14px;
   margin-top: 4px;
+  /* Ensure browser UI elements (like date pickers) know this is a dark input */
+  color-scheme: dark;
 }
 
 .root::placeholder {
   color: var(--color-text-muted);
+}
+
+/* Force the calendar/time icon to be white in WebKit browsers */
+.root::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.root::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
