@@ -60,18 +60,19 @@
   border-bottom: 1px solid #334155;
 }
 
-.tableHeader > span {
+.tableHeader>span {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.tableHeader > span:first-child {
-  justify-content: flex-start; /* Event name stays left-aligned */
+.tableHeader>span:first-child {
+  justify-content: flex-start;
+  /* Event name stays left-aligned */
 }
 
 /* Center all columns except Event (first column) */
-.tableHeader > span:not(:first-child) {
+.tableHeader>span:not(:first-child) {
   text-align: center;
 }
 
@@ -81,17 +82,18 @@
 }
 
 /* Center all columns except Event (first column) */
-.tableRow > span:not(:first-child) {
+.tableRow>span:not(:first-child) {
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.tableRow > span:first-child {
+.tableRow>span:first-child {
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* Event name stays left-aligned */
+  justify-content: flex-start;
+  /* Event name stays left-aligned */
 }
 
 .tableRow:hover {
@@ -104,7 +106,8 @@
   font-weight: 500;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  min-width: 0; /* Allows text to wrap/truncate properly in grid */
+  min-width: 0;
+  /* Allows text to wrap/truncate properly in grid */
 }
 
 .eventNameLink:hover {
@@ -116,7 +119,8 @@
 /* --------------------------------------------------------- */
 .actionsRow {
   display: flex;
-  justify-content: center; /* Center the action buttons */
+  justify-content: center;
+  /* Center the action buttons */
   gap: 10px;
 }
 
@@ -151,7 +155,8 @@
   font-weight: 700;
   width: fit-content;
   text-transform: uppercase;
-  margin: 0 auto; /* Center the bubble within its column */
+  margin: 0 auto;
+  /* Center the bubble within its column */
 }
 
 /* --------------------------------------------------------- */
@@ -182,24 +187,26 @@
   padding-top: 12px;
   border-top: 1px solid #334155;
 }
+
+/* Delete Confirmation Modal Styles */
 /* Delete Confirmation Modal Styles */
 .deleteConfirmButton {
-  background-color: #10b981 !important;
+  background: #ef4444 !important;
   color: #ffffff !important;
   margin-left: 12px;
 }
 
 .deleteConfirmButton:hover {
-  background-color: #059669 !important;
+  background: #dc2626 !important;
 }
 
 .deleteCancelButton {
-  background-color: #ef4444 !important;
-  color: #ffffff !important;
+  background: #334155 !important;
+  color: #e2e8f0 !important;
 }
 
 .deleteCancelButton:hover {
-  background-color: #dc2626 !important;
+  background: #475569 !important;
 }
 
 .deleteModalContent {

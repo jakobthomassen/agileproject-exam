@@ -1,8 +1,9 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import styles from "./Navbar.module.css";
 
 export function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   function notImplemented(label: string) {
     window.alert(`${label} page is not implemented yet.`);
@@ -19,10 +20,17 @@ export function Navbar() {
 
 
       <div className={styles.navButtons}>
-        <button onClick={() => notImplemented("About us")}>
+        <button onClick={() => {
+          if (location.pathname !== "/") {
+            navigate("/");
+            setTimeout(() => document.getElementById("about-section")?.scrollIntoView({ behavior: "smooth" }), 100);
+          } else {
+            document.getElementById("about-section")?.scrollIntoView({ behavior: "smooth" });
+          }
+        }}>
           About us
         </button>
-        <button onClick={() => notImplemented("Contact")}>
+        <button onClick={() => window.open("https://www.peers.live/contact", "_blank")}>
           Contact
         </button>
         <button onClick={() => navigate("/setup")}>
