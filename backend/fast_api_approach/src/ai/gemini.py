@@ -135,12 +135,22 @@ class Gemini(AIPlatform):
 
         # ALWAYS save state to persist interaction data (even if incomplete)
         # This prevents "amnesia" where the AI forgets data if the event wasn't "complete" yet.
+        # UPDATE: Only save if we have a name or it's an existing event
         try:
-             save_ai_generated_event(self.event_state)
-             if not self.event_id:
-                 self.event_id = self.event_state.eventid
+             # Check if we should save: Either it's an existing event (has ID) OR it satisfies requirements (has name)
+             should_save = self.event_id is not None or (self.event_state.eventname and self.event_state.eventname.strip())
+             
+             if should_save:
+                 save_ai_generated_event(self.event_state)
+                 if not self.event_id:
+                     self.event_id = self.event_state.eventid
+                     print(f"DEBUG: Auto-saved event state with event_id={self.event_id}")
+             else:
+                 print("DEBUG: Event has no name yet. Skipping DB save.")
+                 
         except Exception as e:
              print(f"DEBUG: Failed to auto-save partial state: {e}")
+             
         
         # Use instance event_id. Handle case where event hasn't been saved yet.
         if self.event_id:

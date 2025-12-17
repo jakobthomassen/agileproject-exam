@@ -115,8 +115,7 @@ async def chat_greeting_endpoint():
             event_id=None
         )
         
-        # We only want the text, not the full payload with event_id=None
-        return {"message": response["message"]}
+        return response
     except Exception as e:
         print(f"Greeting Error: {e}")
         # Fallback if AI fails

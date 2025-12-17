@@ -355,8 +355,22 @@ export default function SetupAI() {
         try {
           // Only fetch greeting if we don't have messages
           setThinking(true);
-          const res = await axios.get(`${API_URL}/api/chat/greeting`);
-          setMessages([{ sender: "assistant", text: res.data.message }]);
+          const res = await axios.get<APIResponse>(`${API_URL}/api/chat/greeting`);
+
+          if (res.data.message) {
+            setMessages([{ sender: "assistant", text: res.data.message }]);
+          }
+
+          // CAPTURE EVENT ID IMMEDIATELY
+          if (res.data.event_id) {
+            console.log("Greeting created event_id:", res.data.event_id);
+            const updated = { ...eventData, id: res.data.event_id, ui_payload: res.data.ui_payload ?? [] };
+            setEventData(updated);
+
+            // Silently update URL so a refresh won't lose the ID
+            const newUrl = `/event/${res.data.event_id}/setup/ai`;
+            window.history.replaceState(null, "", newUrl);
+          }
         } catch (e) {
           console.error("Failed to fetch greeting", e);
           setMessages([{ sender: "assistant", text: "Hi! Describe your event to get started." }]);
