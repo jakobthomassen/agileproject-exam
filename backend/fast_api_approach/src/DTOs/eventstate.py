@@ -41,8 +41,21 @@ class EventState(BaseModel):
     def is_complete(self) -> bool:
         """Returns True if all required fields are present."""
         return len(self.missing_fields()) == 0
+    
+    def has_values(self) -> bool:
+        """
+        Returns True if any non-empty, non-null field (other than eventid) is present.
+        """
 
-
+        data = self.model_dump()
+        for k, v in data.items():
+            if k == "eventid":
+                continue
+            if v not in (None, "", [], {}, 0):
+                return True
+        return False
+    
+    
 # Data transfer object for event image creation
 class EventImageCreate(BaseModel):
     event_id: int = Field(None, description="FK to events table")

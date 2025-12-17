@@ -61,7 +61,7 @@ class Gemini(AIPlatform):
             else:
                 raise ValueError(f"Event with ID {event_id} not found in the database.")
 
-    def generate_text(self, contents: list) -> str:
+    def generate_text(self, contents: list, save_state: bool = True) -> str:
         """
         Generates AI response and handles tool calling.
         Updates conversation history and event state.
@@ -133,14 +133,39 @@ class Gemini(AIPlatform):
             )
         )
 
-        # ALWAYS save state to persist interaction data (even if incomplete)
-        # This prevents "amnesia" where the AI forgets data if the event wasn't "complete" yet.
+        # Conditional save: only persist when caller allows it AND
+        # either we already have an event_id (updating) OR the state has real values.
         try:
-             save_ai_generated_event(self.event_state)
-             if not self.event_id:
-                 self.event_id = self.event_state.eventid
+            should_save = False
+            if save_state:
+                # If this Gemini instance already has an event_id, it's safe to save.
+                if self.event_id:
+                    should_save = True
+                else:
+                    # Use EventState.has_values() when available to determine if there
+                    # is meaningful data to persist (prevents creating empty drafts).
+                    try:
+                        if hasattr(self.event_state, "has_values") and callable(self.event_state.has_values):
+                            should_save = self.event_state.has_values()
+                        else:
+                            # Fallback inspection if has_values not present
+                            state_dict = self.event_state.model_dump()
+                            for k, v in state_dict.items():
+                                if k == "eventid":
+                                    continue
+                                if v not in (None, "", [], {}, 0):
+                                    should_save = True
+                                    break
+                    except Exception:
+                        # if inspection fails, avoid saving unintentionally
+                        should_save = False
+
+            if should_save:
+                save_ai_generated_event(self.event_state)
+                if not self.event_id:
+                    self.event_id = self.event_state.eventid
         except Exception as e:
-             print(f"DEBUG: Failed to auto-save partial state: {e}")
+            print(f"DEBUG: Failed to auto-save partial state: {e}")
         
         # Use instance event_id. Handle case where event hasn't been saved yet.
         if self.event_id:
@@ -172,7 +197,7 @@ class Gemini(AIPlatform):
         return self.generate_text(prompt)
 
 
-def process_chat_request(message: str, event_id: int = None):
+def process_chat_request(message: str, event_id: int = None, save_state: bool = True):
     """
     Stateless entry point. 
     1. Instantiates Agent (loading state if ID exists).
@@ -190,4 +215,4 @@ def process_chat_request(message: str, event_id: int = None):
         )
     ]
 
-    return agent.generate_text(contents)
+    return agent.generate_text(contents, save_state=save_state)

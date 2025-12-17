@@ -112,7 +112,8 @@ async def chat_greeting_endpoint():
             "You are the AI Event Planner. The user has just started the session. "
             "Give them a short, professional, enthusiastic welcome and ask what event they are planning. "
             "Address the user directly. Do not say 'Here is a message'.", 
-            event_id=None
+            event_id=None,
+            save_state=False
         )
         
         # We only want the text, not the full payload with event_id=None
