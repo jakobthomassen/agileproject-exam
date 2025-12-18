@@ -17,7 +17,7 @@ from .ai.event_handler import (
     get_event_chat_history,
     update_event_field_from_sidebar
 )
-from .db.crud import create_participant, create_image, get_images_for_event
+from .db.crud import create_participant, create_image, get_images_for_event, get_participants_for_event,delete_participant
 from .db.database import SessionLocal
 from .db.models import Event, Participant
 from .DTOs.eventstate import ParticipantCreate, EventImageCreate

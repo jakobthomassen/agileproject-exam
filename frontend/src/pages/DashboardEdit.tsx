@@ -543,7 +543,7 @@ export default function DashboardEdit() {
         return (
           <div className={styles.tabContent}>
             {/* We reuse the container but ParticipantList handles its own layout */}
-            <div style={{ minHeight: "400px" }}>
+            <div>
               <ParticipantList eventId={Number(id)} />
             </div>
           </div>
