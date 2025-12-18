@@ -11,7 +11,7 @@ cleanup() {
 # Trap Ctrl+C
 trap cleanup SIGINT
 
-echo "🚀 Starting Peers Event Planner..."
+echo "Starting Peers Event..."
 
 # Start Backend
 echo "Starting Backend (Port 8000)..."
@@ -32,7 +32,7 @@ cd ../../frontend
 npm run dev &
 FRONTEND_PID=$!
 
-echo "✅ Both servers are running!"
+echo "Both servers are running!"
 echo "Backend: http://localhost:8000"
 echo "Frontend: http://localhost:5173"
 echo "Press Ctrl+C to stop both."
