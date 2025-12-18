@@ -4,10 +4,13 @@ This project runs on both **macOS** and **Windows**.
 
 ## Prerequisites
 
-- Install **Node.js**: https://nodejs.org/en/download
-- Install **Python 3.10+**: https://www.python.org/downloads/
+- Install **Node.js**: [Download Node](https://nodejs.org/en/download)
+- Install **Python 3.10+**: [Download python](https://www.python.org/downloads/)
+- Create Gemini API key: [Create API key](https://aistudio.google.com/app/api-keys)
 
-To verify run: 
+Note that Gemini keys are free but provide better performance for paying users.
+
+To verify Node and Python install, in terminal at project root run: 
 ``` bash
 node -v
 npm -v
@@ -26,6 +29,9 @@ In a terminal, navigate to the `frontend` folder and run:
 npm install
 ```
 
+This installs all dependencies required by frontend.
+
+
 ### Backend setup
 
 Navigate to the `backend/fast_api_approach` folder:
@@ -36,7 +42,6 @@ Navigate to the `backend/fast_api_approach` folder:
 # Mac/Linux
 python3.11 -m venv venv
 source venv/bin/activate
-
 
 # Windows (PowerShell)
 py -3.11 -m venv venv
@@ -78,7 +83,7 @@ In the `agileproject-exam` folder:
 ```
 Click the provided link in the terminal to open 
 
-If this does not work proceed to the manual steps below
+If this does not work proceed to the manual steps below.
 
 ### Frontend
 
@@ -98,7 +103,9 @@ uvicorn src.main:app --reload
 
 The backend will run on http://127.0.0.1:8000
 
-To open the Vite development server in the browser, press `o` and then `Enter` in the terminal running `npm run dev`.
+### Open Server Website
+
+To open the Vite development server in the browser, click the provided link, or press `o` and then `Enter` in the terminal running `npm run dev`.
 
 **Note:** If an error appears in the browser, check the terminal running the backend server.
 Missing **Python** libraries are the most common cause.
