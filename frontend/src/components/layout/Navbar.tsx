@@ -5,9 +5,7 @@ export function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  function notImplemented(label: string) {
-    window.alert(`${label} page is not implemented yet.`);
-  }
+
 
   return (
     <div className={styles.navbar}>
